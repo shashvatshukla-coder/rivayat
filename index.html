@@ -1037,7 +1037,31 @@ save();
     }
     async function adminPanel(section) {
       if(section==='products') return adminProducts(await ProductService.list());
-      if(section==='orders') return adminOrders(await OrderService.list());
+      async function adminFetchOrders() {
+  try {
+    const res = await fetch('https://rivayat-webservice.onrender.com/orders');
+    const data = await res.json();
+    if (data.success && data.orders) {
+      // Convert backend order format to frontend format
+      return data.orders.map(o => ({
+        id: o.id,
+        createdAt: o.createdAt,
+        status: o.status,
+        total: o.price,
+        customer: {
+          name: o.customerName,
+          phone: o.phone,
+          email: o.email
+        },
+        items: o.items || []
+      }));
+    }
+  } catch(e) {
+    console.error('Failed to fetch from API, falling back to local', e);
+  }
+  return OrderService.list(); // fallback to local
+}
+      if(section==='orders') return adminOrders(await adminFetchOrders());
       if(section==='coupons') return adminCoupons(await CouponService.list());
       if(section==='customers') return adminCustomers(await UserService.list());
       if(section==='reviews') return adminReviews(await ReviewService.list());
