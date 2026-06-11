@@ -14,11 +14,11 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "8446716192"; // Swastik Shukla Telegram chat ID from getUpdates
 
 const DEFAULT_ADMIN = {
-  username: process.env.ADMIN_USERNAME || "Ojas_Daddy",
+  username: process.env.ADMIN_USERNAME || "admin@rivayat",
   name: process.env.ADMIN_NAME || "Rivayat Owner",
   email: (process.env.ADMIN_EMAIL || "owner@rivayat.in").toLowerCase(),
   phone: process.env.ADMIN_PHONE || "8004109305",
-  password: process.env.ADMIN_PASSWORD || "Puppylampojasdad#9779#"
+  password: process.env.ADMIN_PASSWORD || "admin"
 };
 
 const DEFAULT_COUPONS = [
@@ -50,8 +50,35 @@ const DEFAULT_HOMEPAGE = {
 };
 
 app.use(cors());
-app.use(express.json({ limit: "20mb" }));
-app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+app.use(express.json({ limit: "5mb" }));
+app.use(cors());
+app.use(express.json({ limit: "5mb" }));
+
+// ─── TELEGRAM NOTIFICATION FUNCTION ──────────────────────────────────────────
+async function sendTelegramMessage(text) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.log("Telegram skipped: missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID");
+    return;
+  }
+
+  const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text
+    })
+  });
+
+  const data = await response.json();
+
+  if (!data.ok) {
+    throw new Error(data.description || "Telegram message failed");
+  }
+
+  return data;
+}
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
 mongoose.set("strictQuery", true);
 mongoose.connect(MONGO_URI)
@@ -785,7 +812,15 @@ app.patch("/orders/:id/status", async (req, res) => {
     order.status = status;
     order.updatedAt = new Date();
     await order.save();
-
+await sendTelegramMessage(
+  `🛍️ New RIVAYAT Order
+Order ID: ${order.id}
+Customer: ${order.customerName || "N/A"}
+Phone: ${order.phone || "N/A"}
+Email: ${order.email || "N/A"}
+Total: ₹${order.price || order.total || 0}
+Status: ${order.status}`
+).catch(err => console.log("Telegram order notification failed:", err.message));
     sendTelegramMessage(`📦 RIVAYAT order status updated\nOrder: ${order.id}\nStatus: ${order.status}\nCustomer: ${order.customerName || ""}`).catch(()=>{});
 
     res.json({ success: true, message: "Order status updated successfully", order });
@@ -1031,7 +1066,32 @@ app.post("/referrals/validate", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+// ─── TELEGRAM TEST ROUTE ─────────────────────────────────────────────────────
+app.post("/telegram/test", async (req, res) => {
+  try {
+    await sendTelegramMessage("✅ RIVAYAT Telegram test successful!");
+    res.json({
+      success: true,
+      message: "Telegram test message sent."
+    });
+  } catch (error) {
+    console.error("Telegram test error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 
+app.get("/telegram/test", async (req, res) => {
+  try {
+    await sendTelegramMessage("✅ RIVAYAT Telegram browser test successful!");
+    res.send("Telegram test message sent.");
+  } catch (error) {
+    console.error("Telegram test error:", error.message);
+    res.status(500).send(error.message);
+  }
+});
 // ─── START SERVER ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
