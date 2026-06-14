@@ -476,6 +476,7 @@
     }
 
   </style>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
   <div class="topbar">Free premium packaging • Cash on Delivery available • WhatsApp support +91 80041 09305</div>
@@ -600,7 +601,7 @@
       { id: 'admin1', username: 'Ojas_Daddy', name: 'Rivayat Owner', email: 'owner@rivayat.in', phone: '8004109305', role: 'admin', password: 'Puppylampojasdad#9779#', addresses: [] }
     ];
 
-    const APP_VERSION = 'rivayat-main-website-v6-returns-proof-animated-scrollfix';
+    const APP_VERSION = 'rivayat-main-website-v7-razorpay-connected';
     const API_BASE_URL = (() => {
       const host = location.hostname;
       const isLocal = location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1';
@@ -692,6 +693,8 @@
         delivery: Number(o.delivery || 0),
         paymentMethod: o.paymentMethod || 'COD',
         paymentStatus: o.paymentStatus || 'Pending',
+        razorpayOrderId: o.razorpayOrderId || o.razorpay_order_id || '',
+        razorpayPaymentId: o.razorpayPaymentId || o.razorpay_payment_id || '',
         customer: { name: o.customerName || 'Customer', phone: o.phone || '', email: o.email || '' },
         address: o.address || {},
         items: o.items || []
@@ -995,6 +998,9 @@
                 items: order.items,
                 paymentMethod: order.paymentMethod,
                 paymentStatus: order.paymentStatus,
+                razorpayOrderId: order.razorpayOrderId || '',
+                razorpayPaymentId: order.razorpayPaymentId || '',
+                razorpaySignature: order.razorpaySignature || '',
                 referralCode: order.referralCode || ''
               })
             });
@@ -1172,28 +1178,61 @@
     };
 
     const PaymentService = {
-      async createRazorpayOrder({ amount, orderId }) {
+      async createRazorpayOrder({ amount, orderId, customer }) {
         await sleep();
-        return { provider: 'razorpay', key: CONFIG.razorpayKey, amount: amount * 100, currency: 'INR', orderId, notes: { brand: 'RIVAYAT' } };
+        if (!CONFIG.apiBaseUrl) throw new Error('Backend API URL not configured for Razorpay.');
+        const data = await apiFetch('/payment/create-order', {
+          method: 'POST',
+          body: JSON.stringify({
+            amount,
+            orderId,
+            customerName: customer?.name || '',
+            phone: customer?.phone || '',
+            email: customer?.email || ''
+          })
+        });
+        return data;
       },
       async openRazorpayCheckout(options) {
         await sleep();
-        if (!CONFIG.razorpayKey || !window.Razorpay) {
-          return { success: false, message: 'Online payment is not active yet. Please choose Cash On Delivery or WhatsApp support.' };
+        const key = options.keyId || options.key || CONFIG.razorpayKey;
+        const razorpayOrderId = options.razorpayOrderId || options.razorpayOrder?.id || options.orderId;
+        const amount = options.amount || options.razorpayOrder?.amount;
+        const currency = options.currency || options.razorpayOrder?.currency || 'INR';
+        if (!key || !window.Razorpay) {
+          return { success: false, message: 'Razorpay checkout could not load. Please try again or choose Cash On Delivery.' };
         }
         return new Promise(resolve => {
           const checkout = new Razorpay({
-            key: CONFIG.razorpayKey,
-            amount: options.amount,
-            currency: options.currency,
+            key,
+            amount,
+            currency,
             name: BRAND.name,
             description: 'RIVAYAT order payment',
-            order_id: options.orderId,
+            order_id: razorpayOrderId,
+            prefill: options.customer || {},
+            theme: { color: '#c7a45a' },
             handler: response => resolve({ success: true, ...response }),
             modal: { ondismiss: () => resolve({ success: false, message: 'Payment window closed.' }) }
           });
           checkout.open();
         });
+      },
+      async verifyPayment(payment, orderId) {
+        await sleep();
+        if (!payment?.razorpay_order_id || !payment?.razorpay_payment_id || !payment?.razorpay_signature) {
+          throw new Error('Razorpay payment response incomplete.');
+        }
+        const data = await apiFetch('/payment/verify', {
+          method: 'POST',
+          body: JSON.stringify({
+            orderId,
+            razorpay_order_id: payment.razorpay_order_id,
+            razorpay_payment_id: payment.razorpay_payment_id,
+            razorpay_signature: payment.razorpay_signature
+          })
+        });
+        return data;
       }
     };
 
@@ -1395,16 +1434,29 @@
       db.set('rivayat_checkout_pincode', fd.get('pincode'));
       msg.innerHTML = '<span class="muted">Creating your order...</span>';
       let paymentStatus = paymentMethod === 'COD' ? 'Pending on Delivery' : 'Pending';
+      let razorpayFields = {};
       if (paymentMethod === 'Online Payment') {
-        const rzOrder = await PaymentService.createRazorpayOrder({ amount: cart.total(fd.get('pincode')), orderId });
-        const payment = await PaymentService.openRazorpayCheckout(rzOrder);
-        if (!payment.success) { msg.innerHTML = `<span class="error">${payment.message || 'Payment failed. Try COD or retry online payment.'}</span>`; return; }
-        paymentStatus = 'Paid';
+        try {
+          const customer = { name: fd.get('name'), contact: fd.get('phone'), email: fd.get('email') };
+          const rzOrder = await PaymentService.createRazorpayOrder({ amount: cart.total(fd.get('pincode')), orderId, customer });
+          const payment = await PaymentService.openRazorpayCheckout({ ...rzOrder, customer });
+          if (!payment.success) { msg.innerHTML = `<span class="error">${payment.message || 'Payment failed. Try COD or retry online payment.'}</span>`; return; }
+          await PaymentService.verifyPayment(payment, orderId);
+          paymentStatus = 'Paid';
+          razorpayFields = {
+            razorpayOrderId: payment.razorpay_order_id,
+            razorpayPaymentId: payment.razorpay_payment_id,
+            razorpaySignature: payment.razorpay_signature
+          };
+        } catch (error) {
+          msg.innerHTML = `<span class="error">${error.message || 'Online payment failed. Please retry or choose COD.'}</span>`;
+          return;
+        }
       }
       db.set('rivayat_checkout_pincode', fd.get('pincode'));
       const delivery = cart.delivery(fd.get('pincode'));
       const total = Math.max(0, cart.subtotal() - cart.discount() + delivery);
-      const order = { id: orderId, createdAt: new Date().toISOString(), status: 'Pending', paymentMethod, paymentStatus,
+      const order = { id: orderId, createdAt: new Date().toISOString(), status: paymentStatus === 'Paid' ? 'Confirmed' : 'Pending', paymentMethod, paymentStatus, ...razorpayFields,
         customer: { name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email') }, address: { line1: fd.get('line1'), city: fd.get('city'), state: fd.get('state'), pincode: fd.get('pincode') },
         items: cart.items.map(({productId,name,size,qty,price})=>({productId,name,size,qty,price})), subtotal: cart.subtotal(), discount: cart.discount(), delivery, total, referralCode: cart.coupon?.referral?.code || '' };
       await OrderService.create(order); cart.clear(); toast('Order placed successfully'); go('#/confirmation/' + order.id);
