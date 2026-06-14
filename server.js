@@ -31,6 +31,9 @@ const RESEND_API_KEY = optionalEnv("RESEND_API_KEY");
 const EMAIL_FROM = optionalEnv("EMAIL_FROM");
 const TELEGRAM_BOT_TOKEN = optionalEnv("TELEGRAM_BOT_TOKEN");
 const TELEGRAM_CHAT_ID = optionalEnv("TELEGRAM_CHAT_ID");
+const RAZORPAY_KEY_ID = optionalEnv("RAZORPAY_KEY_ID");
+const RAZORPAY_KEY_SECRET = optionalEnv("RAZORPAY_KEY_SECRET");
+const RAZORPAY_WEBHOOK_SECRET = optionalEnv("RAZORPAY_WEBHOOK_SECRET");
 
 const DEFAULT_ADMIN = {
   username: optionalEnv("ADMIN_USERNAME"),
@@ -91,7 +94,13 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors(corsOptions));
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({
+  limit: "5mb",
+  verify: (req, res, buf) => {
+    // Keep the exact raw JSON bytes for Razorpay webhook signature verification.
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -211,6 +220,11 @@ const OrderSchema = new mongoose.Schema({
   price:         Number,
   paymentMethod: { type: String, default: "COD" },
   paymentStatus: { type: String, default: "Pending" },
+  razorpayOrderId: { type: String, default: "", index: true },
+  razorpayPaymentId: { type: String, default: "" },
+  razorpaySignature: { type: String, default: "" },
+  razorpayWebhookEvent: { type: String, default: "" },
+  paidAt:        Date,
   status:        { type: String, enum: ORDER_STATUSES, default: "Pending" },
   address:       Object,
   items:         Array,
@@ -432,6 +446,52 @@ async function sendOrderEmail(order) {
     console.log("⚠️ Order email failed:", error.message);
     return { success: false, message: error.message };
   }
+}
+
+
+function razorpayConfigured() {
+  return Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET);
+}
+
+function razorpayAuthHeader() {
+  return `Basic ${Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64")}`;
+}
+
+function safeTimingEqual(a = "", b = "") {
+  const left = Buffer.from(String(a));
+  const right = Buffer.from(String(b));
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+
+function hmacSha256Hex(payload, secret) {
+  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
+}
+
+async function razorpayRequest(path, method = "GET", body) {
+  if (!razorpayConfigured()) {
+    const err = new Error("Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Render Environment.");
+    err.status = 500;
+    throw err;
+  }
+
+  const response = await fetch(`https://api.razorpay.com/v1${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: razorpayAuthHeader()
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const err = new Error(data?.error?.description || data?.message || `Razorpay API error ${response.status}`);
+    err.status = response.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
 }
 
 function deliveryChargeByPincode(pincode = "", subtotal = 0) {
@@ -759,6 +819,172 @@ app.delete("/coupons/:id", async (req, res) => {
   }
 });
 
+// ─── RAZORPAY PAYMENTS ────────────────────────────────────────────────────────
+app.get("/payment/config", (req, res) => {
+  res.json({
+    success: true,
+    razorpayEnabled: Boolean(RAZORPAY_KEY_ID),
+    keyId: RAZORPAY_KEY_ID || ""
+  });
+});
+
+app.post("/payment/create-order", async (req, res) => {
+  try {
+    if (!razorpayConfigured()) {
+      return res.status(500).json({
+        success: false,
+        message: "Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Render Environment."
+      });
+    }
+
+    const amountRupees = Number(
+      req.body.amount ??
+      req.body.total ??
+      req.body.subtotal ??
+      req.body.advanceAmount ??
+      0
+    );
+    const amountPaise = Number(req.body.amountPaise || req.body.amount_in_paise || Math.round(amountRupees * 100));
+
+    if (!Number.isFinite(amountPaise) || amountPaise < 100) {
+      return res.status(400).json({ success: false, message: "Valid payment amount is required. Minimum amount is ₹1." });
+    }
+
+    const receipt = String(req.body.receipt || req.body.orderId || `rvyt_${Date.now()}`).slice(0, 40);
+    const currency = String(req.body.currency || "INR").toUpperCase();
+
+    const razorpayOrder = await razorpayRequest("/orders", "POST", {
+      amount: amountPaise,
+      currency,
+      receipt,
+      payment_capture: 1,
+      notes: {
+        localOrderId: String(req.body.orderId || req.body.id || receipt),
+        customerName: String(req.body.customerName || req.body.name || "").slice(0, 120),
+        phone: String(req.body.phone || "").slice(0, 30),
+        email: String(req.body.email || "").slice(0, 120),
+        source: "RIVAYAT Website"
+      }
+    });
+
+    res.json({
+      success: true,
+      keyId: RAZORPAY_KEY_ID,
+      razorpayOrder,
+      razorpayOrderId: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency
+    });
+  } catch (error) {
+    console.error("Razorpay create-order error:", error.message);
+    res.status(error.status || 500).json({ success: false, message: error.message, details: error.data || undefined });
+  }
+});
+
+app.post("/payment/verify", async (req, res) => {
+  try {
+    const razorpayOrderId = req.body.razorpay_order_id || req.body.razorpayOrderId;
+    const razorpayPaymentId = req.body.razorpay_payment_id || req.body.razorpayPaymentId;
+    const razorpaySignature = req.body.razorpay_signature || req.body.razorpaySignature;
+    const localOrderId = req.body.orderId || req.body.localOrderId || req.body.id;
+
+    if (!razorpayConfigured()) {
+      return res.status(500).json({ success: false, message: "Razorpay is not configured on backend." });
+    }
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({ success: false, message: "Missing Razorpay verification fields." });
+    }
+
+    const expectedSignature = hmacSha256Hex(`${razorpayOrderId}|${razorpayPaymentId}`, RAZORPAY_KEY_SECRET);
+    if (!safeTimingEqual(expectedSignature, razorpaySignature)) {
+      return res.status(400).json({ success: false, message: "Payment signature verification failed." });
+    }
+
+    let order = null;
+    const update = {
+      paymentMethod: "Razorpay",
+      paymentStatus: "Paid",
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      status: "Confirmed",
+      paidAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (localOrderId) {
+      order = await Order.findOneAndUpdate({ id: localOrderId }, { $set: update }, { returnDocument: "after" });
+    }
+    if (!order) {
+      order = await Order.findOneAndUpdate({ razorpayOrderId }, { $set: update }, { returnDocument: "after" });
+    }
+
+    sendTelegramMessage(`✅ RIVAYAT payment verified\nOrder: ${localOrderId || "Not saved yet"}\nRazorpay Order: ${razorpayOrderId}\nPayment: ${razorpayPaymentId}`).catch(()=>{});
+
+    res.json({ success: true, message: "Payment verified successfully", orderUpdated: Boolean(order), order });
+  } catch (error) {
+    console.error("Razorpay verify error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post("/payment/webhook", async (req, res) => {
+  try {
+    if (!RAZORPAY_WEBHOOK_SECRET) {
+      return res.status(500).json({ success: false, message: "RAZORPAY_WEBHOOK_SECRET is missing in Render Environment." });
+    }
+
+    const receivedSignature = req.get("x-razorpay-signature") || "";
+    const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body || {}));
+    const expectedSignature = hmacSha256Hex(rawBody, RAZORPAY_WEBHOOK_SECRET);
+
+    if (!receivedSignature || !safeTimingEqual(expectedSignature, receivedSignature)) {
+      return res.status(400).json({ success: false, message: "Invalid Razorpay webhook signature." });
+    }
+
+    const event = req.body?.event || "unknown";
+    const payment = req.body?.payload?.payment?.entity || null;
+    const rzOrder = req.body?.payload?.order?.entity || null;
+    const razorpayOrderId = payment?.order_id || rzOrder?.id || "";
+    const razorpayPaymentId = payment?.id || "";
+    const localOrderId = rzOrder?.receipt || payment?.notes?.localOrderId || payment?.notes?.orderId || "";
+
+    const update = {
+      razorpayWebhookEvent: event,
+      updatedAt: new Date()
+    };
+
+    if (razorpayOrderId) update.razorpayOrderId = razorpayOrderId;
+    if (razorpayPaymentId) update.razorpayPaymentId = razorpayPaymentId;
+
+    if (["payment.captured", "order.paid"].includes(event)) {
+      update.paymentMethod = "Razorpay";
+      update.paymentStatus = "Paid";
+      update.status = "Confirmed";
+      update.paidAt = new Date();
+    } else if (["payment.failed"].includes(event)) {
+      update.paymentMethod = "Razorpay";
+      update.paymentStatus = "Failed";
+    } else if (["refund.created", "refund.processed"].includes(event)) {
+      update.paymentStatus = event === "refund.processed" ? "Refunded" : "Refund Initiated";
+    }
+
+    let order = null;
+    if (localOrderId) {
+      order = await Order.findOneAndUpdate({ id: localOrderId }, { $set: update }, { returnDocument: "after" });
+    }
+    if (!order && razorpayOrderId) {
+      order = await Order.findOneAndUpdate({ razorpayOrderId }, { $set: update }, { returnDocument: "after" });
+    }
+
+    console.log(`✅ Razorpay webhook received: ${event} | updated order: ${order?.id || "none"}`);
+    res.json({ success: true, received: true, event, orderUpdated: Boolean(order) });
+  } catch (error) {
+    console.error("Razorpay webhook error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ─── ORDERS ───────────────────────────────────────────────────────────────────
 app.post("/orders", async (req, res) => {
   try {
@@ -809,7 +1035,11 @@ app.post("/orders", async (req, res) => {
       price:         Number(body.subtotal || 0) - Number(body.discount || 0) + deliveryChargeByPincode(body.address?.pincode, body.subtotal),
       paymentMethod: body.paymentMethod,
       paymentStatus: body.paymentStatus,
-      status:        "Pending",
+      razorpayOrderId: body.razorpayOrderId || body.razorpay_order_id || "",
+      razorpayPaymentId: body.razorpayPaymentId || body.razorpay_payment_id || "",
+      razorpaySignature: body.razorpaySignature || body.razorpay_signature || "",
+      paidAt: body.paymentStatus === "Paid" ? new Date() : undefined,
+      status:        body.paymentStatus === "Paid" ? "Confirmed" : "Pending",
       address:       body.address,
       items:         body.items,
       referralCode:  String(body.referralCode || "").trim().toUpperCase()
@@ -1139,16 +1369,7 @@ process.on("unhandledRejection", (reason) => {
 process.on("uncaughtException", (err) => {
   console.error("⚠️ Uncaught exception:", err.message);
 });
-import { Resend } from 'resend';
 
-const resend = new Resend('re_YrwwnKSN_KSfqChq69qsc3DMnSRuniA44');
-
-resend.emails.send({
-  from: 'onboarding@resend.dev',
-  to: 'houseofrivayat@gmail.com',
-  subject: 'Hello World',
-  html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
-});
 // ─── START SERVER ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
