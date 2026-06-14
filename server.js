@@ -1,24 +1,43 @@
+try { require("dotenv").config(); } catch (_) {}
+
 const express = require("express");
+const helmet = require("helmet");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://AdminRivayat:rivayatfashion@cluster0.wk2qecc.mongodb.net/rivayat?retryWrites=true&w=majority&appName=Cluster0";
-const APP_SECRET = process.env.APP_SECRET || "change-this-rivayat-secret";
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-const EMAIL_FROM = process.env.EMAIL_FROM || "RIVAYAT <orders@rivayat.in>";
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "8446716192"; // Swastik Shukla Telegram chat ID from getUpdates
+
+function requiredEnv(name) {
+  const value = process.env[name];
+  if (!value || !String(value).trim()) {
+    console.error(`❌ ${name} is missing. Add it in Render → Environment.`);
+    process.exit(1);
+  }
+  return String(value).trim();
+}
+
+function optionalEnv(name, fallback = "") {
+  const value = process.env[name];
+  return value && String(value).trim() ? String(value).trim() : fallback;
+}
+
+const PORT = Number(optionalEnv("PORT", "3000"));
+const MONGO_URI = requiredEnv("MONGO_URI");
+const APP_SECRET = requiredEnv("APP_SECRET");
+const RESEND_API_KEY = optionalEnv("RESEND_API_KEY");
+const EMAIL_FROM = optionalEnv("EMAIL_FROM");
+const TELEGRAM_BOT_TOKEN = optionalEnv("TELEGRAM_BOT_TOKEN");
+const TELEGRAM_CHAT_ID = optionalEnv("TELEGRAM_CHAT_ID");
 
 const DEFAULT_ADMIN = {
-  username: process.env.ADMIN_USERNAME || "admin@rivayat",
-  name: process.env.ADMIN_NAME || "Rivayat Owner",
-  email: (process.env.ADMIN_EMAIL || "owner@rivayat.in").toLowerCase(),
-  phone: process.env.ADMIN_PHONE || "8004109305",
-  password: process.env.ADMIN_PASSWORD || "admin"
+  username: optionalEnv("ADMIN_USERNAME"),
+  name: optionalEnv("ADMIN_NAME", "Rivayat Owner"),
+  email: optionalEnv("ADMIN_EMAIL").toLowerCase(),
+  phone: optionalEnv("ADMIN_PHONE"),
+  password: optionalEnv("ADMIN_PASSWORD")
 };
 
 const DEFAULT_COUPONS = [
@@ -49,41 +68,74 @@ const DEFAULT_HOMEPAGE = {
   secondaryButtonText: "Buy on WhatsApp"
 };
 
-app.use(cors());
+const allowedOrigins = optionalEnv("ALLOWED_ORIGINS", "")
+  .split(",")
+  .map(origin => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    const cleanOrigin = String(origin).trim().replace(/\/$/, "");
+    if (allowedOrigins.includes(cleanOrigin) || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "5mb" }));
-app.use(cors());
-app.use(express.json({ limit: "5mb" }));
-
-// ─── TELEGRAM NOTIFICATION FUNCTION ──────────────────────────────────────────
-async function sendTelegramMessage(text) {
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    console.log("Telegram skipped: missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID");
-    return;
-  }
-
-  const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text
-    })
-  });
-
-  const data = await response.json();
-
-  if (!data.ok) {
-    throw new Error(data.description || "Telegram message failed");
-  }
-
-  return data;
-}
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false
+}));
+
 
 mongoose.set("strictQuery", true);
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ MongoDB Error:", err.message));
+
+async function connectDB() {
+  if (!MONGO_URI) {
+    console.error("❌ MONGO_URI is missing. Add it in .env or Render Environment Variables.");
+    return;
+  }
+  try {
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      retryWrites: true
+    });
+    console.log("✅ MongoDB Connected");
+  } catch (err) {
+    console.error("❌ MongoDB Connection Error:", err.message);
+    setTimeout(connectDB, 5000);
+  }
+}
+
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB runtime error:", err.message);
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.warn("⚠️ MongoDB disconnected. The driver will keep trying to reconnect.");
+});
+
+mongoose.connection.on("reconnected", () => {
+  console.log("✅ MongoDB reconnected");
+});
+
+connectDB();
 
 // ─── SCHEMAS ──────────────────────────────────────────────────────────────────
 const UserSchema = new mongoose.Schema({
@@ -365,7 +417,7 @@ async function sendTelegramMessage(text) {
 }
 
 async function sendOrderEmail(order) {
-  if (!RESEND_API_KEY || !order.email) return { skipped: true, reason: "Email env vars not set" };
+  if (!RESEND_API_KEY || !EMAIL_FROM || !order.email) return { skipped: true, reason: "Email env vars not set" };
   const subject = `RIVAYAT order confirmed: ${order.id}`;
   const html = `<div style="font-family:Arial,sans-serif;color:#111;max-width:680px;margin:auto"><h1>RIVAYAT</h1><h2>Order confirmed</h2><p>Hi ${order.customerName || "Customer"}, your order <strong>${order.id}</strong> has been received.</p><p><strong>Total:</strong> ₹${order.price || 0}<br><strong>Status:</strong> ${order.status || "Pending"}<br><strong>Payment:</strong> ${order.paymentMethod || "COD"}</p><pre style="background:#f7f2e9;padding:14px;border-radius:12px;white-space:pre-wrap">${orderPlainText(order)}</pre><p>Thank you for shopping with RIVAYAT. Own Your Vibe.</p></div>`;
   try {
@@ -394,40 +446,46 @@ function deliveryChargeByPincode(pincode = "", subtotal = 0) {
 
 async function ensureDefaultData() {
   try {
-    const existingAdmin = await User.findOne({
-      $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }]
-    });
+    const adminSeedReady = Boolean(DEFAULT_ADMIN.username && DEFAULT_ADMIN.email && DEFAULT_ADMIN.password);
 
-    if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
-      await User.create({
-        username: DEFAULT_ADMIN.username,
-        name: DEFAULT_ADMIN.name,
-        email: DEFAULT_ADMIN.email,
-        phone: DEFAULT_ADMIN.phone,
-        password: hashedPassword,
-        role: "admin"
+    if (adminSeedReady) {
+      const existingAdmin = await User.findOne({
+        $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }]
       });
-      console.log("✅ Default admin account created");
-    } else if (existingAdmin.role !== "admin") {
-      existingAdmin.role = "admin";
-      existingAdmin.username = existingAdmin.username || DEFAULT_ADMIN.username;
-      await existingAdmin.save();
-      console.log("✅ Existing owner account promoted to admin");
+
+      if (!existingAdmin) {
+        const hashedPassword = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
+        await User.create({
+          username: DEFAULT_ADMIN.username,
+          name: DEFAULT_ADMIN.name,
+          email: DEFAULT_ADMIN.email,
+          phone: DEFAULT_ADMIN.phone,
+          password: hashedPassword,
+          role: "admin"
+        });
+        console.log("✅ Default admin account created from Render env vars");
+      } else if (existingAdmin.role !== "admin") {
+        existingAdmin.role = "admin";
+        existingAdmin.username = existingAdmin.username || DEFAULT_ADMIN.username;
+        await existingAdmin.save();
+        console.log("✅ Existing owner account promoted to admin");
+      }
+    } else {
+      console.log("ℹ️ Admin seed skipped. Add ADMIN_USERNAME, ADMIN_EMAIL, and ADMIN_PASSWORD in Render if you want auto-admin creation.");
     }
 
     for (const coupon of DEFAULT_COUPONS) {
       await Coupon.findOneAndUpdate(
         { code: coupon.code },
         { $setOnInsert: coupon },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
     }
 
     await SiteSetting.findOneAndUpdate(
       { key: "homepage" },
       { $setOnInsert: { key: "homepage", value: DEFAULT_HOMEPAGE } },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     );
     console.log("✅ Default coupons and homepage settings checked");
   } catch (error) {
@@ -435,7 +493,12 @@ async function ensureDefaultData() {
   }
 }
 
-mongoose.connection.once("open", ensureDefaultData);
+let defaultDataSeeded = false;
+mongoose.connection.on("connected", async () => {
+  if (defaultDataSeeded) return;
+  defaultDataSeeded = true;
+  await ensureDefaultData();
+});
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
@@ -456,7 +519,7 @@ app.post("/telegram/test", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: result.reason,
-        fix: "Add TELEGRAM_BOT_TOKEN in Render Environment. TELEGRAM_CHAT_ID is already set to 8446716192."
+        fix: "Add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in Render Environment."
       });
     }
 
@@ -551,7 +614,7 @@ app.put("/settings/homepage", async (req, res) => {
     const setting = await SiteSetting.findOneAndUpdate(
       { key: "homepage" },
       { key: "homepage", value, updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     res.json({ success: true, settings: setting.value });
   } catch (error) {
@@ -591,7 +654,7 @@ app.post("/products", async (req, res) => {
     const product = await Product.findOneAndUpdate(
       { id: productData.id },
       { $set: productData, $setOnInsert: { createdAt: new Date() } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
 
     res.json({ success: true, message: "Product saved successfully", product });
@@ -607,7 +670,7 @@ app.patch("/products/:id", async (req, res) => {
     const existing = await Product.findOne({ id: req.params.id });
     if (!existing) return res.status(404).json({ success: false, message: "Product not found" });
     const productData = normalizeProduct({ ...existing.toObject(), ...req.body, id: existing.id });
-    const product = await Product.findOneAndUpdate({ id: req.params.id }, { $set: productData }, { new: true });
+    const product = await Product.findOneAndUpdate({ id: req.params.id }, { $set: productData }, { returnDocument: "after" });
     res.json({ success: true, message: "Product updated successfully", product });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -657,7 +720,7 @@ app.post("/coupons", async (req, res) => {
     const coupon = await Coupon.findOneAndUpdate(
       { id: couponData.id },
       { $set: couponData, $setOnInsert: { createdAt: new Date() } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
 
     res.json({ success: true, message: "Coupon saved successfully", coupon });
@@ -812,15 +875,6 @@ app.patch("/orders/:id/status", async (req, res) => {
     order.status = status;
     order.updatedAt = new Date();
     await order.save();
-await sendTelegramMessage(
-  `🛍️ New RIVAYAT Order
-Order ID: ${order.id}
-Customer: ${order.customerName || "N/A"}
-Phone: ${order.phone || "N/A"}
-Email: ${order.email || "N/A"}
-Total: ₹${order.price || order.total || 0}
-Status: ${order.status}`
-).catch(err => console.log("Telegram order notification failed:", err.message));
     sendTelegramMessage(`📦 RIVAYAT order status updated\nOrder: ${order.id}\nStatus: ${order.status}\nCustomer: ${order.customerName || ""}`).catch(()=>{});
 
     res.json({ success: true, message: "Order status updated successfully", order });
@@ -871,7 +925,7 @@ app.post("/returns", async (req, res) => {
         },
         $setOnInsert: { createdAt: new Date() }
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     res.json({ success: true, message: `${request.type} request submitted`, request });
   } catch (error) {
@@ -887,7 +941,7 @@ app.patch("/returns/:id/status", async (req, res) => {
     const request = await ReturnRequest.findOneAndUpdate(
       { id: req.params.id },
       { status, updatedAt: new Date() },
-      { new: true }
+      { returnDocument: "after" }
     );
     if (!request) return res.status(404).json({ success: false, message: "Request not found" });
     res.json({ success: true, request });
@@ -922,7 +976,7 @@ app.post("/reviews", async (req, res) => {
     const review = await Review.findOneAndUpdate(
       { id: reviewId },
       { $set: { ...req.body, id: reviewId, updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     res.json({ success: true, review });
   } catch (error) {
@@ -936,7 +990,7 @@ app.patch("/reviews/:id", async (req, res) => {
     const review = await Review.findOneAndUpdate(
       { id: req.params.id },
       { ...req.body, updatedAt: new Date() },
-      { new: true }
+      { returnDocument: "after" }
     );
     if (!review) return res.status(404).json({ success: false, message: "Review not found" });
     res.json({ success: true, review });
@@ -1009,7 +1063,7 @@ app.post("/newsletter", async (req, res) => {
     const lead = await Newsletter.findOneAndUpdate(
       { email },
       { email, phone: req.body.phone || "", source: req.body.source || "Website" },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     sendTelegramMessage(`📩 New RIVAYAT newsletter lead\nEmail: ${email}\nPhone: ${lead.phone || "-"}`).catch(()=>{});
     res.json({ success: true, message: "Subscribed successfully", lead });
@@ -1036,7 +1090,7 @@ app.post("/referrals/me", async (req, res) => {
     const referral = await Referral.findOneAndUpdate(
       { ownerEmail: email },
       { $setOnInsert: { code, ownerEmail: email, rewardValue: 50, active: true }, updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     res.json({ success: true, referral });
   } catch (error) {
@@ -1066,31 +1120,34 @@ app.post("/referrals/validate", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-// ─── TELEGRAM TEST ROUTE ─────────────────────────────────────────────────────
-app.post("/telegram/test", async (req, res) => {
-  try {
-    await sendTelegramMessage("✅ RIVAYAT Telegram test successful!");
-    res.json({
-      success: true,
-      message: "Telegram test message sent."
-    });
-  } catch (error) {
-    console.error("Telegram test error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
 app.get("/telegram/test", async (req, res) => {
   try {
-    await sendTelegramMessage("✅ RIVAYAT Telegram browser test successful!");
-    res.send("Telegram test message sent.");
+    if (!requireAdmin(req, res)) return;
+    const result = await sendTelegramMessage("✅ RIVAYAT Telegram browser test successful!");
+    if (result.skipped) return res.status(400).json({ success: false, message: result.reason });
+    if (!result.success) return res.status(500).json({ success: false, message: result.message });
+    res.json({ success: true, message: "Telegram test message sent." });
   } catch (error) {
     console.error("Telegram test error:", error.message);
-    res.status(500).send(error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("⚠️ Unhandled promise rejection:", reason?.message || reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("⚠️ Uncaught exception:", err.message);
+});
+import { Resend } from 'resend';
+
+const resend = new Resend('re_YrwwnKSN_KSfqChq69qsc3DMnSRuniA44');
+
+resend.emails.send({
+  from: 'onboarding@resend.dev',
+  to: 'houseofrivayat@gmail.com',
+  subject: 'Hello World',
+  html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
 });
 // ─── START SERVER ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
