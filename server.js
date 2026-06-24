@@ -25,7 +25,7 @@ function optionalEnv(name, fallback = "") {
 }
 
 const PORT = Number(optionalEnv("PORT", "3000"));
-const MONGO_URI = requiredEnv("MONGO_URI");
+const MONGO_URI = requiredEnv(mongodb+srv://RIVAYAT_WEB:Rivayatfashion@clusterrivayatwebservic.93eiul1.mongodb.net/?appName=ClusterRIVAYATWEBSERVICE);
 const APP_SECRET = requiredEnv("APP_SECRET");
 const RESEND_API_KEY = optionalEnv("RESEND_API_KEY");
 const EMAIL_FROM = optionalEnv("EMAIL_FROM");
