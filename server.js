@@ -519,11 +519,13 @@ mongoose.connection.on("connected", async () => {
 });
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
+const path = require("path");
+
+app.use(express.static(__dirname));
+
 app.get("/", (req, res) => {
-  res.json({ success: true, message: "✅ Rivayat Backend Running" });
+  res.sendFile(path.join(__dirname, "index.html"));
 });
-
-
 // ─── TELEGRAM TEST (admin only) ───────────────────────────────────────────────
 app.post("/telegram/test", async (req, res) => {
   try {
