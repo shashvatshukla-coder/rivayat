@@ -909,23 +909,16 @@
           return 'Password updated locally. You can login now.';
         }
       },
-      async updateProfile(data) {
-        const response = await fetch(`${API}/profile`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Storage.token()}`
-          },
-          body: JSON.stringify(data)
+      async updateProfile(profile) {
+        const data = await apiFetch('/profile', {
+          method: 'PUT',
+          body: JSON.stringify(profile)
         });
 
-        const result = await response.json();
+        auth.user = data.user;
+        save();
 
-        if (!response.ok) {
-          throw new Error(result.message || "Profile update failed");
-        }
-
-        return result.user;
+        return data.user;
       }
     };
 
