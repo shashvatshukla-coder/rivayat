@@ -882,7 +882,24 @@
         return data.message || 'Password updated.';
       }
     };
+async function updateProfile(data) {
+    const response = await fetch(`${API}/profile`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Storage.token()}`
+        },
+        body: JSON.stringify(data)
+    });
 
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.message || "Profile update failed");
+    }
+
+    return result.user;
+}
     const OrderService = {
       async list(options={}) {
         await sleep();

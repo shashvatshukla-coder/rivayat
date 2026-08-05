@@ -349,6 +349,66 @@ app.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+  // ─── UPDATE PROFILE ──────────────────────────────────────────────────────────
+app.put("/profile", async (req, res) => {
+  try {
+    const email = requestEmail(req);
+
+    if (!email) {
+      return res.status(401).json({
+        success: false,
+        message: "Please login first."
+      });
+    }
+
+    const { name, phone, addresses } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found."
+      });
+    }
+
+    if (typeof name === "string") {
+      user.name = name.trim();
+    }
+
+    if (typeof phone === "string") {
+      user.phone = phone.trim();
+    }
+
+    if (Array.isArray(addresses)) {
+      user.addresses = addresses;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully.",
+      user: {
+        id: user._id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        addresses: user.addresses || []
+      }
+    });
+
+  } catch (error) {
+    console.error("Profile update error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error."
+    });
+  }
+});
 });
 app.post("/forgot-password", async (req, res) => {
   try {
