@@ -310,7 +310,7 @@
     .insta-tile:after { content:"@houseofrivayat"; font-size: 11px; position:absolute; bottom:10px; opacity:.75; }
 
     .footer { background: var(--black); color: rgba(255,255,255,.78); padding: 54px 0 22px; margin-top: 40px; }
-    .footer-grid { display:grid; grid-template-columns: 1.2fr repeat(3,1fr); gap: 28px; }
+    .footer-grid { display:grid; grid-template-columns: 1.3fr repeat(4,1fr); gap: 24px; }
     .footer h3, .footer h4 { color:#fff; margin: 0 0 14px; }
     .footer a { display:block; margin: 9px 0; color: rgba(255,255,255,.66); }
     .footer a:hover { color:#fff; }
@@ -461,7 +461,8 @@
         <p><strong>Email:</strong> houseofrivayat@gmail.com<br><strong>WhatsApp:</strong> +91 80041 09305</p>
       </div>
       <div><h4>Shop</h4><a href="#/shop">All Products</a><a href="#/wishlist">Wishlist</a><a href="#/cart">Cart</a><a href="#/orders">My Orders</a></div>
-      <div><h4>Brand</h4><a href="#/about">About Us</a><a href="#/contact">Contact</a><a href="https://instagram.com/houseofrivayat" target="_blank">Instagram</a><a href="https://facebook.com/houseofrivayat" target="_blank">Facebook</a></div>
+      <div><h4>Brand</h4><a href="#/about">About Us</a><a href="#/contact">Contact</a><a href="https://rivayat.shop/" target="_blank">Rivayat Store</a><a href="https://instagram.com/houseofrivayat" target="_blank">Instagram</a></div>
+      <div><h4>Creators</h4><a href="https://swastikshukla.netlify.app/" target="_blank">Swastik Shukla</a><a href="https://github.com/SwastikShukla006" target="_blank">Swastik GitHub</a><a href="https://my-portfolio-blond-delta-39.vercel.app" target="_blank">Shashvat Shukla</a><a href="https://github.com/shashvatshukla-coder" target="_blank">Shashvat GitHub</a></div>
       <div><h4>Legal</h4><a href="#/privacy">Privacy Policy</a><a href="#/terms">Terms & Conditions</a><a href="#/refund">Refund & Cancellation</a></div>
     </div>
     <div class="container" style="border-top:1px solid var(--line-dark);margin-top:32px;padding-top:18px;color:rgba(255,255,255,.52);font-size:13px">© <span id="year"></span> RIVAYAT Fashion. All rights reserved.</div>
@@ -531,9 +532,11 @@
     ];
 
     const APP_VERSION = 'rivayat-main-website-v4-security-email-telegram-growth';
+   const API_BASE_URL = localStorage.getItem('rivayat_api_base_url')
+     || (location.protocol === 'file:' ? 'http://localhost:3000' : 'https://rivayat.onrender.com');
    const CONFIG = {
-  apiBaseUrl: 'https://rivayat.onrender.com',
-  ordersApiUrl: 'https://rivayat.onrender.com/orders',
+  apiBaseUrl: API_BASE_URL,
+  ordersApiUrl: `${API_BASE_URL}/orders`,
   razorpayKey: ''
 };
 
@@ -874,32 +877,58 @@
         } catch(err) { throw new Error(err.message || 'Signup failed'); }
       },
       async forgotPassword(email) {
-        const data = await apiFetch('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-        return data.message || 'Reset code sent.';
+        try {
+          const data = await apiFetch('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+          if (data.resetCode) return data.message || `Reset code: ${data.resetCode}`;
+          return data.message || 'Reset code sent.';
+        } catch (error) {
+          const cleanEmail = String(email || '').toLowerCase().trim();
+          const localUser = db.get('rivayat_users', []).find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+          if (!localUser) throw new Error(error.message || 'Reset request failed');
+          const code = String(Math.floor(100000 + Math.random() * 900000));
+          sessionStorage.setItem('rivayat_reset_request', JSON.stringify({ email: cleanEmail, code, expiresAt: Date.now() + 15 * 60 * 1000 }));
+          return `Local reset code: ${code}`;
+        }
       },
       async resetPassword(email, code, password) {
-        const data = await apiFetch('/reset-password', { method: 'POST', body: JSON.stringify({ email, code, password }) });
-        return data.message || 'Password updated.';
-      }
-    };
-async function updateProfile(data) {
-    const response = await fetch(`${API}/profile`, {
-        method: "PUT",
-        headers: {
+        try {
+          const data = await apiFetch('/reset-password', { method: 'POST', body: JSON.stringify({ email, code, password }) });
+          return data.message || 'Password updated.';
+        } catch (error) {
+          const cleanEmail = String(email || '').toLowerCase().trim();
+          const reset = JSON.parse(sessionStorage.getItem('rivayat_reset_request') || 'null');
+          if (!reset || reset.email !== cleanEmail || reset.code !== String(code || '').trim() || reset.expiresAt < Date.now()) {
+            throw new Error(error.message || 'Invalid or expired reset code');
+          }
+          const users = db.get('rivayat_users', []);
+          const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+          if (!user) throw new Error(error.message || 'Account not found');
+          user.password = password;
+          db.set('rivayat_users', users);
+          sessionStorage.removeItem('rivayat_reset_request');
+          return 'Password updated locally. You can login now.';
+        }
+      },
+      async updateProfile(data) {
+        const response = await fetch(`${API}/profile`, {
+          method: "PUT",
+          headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${Storage.token()}`
-        },
-        body: JSON.stringify(data)
-    });
+          },
+          body: JSON.stringify(data)
+        });
 
-    const result = await response.json();
+        const result = await response.json();
 
-    if (!response.ok) {
-        throw new Error(result.message || "Profile update failed");
-    }
+        if (!response.ok) {
+          throw new Error(result.message || "Profile update failed");
+        }
 
-    return result.user;
-}
+        return result.user;
+      }
+    };
+
     const OrderService = {
       async list(options={}) {
         await sleep();
@@ -1264,6 +1293,16 @@ async function updateProfile(data) {
       return `<section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">People Behind RIVAYAT</h2><p>Elegant founder and team cards for brand trust and premium storytelling.</p></div></div><div class="grid grid-4">${people.map(p=>`<div class="card founder-card"><div class="avatar">${p[3]}</div><div><h3 style="margin:0">${p[0]}</h3><p class="muted" style="margin:5px 0 8px">${p[1]}</p><span class="pill">${p[2]}</span></div></div>`).join('')}</div></div></section>`;
     }
 
+    function renderFoundersSection() {
+      const people = [
+        { name: 'Shashvat Shukla', role: 'Founder', tag: 'Portfolio', initials: 'SS', links: [['Portfolio','https://my-portfolio-blond-delta-39.vercel.app'], ['GitHub','https://github.com/shashvatshukla-coder'], ['LinkedIn','https://www.linkedin.com/in/shashvat-shukla-03225b397']] },
+        { name: 'Swastik Shukla', role: 'Manager', tag: 'Developer', initials: 'SS', links: [['Portfolio','https://swastikshukla.netlify.app/'], ['Rivayat','https://rivayat.shop/'], ['GitHub','https://github.com/SwastikShukla006'], ['LinkedIn','https://www.linkedin.com/in/swastikshukla009'], ['Instagram','https://www.instagram.com/swastik_shukla__/'], ['Email','mailto:swastikshukla522@gmail.com']] },
+        { name: 'Navneet Tiwari', role: 'Operations Head', tag: '@_navneet006', initials: 'NT', links: [] },
+        { name: 'Shantanu Shukla', role: 'Business Team', tag: 'Team', initials: 'ST', links: [] }
+      ];
+      return `<section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">People Behind RIVAYAT</h2><p>Meet the team and creators building the RIVAYAT shopping experience.</p></div></div><div class="grid grid-4">${people.map(p=>`<div class="card founder-card"><div class="avatar">${p.initials}</div><div><h3 style="margin:0">${p.name}</h3><p class="muted" style="margin:5px 0 8px">${p.role}</p><span class="pill">${p.tag}</span>${p.links.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${p.links.map(([label,url])=>`<a class="btn ghost small" target="_blank" href="${url}">${label}</a>`).join('')}</div>` : ''}</div></div>`).join('')}</div></div></section>`;
+    }
+
     async function renderShop() {
       setSEO('Shop Collection', 'Shop RIVAYAT launch collection: black half pant, white half pant, and full pant.');
       const params = new URLSearchParams(location.hash.split('?')[1] || '');
@@ -1553,10 +1592,21 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
     }
     async function deleteProduct(id) { if(confirm('Delete this product from the catalogue?')) { await ProductService.remove(id); toast('Product deleted'); render(); } }
     function adminOrders(orders) {
-      return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Manage Orders</h1><p>Search orders, filter by status/date, change status, export CSV, and use Telegram backend notifications.</p></div></div><div class="card pad"><div class="mini-filter"><input class="input" id="orderSearchInput" oninput="filterAdminOrders()" placeholder="Search order/customer/phone"><select class="select" id="orderStatusFilter" onchange="filterAdminOrders()"><option value="All">All Status</option>${ORDER_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select><input class="input" id="orderDateFilter" type="date" onchange="filterAdminOrders()"><button class="btn secondary" onclick="document.getElementById('orderSearchInput').value='';document.getElementById('orderStatusFilter').value='All';document.getElementById('orderDateFilter').value='';filterAdminOrders()">Clear</button><button class="btn" onclick="exportOrdersCSV()">Export CSV</button></div></div><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Change Status</th><th>WhatsApp</th></tr></thead><tbody>${orders.map(o=>`<tr class="admin-order-row" data-search="${escapeHtml((o.id + ' ' + o.customer.name + ' ' + o.customer.phone + ' ' + o.customer.email).toLowerCase())}" data-status="${o.status}" data-date="${new Date(o.createdAt).toISOString().slice(0,10)}"><td><strong>${o.id}</strong><br><span class="muted">${new Date(o.createdAt).toLocaleString('en-IN')}</span></td><td>${escapeHtml(o.customer.name)}<br><span class="muted">${escapeHtml(o.customer.phone)}</span></td><td>${money(o.total)}</td><td><span class="status ${o.status}">${o.status}</span></td><td><select class="select" onchange="adminStatus('${o.id}', this.value)">${ORDER_STATUSES.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></td><td><a class="btn secondary small" target="_blank" href="https://wa.me/${(o.customer.phone || '').replace(/\D/g,'')}?text=${orderWhatsAppText(o)}">Customer</a><br><a class="btn ghost small" style="margin-top:6px" target="_blank" href="https://wa.me/${BRAND.whatsappDigits}?text=${orderWhatsAppText(o)}">Admin</a></td></tr>`).join('')}</tbody></table></div></div>`;
+      return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Manage Orders</h1><p>Search orders, filter by status/date, change status, export CSV, and use Telegram backend notifications.</p></div></div><div class="card pad"><div class="mini-filter"><input class="input" id="orderSearchInput" oninput="filterAdminOrders()" placeholder="Search order/customer/phone"><select class="select" id="orderStatusFilter" onchange="filterAdminOrders()"><option value="All">All Status</option>${ORDER_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select><input class="input" id="orderDateFilter" type="date" onchange="filterAdminOrders()"><button class="btn secondary" onclick="document.getElementById('orderSearchInput').value='';document.getElementById('orderStatusFilter').value='All';document.getElementById('orderDateFilter').value='';filterAdminOrders()">Clear</button><button class="btn" onclick="exportOrdersCSV()">Export CSV</button><button class="btn secondary" onclick="testTelegram()">Test Telegram</button></div><div id="telegramMsg" class="muted" style="margin-top:10px"></div></div><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Change Status</th><th>WhatsApp</th></tr></thead><tbody>${orders.map(o=>`<tr class="admin-order-row" data-search="${escapeHtml((o.id + ' ' + o.customer.name + ' ' + o.customer.phone + ' ' + o.customer.email).toLowerCase())}" data-status="${o.status}" data-date="${new Date(o.createdAt).toISOString().slice(0,10)}"><td><strong>${o.id}</strong><br><span class="muted">${new Date(o.createdAt).toLocaleString('en-IN')}</span></td><td>${escapeHtml(o.customer.name)}<br><span class="muted">${escapeHtml(o.customer.phone)}</span></td><td>${money(o.total)}</td><td><span class="status ${o.status}">${o.status}</span></td><td><select class="select" onchange="adminStatus('${o.id}', this.value)">${ORDER_STATUSES.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></td><td><a class="btn secondary small" target="_blank" href="https://wa.me/${(o.customer.phone || '').replace(/\D/g,'')}?text=${orderWhatsAppText(o)}">Customer</a><br><a class="btn ghost small" style="margin-top:6px" target="_blank" href="https://wa.me/${BRAND.whatsappDigits}?text=${orderWhatsAppText(o)}">Admin</a></td></tr>`).join('')}</tbody></table></div></div>`;
     }
     function filterAdminOrders() { const q = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim(); const status = document.getElementById('orderStatusFilter')?.value || 'All'; const date = document.getElementById('orderDateFilter')?.value || ''; document.querySelectorAll('.admin-order-row').forEach(row => { const okSearch = !q || row.dataset.search.includes(q); const okStatus = status === 'All' || row.dataset.status === status; const okDate = !date || row.dataset.date === date; row.style.display = okSearch && okStatus && okDate ? '' : 'none'; }); }
     async function adminStatus(id, status) { await OrderService.updateStatus(id, status); toast('Order status updated'); render(); }
+    async function testTelegram() {
+      const msg = document.getElementById('telegramMsg');
+      try {
+        const message = await TelegramService.test();
+        if (msg) msg.innerHTML = `<span class="success-text">${message}</span>`;
+        toast('Telegram test sent');
+      } catch (error) {
+        if (msg) msg.innerHTML = `<span class="error">${error.message}</span>`;
+        toast(error.message);
+      }
+    }
     function adminReturns(requests) { return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Returns & Exchanges</h1><p>Approve, reject, or resolve customer return/exchange requests.</p></div></div><div class="table-wrap"><table><thead><tr><th>Request</th><th>Order</th><th>Customer</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead><tbody>${requests.map(r=>`<tr><td><strong>${r.type}</strong><br><span class="muted">${new Date(r.createdAt).toLocaleString('en-IN')}</span></td><td>${r.orderId}</td><td>${escapeHtml(r.customer?.name || '-')}<br><span class="muted">${escapeHtml(r.customer?.phone || '')}</span></td><td>${escapeHtml(r.reason || '-')}</td><td><span class="request-badge">${r.status}</span></td><td><select class="select" onchange="returnStatus('${r.id}', this.value)">${RETURN_STATUSES.map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div></div>`; }
     async function returnStatus(id, status) { await ReturnService.updateStatus(id, status); toast('Request updated'); render(); }
     function adminHomepage(home) { return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Homepage Banner</h1><p>Edit hero title, subtitle, offer text, buttons, and image without touching code.</p></div></div><div class="grid grid-2"><form class="card pad grid" onsubmit="saveHomepage(event)"><label>Small Pill Text<input class="input" name="heroPill" value="${escapeHtml(home.heroPill)}"></label><label>Hero Title<input class="input" name="heroTitle" value="${escapeHtml(home.heroTitle)}"></label><label>Hero Subtitle<textarea class="textarea" name="heroSubtitle">${escapeHtml(home.heroSubtitle)}</textarea></label><label>Hero Offer<input class="input" name="heroOffer" value="${escapeHtml(home.heroOffer)}"></label><label>Primary Button<input class="input" name="primaryButtonText" value="${escapeHtml(home.primaryButtonText)}"></label><label>Secondary Button<input class="input" name="secondaryButtonText" value="${escapeHtml(home.secondaryButtonText)}"></label><label>Hero Image URL<input class="input" name="heroImage" value="${escapeHtml(home.heroImage || '')}"></label><label>Upload Hero Image<input class="input" name="heroImageFile" type="file" accept="image/*"></label><button class="btn">Save Homepage</button></form><div class="card pad"><h2>Preview</h2><div class="hero-preview"><img src="${home.heroImage || ASSETS.blackModel}" alt="Homepage preview"></div><h3 class="serif" style="font-size:38px">${escapeHtml(home.heroTitle)}</h3><p class="muted">${escapeHtml(home.heroSubtitle)}</p></div></div></div>`; }
