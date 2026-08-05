@@ -1406,13 +1406,60 @@
       </div></div></div>`;
     }
     async function handleAuth(event, mode) {
-      event.preventDefault(); const fd = new FormData(event.target); const msg = document.getElementById('authMsg');
-      try { if (mode === 'forgot') { msg.innerHTML = '<span class="success-text">Password reset request submitted. Our team will contact you shortly.</span>'; return; }
-        const user = mode === 'signup' ? await AuthService.signup({ name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone'), password: fd.get('password') }) : await AuthService.login(fd.get('email'), fd.get('password'));
-        toast(`Logged in as ${user.name}`); go(user.role === 'admin' ? '#/admin' : '#/dashboard');
-      } catch(e) { msg.innerHTML = `<span class="error">${e.message}</span>`; }
-    }
+    event.preventDefault();
 
+    const fd = new FormData(event.target);
+    const msg = document.getElementById("authMsg");
+
+    try {
+
+        if (mode === "forgot") {
+
+            const email = String(fd.get("email") || "").trim().toLowerCase();
+
+            if (!email) {
+                msg.innerHTML = `<span class="error">Please enter your email.</span>`;
+                return;
+            }
+
+            const response = await fetch(`${API}/forgot-password`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email })
+            });
+
+            const result = await response.json();
+
+            msg.innerHTML = `<span class="success-text">${result.message}</span>`;
+
+            return;
+        }
+
+        const user =
+            mode === "signup"
+                ? await AuthService.signup({
+                    name: fd.get("name"),
+                    email: fd.get("email"),
+                    phone: fd.get("phone"),
+                    password: fd.get("password")
+                })
+                : await AuthService.login(
+                    fd.get("email"),
+                    fd.get("password")
+                );
+
+        toast(`Logged in as ${user.name}`);
+
+        go(user.role === "admin" ? "#/admin" : "#/dashboard");
+
+    } catch (e) {
+
+        msg.innerHTML = `<span class="error">${e.message}</span>`;
+
+    }
+}
     async function renderDashboard(tab='profile') {
       setSEO('User Dashboard', 'Manage RIVAYAT profile, addresses, wishlist, and orders.');
       if (!auth.user) return renderAuth('login');
