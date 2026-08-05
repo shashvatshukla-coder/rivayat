@@ -532,8 +532,8 @@
 
     const APP_VERSION = 'rivayat-main-website-v4-security-email-telegram-growth';
    const CONFIG = {
-  apiBaseUrl: 'https://rivayat-webservice.onrender.com',
-  ordersApiUrl: 'https://rivayat-webservice.onrender.com/orders',
+  apiBaseUrl: 'https://rivayat.onrender.com',
+  ordersApiUrl: 'https://rivayat.onrender.com/orders',
   razorpayKey: ''
 };
 
@@ -560,18 +560,18 @@
           this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
           this.set('rivayat_newsletter_leads', []);
           this.set('rivayat_referrals', []);
-          localStorage.removeItem('https://rivayat-webservice.onrender.com/auth');
-          localStorage.removeItem('https://rivayat-webservice.onrender.com/cart');
-          localStorage.removeItem('https://rivayat-webservice.onrender.com/wishlist');
-          localStorage.removeItem('https://rivayat-webservice.onrender.com/recent');
+          localStorage.removeItem('https://rivayat.onrender.com/auth');
+          localStorage.removeItem('https://rivayat.onrender.com/cart');
+          localStorage.removeItem('https://rivayat.onrender.com/wishlist');
+          localStorage.removeItem('https://https://rivayat.onrender.com/recent');
           localStorage.setItem('rivayat_app_version', APP_VERSION);
           return;
         }
-        if (!localStorage.getItem('https://rivayat-webservice.onrender.com/products')) this.set('https://rivayat-webservice.onrender.com/products', INITIAL_PRODUCTS);
-        if (!localStorage.getItem('https://rivayat-webservice.onrender.com/coupons')) this.set('https://rivayat-webservice.onrender.com/coupons', INITIAL_COUPONS);
-        if (!localStorage.getItem('https://rivayat-webservice.onrender.com/orders')) this.set('https://rivayat-webservice.onrender.com/orders', INITIAL_ORDERS);
-        if (!localStorage.getItem('https://rivayat-webservice.onrender.com/users')) this.set('https://rivayat-webservice.onrender.com/users', INITIAL_USERS);
-        if (!localStorage.getItem('https://rivayat-webservice.onrender.com/reviews')) this.set('https://rivayat-webservice.onrender.com/reviews', INITIAL_REVIEWS);
+        if (!localStorage.getItem('https://https://rivayat.onrender.com/products')) this.set('https://https://rivayat.onrender.com/products', INITIAL_PRODUCTS);
+        if (!localStorage.getItem('https://https://rivayat.onrender.com/coupons')) this.set('https://https://rivayat.onrender.com/coupons', INITIAL_COUPONS);
+        if (!localStorage.getItem('https://https://rivayat.onrender.com/orders')) this.set('https://https://rivayat.onrender.com/orders', INITIAL_ORDERS);
+        if (!localStorage.getItem('https://https://rivayat.onrender.com/users')) this.set('https://https://rivayat.onrender.com/users', INITIAL_USERS);
+        if (!localStorage.getItem('https://https://rivayat.onrender.com/reviews')) this.set('https://https://rivayat.onrender.com/reviews', INITIAL_REVIEWS);
         if (!localStorage.getItem('rivayat_returns')) this.set('rivayat_returns', []);
         if (!localStorage.getItem('rivayat_homepage_settings')) this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
         if (!localStorage.getItem('rivayat_newsletter_leads')) this.set('rivayat_newsletter_leads', []);
