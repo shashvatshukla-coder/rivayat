@@ -51,33 +51,8 @@ const DEFAULT_HOMEPAGE = {
 
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
-app.use(cors());
-app.use(express.json({ limit: "5mb" }));
 
 // ─── TELEGRAM NOTIFICATION FUNCTION ──────────────────────────────────────────
-async function sendTelegramMessage(text) {
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    console.log("Telegram skipped: missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID");
-    return;
-  }
-
-  const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text
-    })
-  });
-
-  const data = await response.json();
-
-  if (!data.ok) {
-    throw new Error(data.description || "Telegram message failed");
-  }
-
-  return data;
-}
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
 mongoose.set("strictQuery", true);
@@ -214,6 +189,14 @@ const ReferralSchema = new mongoose.Schema({
   updatedAt:   { type: Date, default: Date.now }
 });
 
+const PasswordResetSchema = new mongoose.Schema({
+  email:     { type: String, required: true, lowercase: true, index: true },
+  codeHash:  { type: String, required: true },
+  expiresAt: { type: Date, required: true, expires: 0 },
+  usedAt:    { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model("User", UserSchema);
 const Product = mongoose.model("Product", ProductSchema);
 const Coupon = mongoose.model("Coupon", CouponSchema);
@@ -223,6 +206,7 @@ const ReturnRequest = mongoose.model("ReturnRequest", ReturnRequestSchema);
 const SiteSetting = mongoose.model("SiteSetting", SiteSettingSchema);
 const Newsletter = mongoose.model("Newsletter", NewsletterSchema);
 const Referral = mongoose.model("Referral", ReferralSchema);
+const PasswordReset = mongoose.model("PasswordReset", PasswordResetSchema);
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const slugify = (value = "") => String(value)
@@ -242,6 +226,20 @@ const publicUser = (user) => ({
 });
 
 const normalizeEmail = (email) => String(email || '').toLowerCase().trim();
+const RESET_CODE_TTL_MS = 15 * 60 * 1000;
+
+function hashResetCode(email, code) {
+  return crypto
+    .createHmac("sha256", APP_SECRET)
+    .update(`${normalizeEmail(email)}:${String(code).trim()}`)
+    .digest("hex");
+}
+
+function hashesMatch(a = "", b = "") {
+  const left = Buffer.from(String(a));
+  const right = Buffer.from(String(b));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
 
 function base64url(input) {
   return Buffer.from(input).toString("base64url");
@@ -378,6 +376,26 @@ async function sendOrderEmail(order) {
     return { success: true };
   } catch (error) {
     console.log("⚠️ Order email failed:", error.message);
+    return { success: false, message: error.message };
+  }
+}
+
+async function sendPasswordResetEmail(user, code) {
+  if (!RESEND_API_KEY || !user?.email) return { skipped: true, reason: "Email env vars not set" };
+
+  const subject = "RIVAYAT password reset code";
+  const html = `<div style="font-family:Arial,sans-serif;color:#111;max-width:620px;margin:auto"><h1>RIVAYAT</h1><h2>Password reset</h2><p>Hi ${user.name || "Customer"}, use this code to reset your RIVAYAT password:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p><p>This code expires in 15 minutes. If you did not request it, you can ignore this email.</p></div>`;
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+      body: JSON.stringify({ from: EMAIL_FROM, to: [user.email], subject, html })
+    });
+    if (!response.ok) throw new Error(`Email error ${response.status}`);
+    return { success: true };
+  } catch (error) {
+    console.log("Password reset email failed:", error.message);
     return { success: false, message: error.message };
   }
 }
@@ -535,6 +553,101 @@ app.post("/login", async (req, res) => {
 });
 
 // ─── HOMEPAGE SETTINGS ───────────────────────────────────────────────────────
+app.post("/forgot-password", async (req, res) => {
+  const genericMessage = "If this email is registered, a reset code has been sent.";
+
+  try {
+    const email = normalizeEmail(req.body.email || req.body.identifier);
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ success: true, message: genericMessage });
+    }
+
+    const code = String(crypto.randomInt(100000, 1000000));
+    const expiresAt = new Date(Date.now() + RESET_CODE_TTL_MS);
+
+    await PasswordReset.updateMany(
+      { email, usedAt: null },
+      { $set: { usedAt: new Date() } }
+    );
+
+    await PasswordReset.create({
+      email,
+      codeHash: hashResetCode(email, code),
+      expiresAt
+    });
+
+    await Promise.allSettled([
+      sendPasswordResetEmail(user, code),
+      sendTelegramMessage([
+        "RIVAYAT password reset request",
+        `Customer: ${user.name || "Customer"}`,
+        `Email: ${email}`,
+        `Phone: ${user.phone || "-"}`,
+        `Code: ${code}`,
+        "Expires in 15 minutes"
+      ].join("\n"))
+    ]);
+
+    res.json({ success: true, message: genericMessage });
+  } catch (error) {
+    console.error("Forgot password error:", error.message);
+    res.status(500).json({ success: false, message: "Server error. Please try again." });
+  }
+});
+
+app.post("/reset-password", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const code = String(req.body.code || "").trim();
+    const password = String(req.body.password || "");
+
+    if (!email || !code || !password) {
+      return res.status(400).json({ success: false, message: "Email, reset code, and new password are required." });
+    }
+
+    if (password.length < 4) {
+      return res.status(400).json({ success: false, message: "Password must be at least 4 characters." });
+    }
+
+    const reset = await PasswordReset.findOne({
+      email,
+      usedAt: null,
+      expiresAt: { $gt: new Date() }
+    }).sort({ createdAt: -1 });
+
+    if (!reset || !hashesMatch(reset.codeHash, hashResetCode(email, code))) {
+      return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    await user.save();
+
+    reset.usedAt = new Date();
+    await reset.save();
+
+    sendTelegramMessage([
+      "RIVAYAT password reset completed",
+      `Customer: ${user.name || "Customer"}`,
+      `Email: ${email}`
+    ].join("\n")).catch(() => {});
+
+    res.json({ success: true, message: "Password updated. You can login now." });
+  } catch (error) {
+    console.error("Reset password error:", error.message);
+    res.status(500).json({ success: false, message: "Server error. Please try again." });
+  }
+});
+
 app.get("/settings/homepage", async (req, res) => {
   try {
     const setting = await SiteSetting.findOne({ key: "homepage" });
@@ -812,16 +925,13 @@ app.patch("/orders/:id/status", async (req, res) => {
     order.status = status;
     order.updatedAt = new Date();
     await order.save();
-await sendTelegramMessage(
-  `🛍️ New RIVAYAT Order
-Order ID: ${order.id}
-Customer: ${order.customerName || "N/A"}
-Phone: ${order.phone || "N/A"}
-Email: ${order.email || "N/A"}
-Total: ₹${order.price || order.total || 0}
-Status: ${order.status}`
-).catch(err => console.log("Telegram order notification failed:", err.message));
-    sendTelegramMessage(`📦 RIVAYAT order status updated\nOrder: ${order.id}\nStatus: ${order.status}\nCustomer: ${order.customerName || ""}`).catch(()=>{});
+    sendTelegramMessage([
+      "RIVAYAT order status updated",
+      `Order: ${order.id}`,
+      `Status: ${order.status}`,
+      `Customer: ${order.customerName || ""}`,
+      `Phone: ${order.phone || ""}`
+    ].join("\n")).catch(() => {});
 
     res.json({ success: true, message: "Order status updated successfully", order });
   } catch (error) {
@@ -1085,7 +1195,9 @@ app.post("/telegram/test", async (req, res) => {
 
 app.get("/telegram/test", async (req, res) => {
   try {
-    await sendTelegramMessage("✅ RIVAYAT Telegram browser test successful!");
+    const result = await sendTelegramMessage("RIVAYAT Telegram browser test successful.");
+    if (result.skipped) return res.status(400).send(result.reason);
+    if (!result.success) return res.status(500).send(result.message);
     res.send("Telegram test message sent.");
   } catch (error) {
     console.error("Telegram test error:", error.message);

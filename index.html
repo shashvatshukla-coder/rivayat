@@ -872,6 +872,14 @@
           users.push(user); db.set('rivayat_users', users);
           auth.user = user; save(); return user;
         } catch(err) { throw new Error(err.message || 'Signup failed'); }
+      },
+      async forgotPassword(email) {
+        const data = await apiFetch('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+        return data.message || 'Reset code sent.';
+      },
+      async resetPassword(email, code, password) {
+        const data = await apiFetch('/reset-password', { method: 'POST', body: JSON.stringify({ email, code, password }) });
+        return data.message || 'Password updated.';
       }
     };
 
@@ -1099,6 +1107,13 @@
         await sleep();
         if (CONFIG.apiBaseUrl) { const data = await apiFetch('/referrals'); return data.referrals || []; }
         return db.get('rivayat_referrals', []);
+      }
+    };
+
+    const TelegramService = {
+      async test() {
+        const data = await apiFetch('/telegram/test', { method: 'POST', body: JSON.stringify({}) });
+        return data.message || 'Telegram test message sent.';
       }
     };
 
@@ -1394,72 +1409,47 @@
     function renderAuth(mode='login') {
       setSEO(mode === 'signup' ? 'Signup' : mode === 'forgot' ? 'Forgot Password' : 'Login', 'RIVAYAT account login and signup.');
       const isSignup = mode === 'signup'; const isForgot = mode === 'forgot';
-      return `<div class="page section"><div class="container auth-shell"><div class="card pad"><span class="pill">RIVAYAT Account</span><h1 class="serif" style="font-size:54px;margin:18px 0 8px">${isSignup ? 'Create account' : isForgot ? 'Reset password' : 'Welcome back'}</h1><p class="muted">${isForgot ? 'Enter your email and our team will help you reset your password.' : 'Use your registered email/username and password.'}</p>
+      return `<div class="page section"><div class="container auth-shell"><div class="card pad"><span class="pill">RIVAYAT Account</span><h1 class="serif" style="font-size:54px;margin:18px 0 8px">${isSignup ? 'Create account' : isForgot ? 'Reset password' : 'Welcome back'}</h1><p class="muted">${isForgot ? 'Enter your email to receive a reset code.' : 'Use your registered email/username and password.'}</p>
         <form onsubmit="handleAuth(event,'${mode}')" class="grid" style="margin-top:18px">
+          ${isForgot ? '<input type="hidden" name="stage" value="request">' : ''}
           ${isSignup ? '<label>Name<input class="input" name="name" required></label><label>Phone<input class="input" name="phone" required pattern="[0-9]{10}"></label>' : ''}
-          <label>${isSignup ? 'Email' : 'Email or Username'}<input class="input" type="${isSignup ? 'email' : 'text'}" name="email" required></label>
+          <label>${isSignup || isForgot ? 'Email' : 'Email or Username'}<input class="input" type="${isSignup || isForgot ? 'email' : 'text'}" name="email" required></label>
+          ${isForgot ? '<div id="resetFields" class="grid" style="display:none"><label>Reset Code<input class="input" name="code" inputmode="numeric" pattern="[0-9]{6}"></label><label>New Password<input class="input" type="password" name="password" minlength="4"></label><label>Confirm Password<input class="input" type="password" name="confirmPassword" minlength="4"></label></div>' : ''}
           ${!isForgot ? '<label>Password<input class="input" type="password" name="password" required minlength="4"></label>' : ''}
-          <button class="btn full">${isSignup ? 'Sign Up' : isForgot ? 'Send Reset Link' : 'Login'}</button>
+          <button class="btn full" id="authSubmitBtn">${isSignup ? 'Sign Up' : isForgot ? 'Send Reset Code' : 'Login'}</button>
           <div id="authMsg"></div>
         </form>
-        <div class="divider"></div><p class="muted">${isSignup ? 'Already have an account?' : 'New here?'} <a class="accent" href="${isSignup ? '#/login' : '#/signup'}">${isSignup ? 'Login' : 'Create Account'}</a>${!isForgot ? ' • <a class="accent" href="#/forgot-password">Forgot Password?</a>' : ''}</p>
+        <div class="divider"></div><p class="muted">${isSignup ? 'Already have an account?' : isForgot ? 'Remembered it?' : 'New here?'} <a class="accent" href="${isSignup || isForgot ? '#/login' : '#/signup'}">${isSignup || isForgot ? 'Login' : 'Create Account'}</a>${!isForgot ? ' • <a class="accent" href="#/forgot-password">Forgot Password?</a>' : ''}</p>
       </div></div></div>`;
     }
     async function handleAuth(event, mode) {
-    event.preventDefault();
-
-    const fd = new FormData(event.target);
-    const msg = document.getElementById("authMsg");
-
-    try {
-
-        if (mode === "forgot") {
-
-            const email = String(fd.get("email") || "").trim().toLowerCase();
-
-            if (!email) {
-                msg.innerHTML = `<span class="error">Please enter your email.</span>`;
-                return;
-            }
-
-            const response = await fetch(`${API}/forgot-password`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ email })
-            });
-
-            const result = await response.json();
-
-            msg.innerHTML = `<span class="success-text">${result.message}</span>`;
-
-            return;
+      event.preventDefault(); const fd = new FormData(event.target); const msg = document.getElementById('authMsg');
+      try { if (mode === 'forgot') {
+        const email = String(fd.get('email') || '').trim();
+        const stage = String(fd.get('stage') || 'request');
+        if (stage === 'request') {
+          const message = await AuthService.forgotPassword(email);
+          event.target.querySelector('[name="stage"]').value = 'reset';
+          document.getElementById('resetFields').style.display = 'grid';
+          document.getElementById('authSubmitBtn').textContent = 'Reset Password';
+          msg.innerHTML = `<span class="success-text">${message}</span>`;
+          toast('Reset code sent');
+          return;
         }
-
-        const user =
-            mode === "signup"
-                ? await AuthService.signup({
-                    name: fd.get("name"),
-                    email: fd.get("email"),
-                    phone: fd.get("phone"),
-                    password: fd.get("password")
-                })
-                : await AuthService.login(
-                    fd.get("email"),
-                    fd.get("password")
-                );
-
-        toast(`Logged in as ${user.name}`);
-
-        go(user.role === "admin" ? "#/admin" : "#/dashboard");
-
-    } catch (e) {
-
-        msg.innerHTML = `<span class="error">${e.message}</span>`;
-
+        const password = String(fd.get('password') || '');
+        const confirmPassword = String(fd.get('confirmPassword') || '');
+        if (password !== confirmPassword) throw new Error('Passwords do not match');
+        const message = await AuthService.resetPassword(email, fd.get('code'), password);
+        msg.innerHTML = `<span class="success-text">${message}</span>`;
+        toast('Password updated');
+        setTimeout(() => go('#/login'), 900);
+        return;
+      }
+        const user = mode === 'signup' ? await AuthService.signup({ name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone'), password: fd.get('password') }) : await AuthService.login(fd.get('email'), fd.get('password'));
+        toast(`Logged in as ${user.name}`); go(user.role === 'admin' ? '#/admin' : '#/dashboard');
+      } catch(e) { msg.innerHTML = `<span class="error">${e.message}</span>`; }
     }
-}
+
     async function renderDashboard(tab='profile') {
       setSEO('User Dashboard', 'Manage RIVAYAT profile, addresses, wishlist, and orders.');
       if (!auth.user) return renderAuth('login');
