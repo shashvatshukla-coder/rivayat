@@ -527,11 +527,7 @@
 
     const INITIAL_ORDERS = [];
 
-    const INITIAL_USERS = [
-      { id: 'admin1', username: 'Ojas_Daddy', name: 'Rivayat Owner', email: 'owner@rivayat.in', phone: '8004109305', role: 'admin', password: 'Puppylampojasdad#9779#', addresses: [] }
-    ];
-
-    const APP_VERSION = 'rivayat-main-website-v4-security-email-telegram-growth';
+    const APP_VERSION = 'rivayat-main-website-v5-secure-auth';
    const API_BASE_URL = localStorage.getItem('rivayat_api_base_url')
      || (location.protocol === 'file:' ? 'http://localhost:3000' : 'https://rivayat.onrender.com');
    const CONFIG = {
@@ -557,24 +553,28 @@
           this.set('rivayat_products', INITIAL_PRODUCTS);
           this.set('rivayat_coupons', INITIAL_COUPONS);
           this.set('rivayat_orders', INITIAL_ORDERS);
-          this.set('rivayat_users', INITIAL_USERS);
           this.set('rivayat_reviews', INITIAL_REVIEWS);
           this.set('rivayat_returns', []);
           this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
           this.set('rivayat_newsletter_leads', []);
           this.set('rivayat_referrals', []);
+          localStorage.removeItem('rivayat_users');
           localStorage.removeItem('https://rivayat.onrender.com/auth');
           localStorage.removeItem('https://rivayat.onrender.com/cart');
           localStorage.removeItem('https://rivayat.onrender.com/wishlist');
           localStorage.removeItem('https://https://rivayat.onrender.com/recent');
+          localStorage.removeItem('https://https://rivayat.onrender.com/products');
+          localStorage.removeItem('https://https://rivayat.onrender.com/coupons');
+          localStorage.removeItem('https://https://rivayat.onrender.com/orders');
+          localStorage.removeItem('https://https://rivayat.onrender.com/users');
+          localStorage.removeItem('https://https://rivayat.onrender.com/reviews');
           localStorage.setItem('rivayat_app_version', APP_VERSION);
           return;
         }
-        if (!localStorage.getItem('https://https://rivayat.onrender.com/products')) this.set('https://https://rivayat.onrender.com/products', INITIAL_PRODUCTS);
-        if (!localStorage.getItem('https://https://rivayat.onrender.com/coupons')) this.set('https://https://rivayat.onrender.com/coupons', INITIAL_COUPONS);
-        if (!localStorage.getItem('https://https://rivayat.onrender.com/orders')) this.set('https://https://rivayat.onrender.com/orders', INITIAL_ORDERS);
-        if (!localStorage.getItem('https://https://rivayat.onrender.com/users')) this.set('https://https://rivayat.onrender.com/users', INITIAL_USERS);
-        if (!localStorage.getItem('https://https://rivayat.onrender.com/reviews')) this.set('https://https://rivayat.onrender.com/reviews', INITIAL_REVIEWS);
+        if (!localStorage.getItem('rivayat_products')) this.set('rivayat_products', INITIAL_PRODUCTS);
+        if (!localStorage.getItem('rivayat_coupons')) this.set('rivayat_coupons', INITIAL_COUPONS);
+        if (!localStorage.getItem('rivayat_orders')) this.set('rivayat_orders', INITIAL_ORDERS);
+        if (!localStorage.getItem('rivayat_reviews')) this.set('rivayat_reviews', INITIAL_REVIEWS);
         if (!localStorage.getItem('rivayat_returns')) this.set('rivayat_returns', []);
         if (!localStorage.getItem('rivayat_homepage_settings')) this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
         if (!localStorage.getItem('rivayat_newsletter_leads')) this.set('rivayat_newsletter_leads', []);
@@ -589,11 +589,7 @@
     const money = n => '₹' + Number(n || 0).toLocaleString('en-IN');
     const uid = prefix => prefix + '-' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
     const apiHeaders = () => {
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-user-role': auth.user?.role || 'guest',
-        'x-user-email': auth.user?.email || ''
-      };
+      const headers = { 'Content-Type': 'application/json' };
       if (auth.user?.token) headers.Authorization = `Bearer ${auth.user.token}`;
       return headers;
     };
@@ -854,60 +850,26 @@
           auth.user = data.user;
           save();
           return data.user;
-        } catch (apiError) {
-          const localUser = db.get('rivayat_users', []).find(u =>
-            (u.email?.toLowerCase() === String(identifier).toLowerCase() || u.username === identifier) && u.password === password
-          );
-          if (localUser) {
-            const { password: _password, ...safeUser } = localUser;
-            auth.user = safeUser;
-            save();
-            return safeUser;
-          }
-          throw new Error(apiError.message || 'Login failed');
-        }
+        } catch (apiError) { throw new Error(apiError.message || 'Login failed'); }
       },
       async signup(payload) {
         try {
           const data = await apiFetch('/signup', { method: 'POST', body: JSON.stringify({ name: payload.name, email: payload.email, phone: payload.phone, password: payload.password }) });
           const user = { ...data.user, role: data.user.role || 'customer', addresses: data.user.addresses || [], name: payload.name, email: payload.email, phone: payload.phone };
-          const users = db.get('rivayat_users', []);
-          users.push(user); db.set('rivayat_users', users);
           auth.user = user; save(); return user;
         } catch(err) { throw new Error(err.message || 'Signup failed'); }
       },
       async forgotPassword(email) {
         try {
           const data = await apiFetch('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-          if (data.resetCode) return data.message || `Reset code: ${data.resetCode}`;
           return data.message || 'Reset code sent.';
-        } catch (error) {
-          const cleanEmail = String(email || '').toLowerCase().trim();
-          const localUser = db.get('rivayat_users', []).find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
-          if (!localUser) throw new Error(error.message || 'Reset request failed');
-          const code = String(Math.floor(100000 + Math.random() * 900000));
-          sessionStorage.setItem('rivayat_reset_request', JSON.stringify({ email: cleanEmail, code, expiresAt: Date.now() + 15 * 60 * 1000 }));
-          return `Local reset code: ${code}`;
-        }
+        } catch (error) { throw new Error(error.message || 'Reset request failed'); }
       },
       async resetPassword(email, code, password) {
         try {
           const data = await apiFetch('/reset-password', { method: 'POST', body: JSON.stringify({ email, code, password }) });
           return data.message || 'Password updated.';
-        } catch (error) {
-          const cleanEmail = String(email || '').toLowerCase().trim();
-          const reset = JSON.parse(sessionStorage.getItem('rivayat_reset_request') || 'null');
-          if (!reset || reset.email !== cleanEmail || reset.code !== String(code || '').trim() || reset.expiresAt < Date.now()) {
-            throw new Error(error.message || 'Invalid or expired reset code');
-          }
-          const users = db.get('rivayat_users', []);
-          const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
-          if (!user) throw new Error(error.message || 'Account not found');
-          user.password = password;
-          db.set('rivayat_users', users);
-          sessionStorage.removeItem('rivayat_reset_request');
-          return 'Password updated locally. You can login now.';
-        }
+        } catch (error) { throw new Error(error.message || 'Invalid or expired reset code'); }
       },
       async updateProfile(profile) {
         const data = await apiFetch('/profile', {

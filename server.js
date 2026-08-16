@@ -7,22 +7,26 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://AdminRivayat:rivayatfashion@cluster0.wk2qecc.mongodb.net/rivayat?retryWrites=true&w=majority&appName=Cluster0";
-const APP_SECRET = process.env.APP_SECRET || "change-this-rivayat-secret";
+const MONGO_URI = process.env.MONGO_URI || "";
+const APP_SECRET = process.env.APP_SECRET || "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "RIVAYAT <orders@rivayat.in>";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "8446716192";
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
+const ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const ORDER_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
 const RETURN_STATUSES = ["Pending", "Approved", "Rejected", "Resolved"];
-const DEFAULT_ADMIN = {
-  username: process.env.ADMIN_USERNAME || "admin@rivayat",
+const DEFAULT_ADMIN = process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD ? {
+  username: process.env.ADMIN_USERNAME || process.env.ADMIN_EMAIL,
   name: process.env.ADMIN_NAME || "Rivayat Owner",
-  email: (process.env.ADMIN_EMAIL || "owner@rivayat.in").toLowerCase(),
-  phone: process.env.ADMIN_PHONE || "8004109305",
-  password: process.env.ADMIN_PASSWORD || "admin"
-};
+  email: process.env.ADMIN_EMAIL.toLowerCase(),
+  phone: process.env.ADMIN_PHONE || "",
+  password: process.env.ADMIN_PASSWORD
+} : null;
 const DEFAULT_HOMEPAGE = {
   heroPill: "Premium Indian D2C Fashion - Launch Collection",
   heroTitle: "Own Your Vibe with RIVAYAT.",
@@ -38,15 +42,18 @@ const DEFAULT_COUPONS = [
   { id: "c3", code: "LAUNCH20", type: "percent", value: 20, minCart: 999, active: false, expiry: "2027-12-31", description: "20% launch discount above Rs 999" }
 ];
 
-app.use(cors());
+app.disable("x-powered-by");
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error("Origin not allowed by CORS"));
+  }
+}));
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true, limit: "8mb" }));
 app.use(express.static(__dirname));
 
 mongoose.set("strictQuery", true);
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB error:", err.message));
 
 const UserSchema = new mongoose.Schema({
   username: { type: String, unique: true, sparse: true },
@@ -219,10 +226,7 @@ function verifyToken(token = "") {
 }
 function authContext(req) {
   const token = String(req.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  return verifyToken(token) || {
-    role: String(req.get("x-user-role") || "guest").toLowerCase(),
-    email: normalizeEmail(req.get("x-user-email"))
-  };
+  return verifyToken(token) || { role: "guest", email: "" };
 }
 function requireAdmin(req, res) {
   if (authContext(req).role === "admin") return true;
@@ -281,20 +285,22 @@ async function sendEmail({ to, subject, html }) {
   }
 }
 async function ensureDefaultData() {
-  const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
-  if (!existingAdmin) {
-    await User.create({
-      username: DEFAULT_ADMIN.username,
-      name: DEFAULT_ADMIN.name,
-      email: DEFAULT_ADMIN.email,
-      phone: DEFAULT_ADMIN.phone,
-      password: await bcrypt.hash(DEFAULT_ADMIN.password, 10),
-      role: "admin"
-    });
-  } else if (existingAdmin.role !== "admin") {
-    existingAdmin.role = "admin";
-    existingAdmin.username = existingAdmin.username || DEFAULT_ADMIN.username;
-    await existingAdmin.save();
+  if (DEFAULT_ADMIN) {
+    const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
+    if (!existingAdmin) {
+      await User.create({
+        username: DEFAULT_ADMIN.username,
+        name: DEFAULT_ADMIN.name,
+        email: DEFAULT_ADMIN.email,
+        phone: DEFAULT_ADMIN.phone,
+        password: await bcrypt.hash(DEFAULT_ADMIN.password, 12),
+        role: "admin"
+      });
+    } else if (existingAdmin.role !== "admin") {
+      existingAdmin.role = "admin";
+      existingAdmin.username = existingAdmin.username || DEFAULT_ADMIN.username;
+      await existingAdmin.save();
+    }
   }
   for (const coupon of DEFAULT_COUPONS) {
     await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true });
@@ -305,8 +311,6 @@ async function ensureDefaultData() {
     { upsert: true }
   );
 }
-mongoose.connection.once("open", () => ensureDefaultData().catch((err) => console.log("Seed skipped:", err.message)));
-
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
 app.get("/health", (req, res) => res.json({ success: true }));
@@ -318,20 +322,14 @@ app.post("/telegram/test", async (req, res) => {
   if (!result.success) return res.status(500).json({ success: false, message: result.message });
   res.json({ success: true, message: "Telegram test message sent.", result });
 });
-app.get("/telegram/test", async (req, res) => {
-  const result = await sendTelegramMessage("RIVAYAT Telegram browser test successful.");
-  if (result.skipped) return res.status(400).send(result.reason);
-  if (!result.success) return res.status(500).send(result.message);
-  res.send("Telegram test message sent.");
-});
-
 app.post("/signup", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
     if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email, and password are required." });
     const cleanEmail = normalizeEmail(email);
     if (await User.findOne({ email: cleanEmail })) return res.status(400).json({ success: false, message: "Email already registered. Please login." });
-    const user = await User.create({ name, email: cleanEmail, phone: phone || "", password: await bcrypt.hash(password, 10), role: "customer" });
+    if (String(password).length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
+    const user = await User.create({ name, email: cleanEmail, phone: phone || "", password: await bcrypt.hash(password, 12), role: "customer" });
     res.json({ success: true, message: "Account created successfully!", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -349,10 +347,12 @@ app.post("/login", async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-  // ─── UPDATE PROFILE ──────────────────────────────────────────────────────────
+});
+
 app.put("/profile", async (req, res) => {
   try {
-    const email = requestEmail(req);
+    const auth = authContext(req);
+    const email = normalizeEmail(auth.email);
 
     if (!email) {
       return res.status(401).json({
@@ -409,7 +409,6 @@ app.put("/profile", async (req, res) => {
     });
   }
 });
-});
 app.post("/forgot-password", async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email || req.body.identifier);
@@ -453,7 +452,7 @@ app.post("/reset-password", async (req, res) => {
     const code = String(req.body.code || "").trim();
     const password = String(req.body.password || "");
     if (!email || !code || !password) return res.status(400).json({ success: false, message: "Email, reset code, and new password are required." });
-    if (password.length < 4) return res.status(400).json({ success: false, message: "Password must be at least 4 characters." });
+    if (password.length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
     const reset = await PasswordReset.findOne({ email, usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
     if (!reset || !sameHash(reset.codeHash, hashResetCode(email, code))) return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
     const user = await User.findOne({ email });
@@ -599,10 +598,14 @@ app.get("/returns", async (req, res) => {
   res.json({ success: true, requests: await ReturnRequest.find(query).sort({ createdAt: -1 }) });
 });
 app.post("/returns", async (req, res) => {
+  const auth = authContext(req);
+  if (!auth.email) return res.status(401).json({ success: false, message: "Login required" });
   const body = req.body || {};
+  const order = await Order.findOne({ id: body.orderId, email: normalizeEmail(auth.email) });
+  if (!order && auth.role !== "admin") return res.status(403).json({ success: false, message: "You can only return your own order." });
   const request = await ReturnRequest.findOneAndUpdate(
     { id: body.id || `ret-${Date.now()}` },
-    { ...body, id: body.id || `ret-${Date.now()}`, updatedAt: new Date() },
+    { ...body, customer: { ...(body.customer || {}), email: normalizeEmail(auth.email) }, id: body.id || `ret-${Date.now()}`, updatedAt: new Date() },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
   sendTelegramMessage(`RIVAYAT return/exchange request\nOrder: ${request.orderId}\nType: ${request.type}\nReason: ${request.reason || "-"}`).catch(() => {});
@@ -702,6 +705,30 @@ app.get("/admin/stats", async (req, res) => {
 });
 app.post("/delivery/quote", (req, res) => res.json({ success: true, charge: deliveryChargeByPincode(req.body.pincode, req.body.subtotal), freeAbove: 999 }));
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+function validateConfig() {
+  const errors = [];
+  if (!MONGO_URI) errors.push("MONGO_URI is required");
+  if (APP_SECRET.length < 32) errors.push("APP_SECRET must contain at least 32 characters");
+  if ((process.env.ADMIN_EMAIL && !process.env.ADMIN_PASSWORD) || (!process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD)) {
+    errors.push("ADMIN_EMAIL and ADMIN_PASSWORD must be configured together");
+  }
+  if (process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD.length < 12) errors.push("ADMIN_PASSWORD must contain at least 12 characters");
+  if (errors.length) throw new Error(`Invalid configuration: ${errors.join("; ")}`);
+}
+
+async function startServer() {
+  validateConfig();
+  await mongoose.connect(MONGO_URI);
+  console.log("MongoDB connected");
+  await ensureDefaultData();
+  return app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+if (require.main === module) {
+  startServer().catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, authContext, createToken, verifyToken, deliveryChargeByPincode, validateConfig, startServer };
