@@ -1,1 +1,7 @@
-.sprite-media{background-image:var(--catalog-image,url('/assets/catalog-2026.webp'))!important;background-repeat:no-repeat;background-size:500% 500%;background-color:#e8e7e1}.catalog-hq-ready .sprite-media{transition:background-image .15s ease}
+.sprite-media{
+  background-image:url('/assets/rivat catalog.jpeg')!important;
+  background-repeat:no-repeat;
+  background-size:500% 500%;
+  background-color:#e8e7e1;
+  image-rendering:auto;
+}
