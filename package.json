@@ -8,6 +8,9 @@
     "check": "node --check server.js && node scripts/check-frontend.js",
     "test": "node --test"
   },
+  "engines": {
+    "node": ">=20 <23"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
