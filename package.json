@@ -4,8 +4,8 @@
   "description": "Rivayat fashion storefront and API",
   "main": "modern-server.js",
   "scripts": {
-    "start": "node modern-server.js",
-    "check": "node --check server.js && node --check modern-server.js && node scripts/check-frontend.js",
+    "start": "node -r ./launch-api.js modern-server.js",
+    "check": "node --check server.js && node --check modern-server.js && node --check launch-api.js && node scripts/check-frontend.js",
     "test": "node --test"
   },
   "engines": {
