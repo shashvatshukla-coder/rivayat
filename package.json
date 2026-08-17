@@ -2,10 +2,10 @@
   "name": "rivayat_backend",
   "version": "1.0.0",
   "description": "Rivayat fashion storefront and API",
-  "main": "server.js",
+  "main": "modern-server.js",
   "scripts": {
-    "start": "node server.js",
-    "check": "node --check server.js && node scripts/check-frontend.js",
+    "start": "node modern-server.js",
+    "check": "node --check server.js && node --check modern-server.js && node scripts/check-frontend.js",
     "test": "node --test"
   },
   "engines": {
