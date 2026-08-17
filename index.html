@@ -4,21 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>RIVAYAT — Modern Streetwear</title>
-  <meta name="description" content="RIVAYAT modern streetwear. Discover limited hoodies, cargos and jackets built for everyday rotation.">
+  <meta name="description" content="RIVAYAT modern streetwear. Discover limited hoodies, cargos, jackets and shirts built for everyday rotation.">
   <meta name="theme-color" content="#f4f2ed">
-  <link rel="stylesheet" href="/styles.css?v=20260817-products">
-  <link rel="stylesheet" href="/hq-images.css?v=20260817-hq2">
-  <link rel="preload" href="/assets/products/charcoal-city-wide-cargo.png" as="image" fetchpriority="high">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20260817-launch">
+  <link rel="stylesheet" href="/hq-images.css?v=20260817-launch">
+  <link rel="stylesheet" href="/launch-polish.css?v=20260817-launch">
 </head>
 <body>
 <div class="loader" id="loader"><div class="loader-mark">RIVAYAT</div></div>
-<div class="announcement">Free shipping over ₹999 · Easy returns · New Drop 02 live</div>
+<div class="announcement">Free shipping over ₹999 · Easy returns · Secure 4-digit email sign-in</div>
 <header class="header">
   <div class="shell header-inner">
     <nav class="desktop-nav">
-      <a href="#/shop">New Drop</a><a href="#/shop?cat=Hoodies">Hoodies</a><a href="#/shop?cat=Cargos">Cargos</a><a href="#/shop?cat=Jackets">Jackets</a>
+      <a href="#/shop">New Drop</a><a href="#/shop?cat=Hoodies">Hoodies</a><a href="#/shop?cat=Cargos">Cargos</a><a href="#/shop?cat=Jackets">Jackets</a><a href="#/shop?cat=Shirts">Shirts</a>
     </nav>
-    <a class="brand" href="#/">RIVAYAT</a>
+    <a class="brand" href="#/" aria-label="RIVAYAT home">RIVAYAT</a>
     <div class="header-actions">
       <button class="icon-btn hide-mobile" aria-label="Search" onclick="openSearch()"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></button>
       <button class="icon-btn hide-mobile" aria-label="Theme" onclick="toggleTheme()"><svg class="icon" viewBox="0 0 24 24"><path d="M20.5 14.2A8 8 0 1 1 9.8 3.5 6.5 6.5 0 0 0 20.5 14.2Z"></path></svg></button>
@@ -30,10 +34,10 @@
 <main id="app"></main>
 <footer class="footer">
   <div class="shell footer-grid">
-    <div><span class="brand">RIVAYAT</span><p>Streetwear with intention. Small drops, strong silhouettes, useful details. Designed for daily rotation.</p><p>© 2026 RIVAYAT. All rights reserved.</p></div>
-    <div><h4>Shop</h4><a href="#/shop">New Drop</a><a href="#/shop?cat=Hoodies">Hoodies</a><a href="#/shop?cat=Cargos">Cargos</a><a href="#/shop?cat=Jackets">Jackets</a></div>
-    <div><h4>Account</h4><a href="#/login">Sign in</a><a href="#/profile">Profile</a><a href="#/profile?tab=orders">Orders</a><a href="#/cart">Bag</a></div>
-    <div><h4>Support</h4><a href="#/profile?tab=orders">Returns & exchanges</a><a href="#/shop">Size guide</a><a href="mailto:support@rivayat.in">Contact</a></div>
+    <div><span class="brand">RIVAYAT</span><p>Streetwear with intention. Small drops, useful details and dependable customer support.</p><p>© 2026 RIVAYAT. All rights reserved.</p></div>
+    <div><h4>Shop</h4><a href="#/shop">New Drop</a><a href="#/shop?cat=Hoodies">Hoodies</a><a href="#/shop?cat=Cargos">Cargos</a><a href="#/shop?cat=Jackets">Jackets</a><a href="#/shop?cat=Shirts">Shirts</a></div>
+    <div><h4>Account</h4><a href="#/login?mode=otp">Email sign-in</a><a href="#/profile">Profile</a><a href="#/profile?tab=orders">Orders</a><a href="#/cart">Bag</a></div>
+    <div><h4>Customer care</h4><a href="#/returns-policy">Returns & refunds</a><a href="#/shipping">Shipping</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><a href="#/cookies">Cookies</a><a href="mailto:support@rivayat.in">support@rivayat.in</a></div>
   </div>
 </footer>
 
@@ -51,23 +55,15 @@
     <div class="search-results" id="searchResults"></div>
   </div>
 </div>
-
-<div class="cart-drawer" id="cartDrawer" onclick="cartBackdrop(event)">
-  <aside class="cart-panel">
-    <div class="modal-head"><h2>Your bag</h2><button class="icon-btn" onclick="closeCart()">×</button></div>
-    <div id="cartLines"></div>
-    <div id="cartDrawerSummary"></div>
-  </aside>
-</div>
-
-<div class="modal-backdrop" id="modalBackdrop" onclick="modalBackdrop(event)">
-  <div class="modal" id="modal"></div>
-</div>
+<div class="cart-drawer" id="cartDrawer" onclick="cartBackdrop(event)"><aside class="cart-panel"><div class="modal-head"><h2>Your bag</h2><button class="icon-btn" onclick="closeCart()">×</button></div><div id="cartLines"></div><div id="cartDrawerSummary"></div></aside></div>
+<div class="modal-backdrop" id="modalBackdrop" onclick="modalBackdrop(event)"><div class="modal" id="modal"></div></div>
 <div class="toast-stack" id="toasts"></div>
 
-<script src="/app-core.js?v=20260817-products" defer></script>
-<script src="/app-account.js?v=20260817-hq2" defer></script>
-<script src="/app-admin.js?v=20260817-hq2" defer></script>
-<script src="/app-runtime.js?v=20260817-hq2" defer></script>
+<script src="/catalog-hq-loader.js?v=20260817-launch" defer></script>
+<script src="/app-core.js?v=20260817-launch" defer></script>
+<script src="/app-account.js?v=20260817-launch" defer></script>
+<script src="/app-admin.js?v=20260817-launch" defer></script>
+<script src="/app-legal.js?v=20260817-launch" defer></script>
+<script src="/app-runtime.js?v=20260817-launch" defer></script>
 </body>
 </html>
