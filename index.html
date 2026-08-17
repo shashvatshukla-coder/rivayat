@@ -6,6 +6,13 @@
   <title>RIVAYAT | Premium Indian Fashion</title>
   <meta name="description" content="RIVAYAT premium men’s fashion. Shop half pants and full pants with a luxury mobile-first shopping experience." />
   <meta name="theme-color" content="#070707" />
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('rivayat_theme');
+      const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = savedTheme || (systemDark ? 'dark' : 'light');
+    } catch {}
+  </script>
   <meta property="og:title" content="RIVAYAT | Premium Indian Fashion" />
   <meta property="og:description" content="Own Your Vibe with premium everyday menswear by RIVAYAT." />
   <meta property="og:type" content="website" />
@@ -420,9 +427,150 @@
       .stat-grid { grid-template-columns: 1fr; }
       .footer { padding-bottom: 80px; }
     }
+
+    /* --- RIVAYAT storefront v6: theme, sections, premium, auth, loaders --- */
+    .site-loader {
+      position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+      background: var(--ivory); transition: opacity .45s var(--ease), visibility .45s;
+    }
+    .site-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-box { width: min(360px, calc(100vw - 48px)); text-align:center; }
+    .loader-mark {
+      width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 24px;
+      display:grid; place-items:center; background:#111; color:#fff; font-family:Georgia,serif;
+      font-size:34px; box-shadow:var(--shadow); animation: loaderFloat 1.3s ease-in-out infinite alternate;
+    }
+    .loader-brand { letter-spacing:.34em; font-weight:950; font-size:12px; margin-left:.34em; }
+    .loader-track { height:3px; background:var(--line); border-radius:99px; overflow:hidden; margin-top:18px; }
+    .loader-track span { display:block; height:100%; width:40%; background:linear-gradient(90deg,#8c6a38,#d1b27f); animation:loaderSlide 1.1s ease-in-out infinite; }
+    @keyframes loaderSlide { 0%{transform:translateX(-110%)} 100%{transform:translateX(360%)} }
+    @keyframes loaderFloat { to { transform:translateY(-5px) rotate(2deg); } }
+
+    .route-loader { min-height:52vh; display:grid; place-items:center; }
+    .route-loader-card { width:min(520px,100%); padding:28px; }
+    .skeleton { background:linear-gradient(90deg,rgba(128,128,128,.08),rgba(128,128,128,.18),rgba(128,128,128,.08)); background-size:220% 100%; animation:shimmer 1.2s linear infinite; border-radius:14px; }
+    @keyframes shimmer { to { background-position:-220% 0; } }
+
+    .theme-toggle { min-width:44px; }
+    .section-nav { padding: 0 0 12px; }
+    .section-nav-inner {
+      display:flex; gap:10px; overflow:auto; scrollbar-width:none; padding:10px;
+      background:rgba(255,255,255,.55); border:1px solid var(--line); border-radius:999px;
+      box-shadow:0 12px 34px rgba(0,0,0,.05); backdrop-filter:blur(16px);
+    }
+    .section-nav-inner::-webkit-scrollbar{display:none}
+    .section-nav a { white-space:nowrap; border-radius:999px; padding:10px 16px; font-weight:850; font-size:13px; color:var(--muted); }
+    .section-nav a:hover { background:var(--black); color:#fff; }
+
+    .home-section { position:relative; }
+    .home-section.tinted { background:var(--cream); border-block:1px solid var(--line); }
+    .collection-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+    .collection-card {
+      min-height:260px; padding:28px; border-radius:28px; border:1px solid var(--line);
+      display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; position:relative;
+      background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(239,231,218,.7));
+    }
+    .collection-card.dark { background:linear-gradient(145deg,#0c0c0d,#26211c); color:#fff; border-color:rgba(255,255,255,.12); }
+    .collection-card h3 { font-size:34px; margin:8px 0; }
+    .collection-card p { max-width:32ch; color:var(--muted); }
+    .collection-card.dark p { color:rgba(255,255,255,.68); }
+
+    .premium-stage {
+      background:
+        radial-gradient(circle at 85% 15%,rgba(185,148,93,.30),transparent 36%),
+        linear-gradient(135deg,#080809,#191715 60%,#272019);
+      color:#fff; border-radius:34px; padding:clamp(28px,5vw,64px); overflow:hidden; position:relative;
+      box-shadow:0 30px 90px rgba(0,0,0,.28);
+    }
+    .premium-stage .muted { color:rgba(255,255,255,.68); }
+    .premium-stage .section-head p { color:rgba(255,255,255,.68); }
+    .premium-stage .card { background:#fffaf1; color:#111; }
+    .premium-kicker { text-transform:uppercase; letter-spacing:.22em; font-size:11px; font-weight:950; color:#d5b47b; }
+    .premium-tag { display:inline-flex; margin-bottom:7px; font-size:10px; font-weight:950; letter-spacing:.16em; text-transform:uppercase; color:#8b6632; }
+
+    .trust-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+    .trust-item { padding:18px; border:1px solid var(--line); border-radius:20px; background:rgba(255,255,255,.55); }
+    .trust-item strong { display:block; margin-bottom:6px; }
+    .trust-icon { font-size:22px; margin-bottom:10px; }
+
+    .auth-shell { max-width:980px; }
+    .auth-layout { display:grid; grid-template-columns:.9fr 1.1fr; gap:18px; align-items:stretch; }
+    .auth-story {
+      border-radius:28px; padding:32px; color:#fff; min-height:560px; display:flex; flex-direction:column; justify-content:space-between;
+      background:radial-gradient(circle at 80% 15%,rgba(185,148,93,.42),transparent 34%),linear-gradient(145deg,#070707,#26211b);
+    }
+    .auth-story h2 { font-size:44px; margin:12px 0; }
+    .auth-benefits { display:grid; gap:10px; }
+    .auth-benefits div { padding:13px 14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); border-radius:16px; }
+    .auth-divider { display:flex; align-items:center; gap:12px; color:var(--muted); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; margin:18px 0; }
+    .auth-divider::before,.auth-divider::after { content:""; height:1px; background:var(--line); flex:1; }
+    .google-auth-wrap { min-height:44px; display:grid; place-items:center; overflow:hidden; }
+    .google-config-note { font-size:12px; color:var(--muted); text-align:center; padding:10px; border:1px dashed var(--line); border-radius:14px; }
+    .verification-code { text-align:center; letter-spacing:.45em; font-weight:950; font-size:20px; }
+
+    .address-tools { display:grid; gap:12px; margin:12px 0 18px; }
+    .saved-address-picker { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
+    .saved-address-picker label { flex:1 1 260px; }
+    .place-autocomplete-shell { min-height:44px; }
+    .place-autocomplete-shell > * { width:100%; }
+    gmp-place-autocomplete { width:100%; --gmp-mat-color-surface:var(--white); --gmp-mat-color-on-surface:var(--ink); }
+    .verified-chip { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:6px 10px; background:rgba(18,114,60,.1); color:var(--success); font-size:12px; font-weight:900; }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --ink:#f3eee6; --muted:#aaa39a; --line:rgba(255,255,255,.12);
+      --cream:#151517; --ivory:#0c0c0e; --white:#18181b; --shadow:0 24px 70px rgba(0,0,0,.36);
+    }
+    html[data-theme="dark"] body { background:#0c0c0e; }
+    html[data-theme="dark"] .header { background:rgba(12,12,14,.78); border-color:var(--line); }
+    html[data-theme="dark"] .card,
+    html[data-theme="dark"] .filter-panel,
+    html[data-theme="dark"] .summary-box { background:rgba(24,24,27,.88); }
+    html[data-theme="dark"] .input,
+    html[data-theme="dark"] .select,
+    html[data-theme="dark"] .textarea { background:#141416; color:var(--ink); }
+    html[data-theme="dark"] .input:focus,
+    html[data-theme="dark"] .select:focus,
+    html[data-theme="dark"] .textarea:focus { background:#17171a; }
+    html[data-theme="dark"] .pill,
+    html[data-theme="dark"] .trust-item,
+    html[data-theme="dark"] .section-nav-inner { background:rgba(255,255,255,.05); }
+    html[data-theme="dark"] .btn { background:#f1e8da; color:#111; }
+    html[data-theme="dark"] .btn.secondary,
+    html[data-theme="dark"] .btn.ghost { background:#18181b; color:var(--ink); border-color:var(--line); }
+    html[data-theme="dark"] .btn.gold,
+    html[data-theme="dark"] .btn.danger,
+    html[data-theme="dark"] .btn.success { color:#fff; }
+    html[data-theme="dark"] .collection-card { background:linear-gradient(145deg,#19191c,#111113); }
+    html[data-theme="dark"] .collection-card.dark { background:linear-gradient(145deg,#070708,#211c17); }
+    html[data-theme="dark"] table { background:#161619; }
+    html[data-theme="dark"] .policy article { color:#c7c0b6; }
+    html[data-theme="dark"] .policy h2 { color:var(--ink); }
+    html[data-theme="dark"] .side-nav a.active { background:#eee4d6; color:#111; }
+    html[data-theme="dark"] .hero { background:radial-gradient(circle at 85% 20%,rgba(185,148,93,.18),transparent 34%),linear-gradient(180deg,#0c0c0e,#121214); }
+
+    @media (max-width: 980px) {
+      .collection-grid,.trust-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .auth-layout { grid-template-columns:1fr; }
+      .auth-story { min-height:300px; }
+    }
+    @media (max-width: 640px) {
+      .collection-grid,.trust-grid { grid-template-columns:1fr; }
+      .premium-stage { border-radius:26px; padding:24px 18px; }
+      .section-nav-inner { border-radius:20px; }
+    }
+
   </style>
 </head>
 <body>
+  <div class="site-loader" id="siteLoader" aria-live="polite" aria-label="Loading RIVAYAT">
+    <div class="loader-box">
+      <div class="loader-mark">R</div>
+      <div class="loader-brand">RIVAYAT</div>
+      <p class="muted">Curating your selection</p>
+      <div class="loader-track"><span></span></div>
+    </div>
+  </div>
   <div class="topbar">Free premium packaging • Cash on Delivery available • WhatsApp support +91 80041 09305</div>
   <header class="header">
     <div class="container nav">
@@ -432,6 +580,7 @@
       </a>
       <nav class="nav-links" id="desktopNav"></nav>
       <div class="nav-actions">
+        <button class="icon-btn theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark or light mode">◐</button>
         <button class="icon-btn" onclick="go('#/wishlist')" aria-label="Wishlist">♡<span id="wishCount" class="badge hide">0</span></button>
         <button class="icon-btn" onclick="go('#/cart')" aria-label="Cart">Bag<span id="cartCount" class="badge hide">0</span></button>
         <button class="icon-btn" onclick="go(auth.user ? '#/dashboard' : '#/login')"><span class="label" id="accountLabel">Account</span></button>
@@ -488,28 +637,100 @@
 
     const INITIAL_PRODUCTS = [
       {
-        id: 'rivayat-half-pant-black', slug: 'rivayat-half-pant-black', name: 'Rivayat Half Pant - Black', category: 'Half Pants', color: 'Black',
-        mrp: 499, price: 349, sizes: SIZES, inventory: { S: 24, M: 30, L: 26, XL: 18, XXL: 11 }, rating: 4.8, reviews: 128,
-        badge: 'Best Seller', description: 'Premium black half pant designed for everyday comfort, relaxed movement, and clean street-ready styling.',
-        details: ['Soft breathable feel', 'Minimal premium branding', 'Relaxed athletic fit', 'Made for Indian daily wear'],
-        image: ASSETS.blackFront, gallery: [ASSETS.blackFront, ASSETS.blackSide, ASSETS.blackPocket, ASSETS.blackModel],
-        bg: 'linear-gradient(135deg,#090909,#2d2923 55%,#d9c5a4)', art: 'black', type: 'short'
+        id:'rivayat-half-pant-black', slug:'rivayat-half-pant-black', name:'RIVAYAT Half Pant - Black', category:'Half Pants', color:'Black',
+        mrp:499, price:349, sizes:SIZES, inventory:{S:24,M:30,L:26,XL:18,XXL:11}, rating:4.8, reviews:128, soldCount:42,
+        badge:'Best Seller', tier:'standard', description:'Premium black half pant designed for everyday comfort, relaxed movement, and clean street-ready styling.',
+        details:['Soft breathable feel','Minimal premium branding','Relaxed athletic fit','Made for Indian daily wear'],
+        image:ASSETS.blackFront, gallery:[ASSETS.blackFront,ASSETS.blackSide,ASSETS.blackPocket,ASSETS.blackModel],
+        bg:'linear-gradient(135deg,#090909,#2d2923 55%,#d9c5a4)', art:'black', type:'short'
       },
       {
-        id: 'rivayat-half-pant-white', slug: 'rivayat-half-pant-white', name: 'Rivayat Half Pant - White', category: 'Half Pants', color: 'White',
-        mrp: 499, price: 349, sizes: SIZES, inventory: { S: 20, M: 28, L: 25, XL: 14, XXL: 9 }, rating: 4.7, reviews: 103,
-        badge: 'New Arrival', description: 'Fresh white half pant with an elevated clean look for summer fits, travel, gym, and casual styling.',
-        details: ['Clean white finish', 'Lightweight everyday comfort', 'Easy to pair', 'Modern minimal silhouette'],
-        image: ASSETS.whiteFront, gallery: [ASSETS.whiteFront, ASSETS.whiteSide, ASSETS.whiteBack, ASSETS.whiteModel],
-        bg: 'linear-gradient(135deg,#ece4d5,#fffaf1 54%,#111111)', art: 'white', type: 'short'
+        id:'rivayat-half-pant-white', slug:'rivayat-half-pant-white', name:'RIVAYAT Half Pant - White', category:'Half Pants', color:'White',
+        mrp:499, price:349, sizes:SIZES, inventory:{S:20,M:28,L:25,XL:14,XXL:9}, rating:4.7, reviews:103, soldCount:25,
+        badge:'Clean Essential', tier:'standard', description:'Fresh white half pant with an elevated clean look for summer fits, travel, gym, and casual styling.',
+        details:['Clean white finish','Lightweight everyday comfort','Easy to pair','Modern minimal silhouette'],
+        image:ASSETS.whiteFront, gallery:[ASSETS.whiteFront,ASSETS.whiteSide,ASSETS.whiteBack,ASSETS.whiteModel],
+        bg:'linear-gradient(135deg,#ece4d5,#fffaf1 54%,#111111)', art:'white', type:'short'
       },
       {
-        id: 'rivayat-full-pant', slug: 'rivayat-full-pant', name: 'Rivayat Full Pant', category: 'Full Pants', color: 'Black',
-        mrp: 599, price: 359, sizes: SIZES, inventory: { S: 16, M: 32, L: 24, XL: 17, XXL: 12 }, rating: 4.9, reviews: 154,
-        badge: 'Hot Deal', description: 'A premium full pant with a sharp minimal profile, made for comfort-heavy daily use and clean styling.',
-        details: ['Premium neutral style', 'Comfortable full-length fit', 'Durable daily construction', 'Best value launch pricing'],
-        image: ASSETS.fullFront, gallery: [ASSETS.fullFront, ASSETS.fullBack, ASSETS.fullDetails],
-        bg: 'linear-gradient(135deg,#0c0c0c,#363029 50%,#c8a36a)', art: 'black', type: 'full'
+        id:'rivayat-full-pant', slug:'rivayat-full-pant', name:'RIVAYAT Full Pant - Black', category:'Full Pants', color:'Black',
+        mrp:599, price:359, sizes:SIZES, inventory:{S:16,M:32,L:24,XL:17,XXL:12}, rating:4.9, reviews:154, soldCount:36,
+        badge:'Hot Deal', tier:'standard', description:'A premium full pant with a sharp minimal profile, made for comfort-heavy daily use and clean styling.',
+        details:['Premium neutral style','Comfortable full-length fit','Durable daily construction','Best value launch pricing'],
+        image:ASSETS.fullFront, gallery:[ASSETS.fullFront,ASSETS.fullBack,ASSETS.fullDetails],
+        bg:'linear-gradient(135deg,#0c0c0c,#363029 50%,#c8a36a)', art:'black', type:'full'
+      },
+      {
+        id:'rivayat-motion-half-pant', slug:'rivayat-motion-half-pant', name:'Motion Half Pant - Onyx', category:'Half Pants', color:'Onyx',
+        mrp:649, price:399, sizes:SIZES, inventory:{S:18,M:25,L:22,XL:14,XXL:8}, rating:4.8, reviews:38, soldCount:14,
+        badge:'New Drop', tier:'standard', description:'An easy-moving onyx short for workouts, travel days, and elevated casual wear.',
+        details:['Flexible daily fit','Deep onyx tone','Easy-care construction','Zip-safe essentials pocket'],
+        image:ASSETS.blackSide, gallery:[ASSETS.blackSide,ASSETS.blackFront,ASSETS.blackPocket,ASSETS.blackModel],
+        bg:'linear-gradient(135deg,#111,#38332d 58%,#b9945d)', art:'black', type:'short'
+      },
+      {
+        id:'rivayat-everyday-half-pant-ivory', slug:'rivayat-everyday-half-pant-ivory', name:'Everyday Half Pant - Ivory', category:'Half Pants', color:'Ivory',
+        mrp:649, price:399, sizes:SIZES, inventory:{S:15,M:23,L:20,XL:13,XXL:7}, rating:4.7, reviews:31, soldCount:11,
+        badge:'Everyday Essential', tier:'standard', description:'A softer ivory essential for clean summer styling and relaxed everyday comfort.',
+        details:['Warm ivory finish','Breathable feel','Relaxed clean fit','Easy summer styling'],
+        image:ASSETS.whiteSide, gallery:[ASSETS.whiteSide,ASSETS.whiteFront,ASSETS.whiteBack,ASSETS.whiteModel],
+        bg:'linear-gradient(135deg,#f0e9dd,#fffaf1 62%,#b9945d)', art:'white', type:'short'
+      },
+      {
+        id:'rivayat-travel-full-pant-graphite', slug:'rivayat-travel-full-pant-graphite', name:'Travel Full Pant - Graphite', category:'Full Pants', color:'Graphite',
+        mrp:899, price:549, sizes:SIZES, inventory:{S:12,M:20,L:19,XL:12,XXL:7}, rating:4.9, reviews:44, soldCount:21,
+        badge:'Travel Ready', tier:'standard', description:'A graphite full pant built for long days, movement, and a refined travel-ready silhouette.',
+        details:['Travel-ready comfort','Graphite neutral shade','Full-length tapered profile','Low-maintenance fabric'],
+        image:ASSETS.fullDetails, gallery:[ASSETS.fullDetails,ASSETS.fullFront,ASSETS.fullBack],
+        bg:'linear-gradient(135deg,#171717,#49423b 55%,#9e8a6d)', art:'black', type:'full'
+      },
+      {
+        id:'rivayat-everyday-full-pant-black', slug:'rivayat-everyday-full-pant-black', name:'Everyday Full Pant - Black', category:'Full Pants', color:'Black',
+        mrp:799, price:499, sizes:SIZES, inventory:{S:14,M:26,L:21,XL:15,XXL:9}, rating:4.8, reviews:52, soldCount:27,
+        badge:'Core Collection', tier:'standard', description:'A dependable black full pant tuned for repeat wear, clean fits, and all-day comfort.',
+        details:['Core black finish','Comfort waistband','Sharp everyday drape','Built for repeat wear'],
+        image:ASSETS.fullBack, gallery:[ASSETS.fullBack,ASSETS.fullFront,ASSETS.fullDetails],
+        bg:'linear-gradient(135deg,#080808,#302b26 55%,#a98959)', art:'black', type:'full'
+      },
+      {
+        id:'rivayat-prive-signature-black', slug:'rivayat-prive-signature-black', name:'Privé Signature Trouser - Noir', category:'Full Pants', color:'Black',
+        mrp:1499, price:999, sizes:SIZES, inventory:{S:8,M:12,L:10,XL:7,XXL:5}, rating:4.9, reviews:22, soldCount:8,
+        badge:'RIVAYAT Privé', tier:'premium', description:'A more refined RIVAYAT trouser with a richer finish, polished line, and limited-drop positioning.',
+        details:['Premium limited drop','Refined full-length silhouette','Elevated finishing','Premium packaging included'],
+        image:ASSETS.fullFront, gallery:[ASSETS.fullFront,ASSETS.fullDetails,ASSETS.fullBack],
+        bg:'linear-gradient(135deg,#050505,#26201a 58%,#c6a46d)', art:'black', type:'full'
+      },
+      {
+        id:'rivayat-prive-ivory-half', slug:'rivayat-prive-ivory-half', name:'Privé Resort Half Pant - Ivory', category:'Half Pants', color:'Ivory',
+        mrp:1099, price:749, sizes:SIZES, inventory:{S:8,M:11,L:9,XL:7,XXL:4}, rating:4.9, reviews:17, soldCount:6,
+        badge:'RIVAYAT Privé', tier:'premium', description:'A premium ivory resort short with clean proportions and a polished minimal finish.',
+        details:['Premium ivory tone','Resort-ready profile','Limited collection','Premium packaging included'],
+        image:ASSETS.whiteModel, gallery:[ASSETS.whiteModel,ASSETS.whiteFront,ASSETS.whiteSide,ASSETS.whiteBack],
+        bg:'linear-gradient(135deg,#e9e0d3,#fffaf1 58%,#b9945d)', art:'white', type:'short'
+      },
+      {
+        id:'rivayat-prive-onyx-half', slug:'rivayat-prive-onyx-half', name:'Privé Onyx Half Pant', category:'Half Pants', color:'Onyx',
+        mrp:1199, price:799, sizes:SIZES, inventory:{S:7,M:10,L:9,XL:6,XXL:4}, rating:4.9, reviews:19, soldCount:7,
+        badge:'RIVAYAT Privé', tier:'premium', description:'A darker premium half pant with restrained branding and a sharper monochrome feel.',
+        details:['Deep onyx tone','Premium finish','Low-volume drop','Premium packaging included'],
+        image:ASSETS.blackModel, gallery:[ASSETS.blackModel,ASSETS.blackFront,ASSETS.blackSide,ASSETS.blackPocket],
+        bg:'linear-gradient(135deg,#050505,#201b18 58%,#967249)', art:'black', type:'short'
+      },
+      {
+        id:'rivayat-prive-travel-trouser', slug:'rivayat-prive-travel-trouser', name:'Privé Travel Trouser - Graphite', category:'Full Pants', color:'Graphite',
+        mrp:1599, price:1099, sizes:SIZES, inventory:{S:6,M:10,L:8,XL:6,XXL:3}, rating:5.0, reviews:13, soldCount:5,
+        badge:'RIVAYAT Privé', tier:'premium', description:'A premium travel trouser for customers who want a sharper look without giving up movement.',
+        details:['Refined travel construction','Premium graphite finish','Limited availability','Premium packaging included'],
+        image:ASSETS.fullDetails, gallery:[ASSETS.fullDetails,ASSETS.fullFront,ASSETS.fullBack],
+        bg:'linear-gradient(135deg,#111,#39332c 55%,#b9945d)', art:'black', type:'full'
+      },
+      {
+        id:'rivayat-prive-pearl-half', slug:'rivayat-prive-pearl-half', name:'Privé Pearl Half Pant', category:'Half Pants', color:'White',
+        mrp:1199, price:849, sizes:SIZES, inventory:{S:7,M:10,L:8,XL:6,XXL:3}, rating:4.9, reviews:15, soldCount:5,
+        badge:'RIVAYAT Privé', tier:'premium', description:'A crisp pearl-white premium short designed for clean summer statements and minimal wardrobes.',
+        details:['Pearl white finish','Premium clean cut','Limited collection','Premium packaging included'],
+        image:ASSETS.whiteFront, gallery:[ASSETS.whiteFront,ASSETS.whiteModel,ASSETS.whiteSide,ASSETS.whiteBack],
+        bg:'linear-gradient(135deg,#efe8dd,#fffdf8 62%,#ad8956)', art:'white', type:'short'
       }
     ];
 
@@ -527,21 +748,22 @@
 
     const INITIAL_ORDERS = [];
 
-    const APP_VERSION = 'rivayat-main-website-v5-secure-auth';
-   const API_BASE_URL = localStorage.getItem('rivayat_api_base_url')
-     || (location.protocol === 'file:' ? 'http://localhost:3000' : 'https://rivayat.onrender.com');
-   const CONFIG = {
-  apiBaseUrl: API_BASE_URL,
-  ordersApiUrl: `${API_BASE_URL}/orders`,
-  razorpayKey: ''
-};
+    const APP_VERSION = 'rivayat-main-website-v6-premium-auth';
+    const API_BASE_URL = localStorage.getItem('rivayat_api_base_url')
+      || (location.protocol === 'file:' ? 'http://localhost:3000' : 'https://rivayat.onrender.com');
+    const CONFIG = {
+      apiBaseUrl: API_BASE_URL,
+      ordersApiUrl: `${API_BASE_URL}/orders`,
+      razorpayKey: ''
+    };
+    const PUBLIC_CONFIG = { googleClientId:'', googleMapsApiKey:'' };
 
     const DEFAULT_HOMEPAGE = {
-      heroPill: 'Premium Indian D2C Fashion • Launch Collection',
+      heroPill: 'Premium Indian D2C Fashion • New Storefront',
       heroTitle: 'Own Your Vibe with RIVAYAT.',
-      heroSubtitle: 'A luxury-minimal menswear experience for clean fits, comfortable movement, and elevated daily style. Built mobile-first for smooth shopping on every device.',
+      heroSubtitle: 'Clean everyday fits, considered details, and a smoother shopping experience — now with RIVAYAT Privé for elevated limited drops.',
       heroImage: ASSETS.blackModel,
-      heroOffer: 'Half Pants from ₹349 • Full Pant from ₹359',
+      heroOffer: 'Essentials from ₹349 • Privé from ₹749',
       primaryButtonText: 'Shop Collection',
       secondaryButtonText: 'Buy on WhatsApp'
     };
@@ -549,29 +771,11 @@
       get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
       set(key, value) { localStorage.setItem(key, JSON.stringify(value)); },
       init() {
-        if (localStorage.getItem('rivayat_app_version') !== APP_VERSION) {
-          this.set('rivayat_products', INITIAL_PRODUCTS);
-          this.set('rivayat_coupons', INITIAL_COUPONS);
-          this.set('rivayat_orders', INITIAL_ORDERS);
-          this.set('rivayat_reviews', INITIAL_REVIEWS);
-          this.set('rivayat_returns', []);
-          this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
-          this.set('rivayat_newsletter_leads', []);
-          this.set('rivayat_referrals', []);
-          localStorage.removeItem('rivayat_users');
-          localStorage.removeItem('https://rivayat.onrender.com/auth');
-          localStorage.removeItem('https://rivayat.onrender.com/cart');
-          localStorage.removeItem('https://rivayat.onrender.com/wishlist');
-          localStorage.removeItem('https://https://rivayat.onrender.com/recent');
-          localStorage.removeItem('https://https://rivayat.onrender.com/products');
-          localStorage.removeItem('https://https://rivayat.onrender.com/coupons');
-          localStorage.removeItem('https://https://rivayat.onrender.com/orders');
-          localStorage.removeItem('https://https://rivayat.onrender.com/users');
-          localStorage.removeItem('https://https://rivayat.onrender.com/reviews');
-          localStorage.setItem('rivayat_app_version', APP_VERSION);
-          return;
-        }
-        if (!localStorage.getItem('rivayat_products')) this.set('rivayat_products', INITIAL_PRODUCTS);
+        const existingProducts = this.get('rivayat_products', []);
+        const productMap = new Map(INITIAL_PRODUCTS.map(p => [p.id, p]));
+        existingProducts.forEach(p => productMap.set(p.id, { ...productMap.get(p.id), ...p }));
+        this.set('rivayat_products', Array.from(productMap.values()));
+
         if (!localStorage.getItem('rivayat_coupons')) this.set('rivayat_coupons', INITIAL_COUPONS);
         if (!localStorage.getItem('rivayat_orders')) this.set('rivayat_orders', INITIAL_ORDERS);
         if (!localStorage.getItem('rivayat_reviews')) this.set('rivayat_reviews', INITIAL_REVIEWS);
@@ -579,8 +783,7 @@
         if (!localStorage.getItem('rivayat_homepage_settings')) this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
         if (!localStorage.getItem('rivayat_newsletter_leads')) this.set('rivayat_newsletter_leads', []);
         if (!localStorage.getItem('rivayat_referrals')) this.set('rivayat_referrals', []);
-          this.set('rivayat_newsletter_leads', []);
-          this.set('rivayat_referrals', []);
+        localStorage.setItem('rivayat_app_version', APP_VERSION);
       }
     };
     db.init();
@@ -600,15 +803,29 @@
         headers: { ...apiHeaders(), ...(options.headers || {}) }
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || data.success === false) throw new Error(data.message || 'Backend request failed');
+      if (!response.ok || data.success === false) {
+        const error = new Error(data.message || 'Backend request failed');
+        Object.assign(error, data);
+        error.status = response.status;
+        throw error;
+      }
       return data;
     }
     const mergeById = (local=[], remote=[]) => {
       const map = new Map();
       local.forEach(item => map.set(item.id, item));
-      remote.forEach(item => map.set(item.id, { ...map.get(item.id), ...item }));
+      remote.forEach(item => {
+        const previous = map.get(item.id) || {};
+        const cleanRemote = { ...item };
+        if (!cleanRemote.image) delete cleanRemote.image;
+        if (!Array.isArray(cleanRemote.gallery) || !cleanRemote.gallery.length) delete cleanRemote.gallery;
+        if (!cleanRemote.sizeChartImage) delete cleanRemote.sizeChartImage;
+        if (!cleanRemote.bg) delete cleanRemote.bg;
+        map.set(item.id, { ...previous, ...cleanRemote });
+      });
       return Array.from(map.values()).filter(Boolean);
     };
+
     function normalizeOrder(o) {
       if (!o) return o;
       if (o.customer && typeof o.total !== 'undefined') return o;
@@ -735,6 +952,7 @@
         if (params.category && params.category !== 'All') items = items.filter(p => p.category === params.category);
         if (params.color && params.color !== 'All') items = items.filter(p => p.color === params.color);
         if (params.size && params.size !== 'All') items = items.filter(p => (p.sizes || []).includes(params.size));
+        if (params.tier && params.tier !== 'All') items = items.filter(p => (p.tier || 'standard') === params.tier);
         if (params.sort === 'price-low') items.sort((a,b)=>a.price-b.price);
         if (params.sort === 'price-high') items.sort((a,b)=>b.price-a.price);
         if (params.sort === 'rating') items.sort((a,b)=>(b.rating||0)-(a.rating||0));
@@ -745,7 +963,10 @@
         if (CONFIG.apiBaseUrl) {
           try {
             const data = await apiFetch(`/products/${encodeURIComponent(slugOrId)}`);
-            if (data.product) return data.product;
+            if (data.product) {
+              const local = db.get('rivayat_products', []).find(p => p.slug === slugOrId || p.id === slugOrId);
+              return mergeById(local ? [local] : [], [data.product])[0] || data.product;
+            }
           } catch (error) {
             console.warn('Product API get failed, using local product:', error.message);
           }
@@ -845,42 +1066,46 @@
 
     const AuthService = {
       async login(identifier, password) {
-        try {
-          const data = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ email: identifier, identifier, password }) });
-          auth.user = data.user;
-          save();
-          return data.user;
-        } catch (apiError) { throw new Error(apiError.message || 'Login failed'); }
-      },
-      async signup(payload) {
-        try {
-          const data = await apiFetch('/signup', { method: 'POST', body: JSON.stringify({ name: payload.name, email: payload.email, phone: payload.phone, password: payload.password }) });
-          const user = { ...data.user, role: data.user.role || 'customer', addresses: data.user.addresses || [], name: payload.name, email: payload.email, phone: payload.phone };
-          auth.user = user; save(); return user;
-        } catch(err) { throw new Error(err.message || 'Signup failed'); }
-      },
-      async forgotPassword(email) {
-        try {
-          const data = await apiFetch('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-          return data.message || 'Reset code sent.';
-        } catch (error) { throw new Error(error.message || 'Reset request failed'); }
-      },
-      async resetPassword(email, code, password) {
-        try {
-          const data = await apiFetch('/reset-password', { method: 'POST', body: JSON.stringify({ email, code, password }) });
-          return data.message || 'Password updated.';
-        } catch (error) { throw new Error(error.message || 'Invalid or expired reset code'); }
-      },
-      async updateProfile(profile) {
-        const data = await apiFetch('/profile', {
-          method: 'PUT',
-          body: JSON.stringify(profile)
-        });
-
+        const data = await apiFetch('/login', { method:'POST', body:JSON.stringify({ email:identifier, identifier, password }) });
         auth.user = data.user;
         save();
-
         return data.user;
+      },
+      async signup(payload) {
+        return apiFetch('/signup', {
+          method:'POST',
+          body:JSON.stringify({ name:payload.name, email:payload.email, phone:payload.phone, password:payload.password })
+        });
+      },
+      async verifyEmail(email, code) {
+        const data = await apiFetch('/verify-email', { method:'POST', body:JSON.stringify({ email, code }) });
+        auth.user = data.user;
+        save();
+        return data;
+      },
+      async resendVerification(email) {
+        return apiFetch('/resend-verification', { method:'POST', body:JSON.stringify({ email }) });
+      },
+      async google(credential) {
+        const data = await apiFetch('/auth/google', { method:'POST', body:JSON.stringify({ credential }) });
+        auth.user = data.user;
+        save();
+        return data.user;
+      },
+      async forgotPassword(email) {
+        const data = await apiFetch('/forgot-password', { method:'POST', body:JSON.stringify({ email }) });
+        return data.message || 'Reset code sent.';
+      },
+      async resetPassword(email, code, password) {
+        const data = await apiFetch('/reset-password', { method:'POST', body:JSON.stringify({ email, code, password }) });
+        return data.message || 'Password updated.';
+      },
+      async updateProfile(profile) {
+        const currentToken = auth.user?.token;
+        const data = await apiFetch('/profile', { method:'PUT', body:JSON.stringify(profile) });
+        auth.user = { ...auth.user, ...data.user, token:data.user?.token || currentToken };
+        save();
+        return auth.user;
       }
     };
 
@@ -1025,7 +1250,18 @@
         }
         return db.get('rivayat_users', []);
       },
-      async addAddress(userId, address) { await sleep(); const users = db.get('rivayat_users', []); const u = users.find(x=>x.id===userId); if (!u) throw new Error('User not found'); u.addresses = u.addresses || []; u.addresses.push({ id: uid('addr'), ...address }); db.set('rivayat_users', users); if (auth.user?.id === userId) auth.user = u; save(); return u.addresses; }
+      async addAddress(userId, address) {
+        if (!auth.user || String(auth.user.id) !== String(userId)) throw new Error('Login required');
+        const next = [...(auth.user.addresses || []), { id:uid('addr'), ...address }];
+        const user = await AuthService.updateProfile({ addresses:next });
+        return user.addresses || [];
+      },
+      async removeAddress(userId, addressId) {
+        if (!auth.user || String(auth.user.id) !== String(userId)) throw new Error('Login required');
+        const next = (auth.user.addresses || []).filter(a => a.id !== addressId);
+        const user = await AuthService.updateProfile({ addresses:next });
+        return user.addresses || [];
+      }
     };
 
     const ReviewService = {
@@ -1169,13 +1405,14 @@
     const recent = { ids: db.get('rivayat_recent', []), add(id){ this.ids = [id, ...this.ids.filter(x=>x!==id)].slice(0,4); save(); } };
 
     const navItems = [
-      ['Home','#/'], ['Shop','#/shop'], ['About','#/about'], ['Contact','#/contact'], ['Orders','#/orders']
+      ['Home','#/'], ['Shop','#/shop'], ['Privé','#/premium'], ['About','#/about'], ['Contact','#/contact'], ['Orders','#/orders']
     ];
     document.getElementById('desktopNav').innerHTML = navItems.map(([label,href])=>`<a class="nav-link" href="${href}">${label}</a>`).join('');
     document.getElementById('mobileNav').innerHTML = navItems.map(([label,href])=>`<a href="${href}" onclick="toggleDrawer(false)">${label}</a>`).join('') + `<a href="#/login" onclick="toggleDrawer(false)">Login / Signup</a>`;
     document.getElementById('year').textContent = new Date().getFullYear();
 
     function go(hash) { location.hash = hash; }
+    function scrollToSection(id) { document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' }); }
     function toggleDrawer(open) { document.getElementById('mobileDrawer').classList.toggle('open', open); document.getElementById('drawerBackdrop').classList.toggle('open', open); document.body.classList.toggle('no-scroll', open); }
     function toast(msg) { const host = document.getElementById('toastHost'); const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; host.appendChild(el); setTimeout(()=>el.remove(), 2600); }
     function setSEO(title, description) { document.title = `${title} | RIVAYAT`; document.querySelector('meta[name="description"]').setAttribute('content', description || 'Premium fashion by RIVAYAT.'); }
@@ -1187,6 +1424,172 @@
       document.querySelectorAll('.nav-link').forEach(a => a.classList.toggle('active', a.getAttribute('href') === (location.hash || '#/')));
     }
 
+    function applyTheme(theme) {
+      const next = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('rivayat_theme', next);
+      const btn = document.getElementById('themeToggle');
+      if (btn) { btn.textContent = next === 'dark' ? '☀' : '◐'; btn.title = next === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'; }
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#0c0c0e' : '#070707');
+    }
+    function toggleTheme() { applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); if(document.getElementById('googleAuthButton')) initGoogleButton(); }
+    function hideSiteLoader() { document.getElementById('siteLoader')?.classList.add('hidden'); }
+    function renderRouteLoader() {
+      return `<div class="section route-loader"><div class="container"><div class="card route-loader-card"><div class="skeleton" style="height:18px;width:34%;margin-bottom:18px"></div><div class="skeleton" style="height:48px;width:78%;margin-bottom:12px"></div><div class="skeleton" style="height:14px;width:92%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div></div>`;
+    }
+
+    async function loadPublicConfig() {
+      if (!CONFIG.apiBaseUrl) return PUBLIC_CONFIG;
+      try {
+        const response = await fetch(`${CONFIG.apiBaseUrl}/public-config`);
+        const data = await response.json();
+        if (response.ok && data.config) Object.assign(PUBLIC_CONFIG, data.config);
+      } catch (error) {
+        console.warn('Public configuration could not be loaded:', error.message);
+      }
+      return PUBLIC_CONFIG;
+    }
+
+    const externalScripts = new Map();
+    function loadExternalScript(id, src) {
+      if (document.getElementById(id)) return externalScripts.get(id) || Promise.resolve();
+      const promise = new Promise((resolve,reject)=>{
+        const script = document.createElement('script');
+        script.id=id; script.src=src; script.async=true; script.defer=true;
+        script.onload=resolve; script.onerror=()=>reject(new Error(`Could not load ${id}`));
+        document.head.appendChild(script);
+      });
+      externalScripts.set(id,promise);
+      return promise;
+    }
+
+    let googleIdentityReady = false;
+    async function initGoogleButton() {
+      const host = document.getElementById('googleAuthButton');
+      if (!host) return;
+      if (!PUBLIC_CONFIG.googleClientId) {
+        host.innerHTML = `<div class="google-config-note">Google sign-in will appear here after <strong>GOOGLE_CLIENT_ID</strong> is added on the backend.</div>`;
+        return;
+      }
+      try {
+        await loadExternalScript('google-identity-services','https://accounts.google.com/gsi/client');
+        if (!window.google?.accounts?.id) throw new Error('Google Identity Services is unavailable.');
+        if (!googleIdentityReady) {
+          google.accounts.id.initialize({
+            client_id: PUBLIC_CONFIG.googleClientId,
+            callback: handleGoogleCredential,
+            auto_select: false,
+            cancel_on_tap_outside: true
+          });
+          googleIdentityReady = true;
+        }
+        host.innerHTML='';
+        google.accounts.id.renderButton(host,{
+          type:'standard',
+          theme:document.documentElement.dataset.theme === 'dark' ? 'filled_black' : 'outline',
+          size:'large',
+          shape:'pill',
+          text:location.hash.includes('signup') ? 'signup_with' : 'continue_with',
+          width:Math.min(360, Math.max(240, host.clientWidth || 320))
+        });
+      } catch(error) {
+        host.innerHTML = `<div class="google-config-note">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function handleGoogleCredential(response) {
+      const msg=document.getElementById('authMsg');
+      try {
+        if (msg) msg.innerHTML='<span class="muted">Checking your Google account…</span>';
+        const user=await AuthService.google(response.credential);
+        toast(`Welcome ${user.name}`);
+        go(user.role==='admin' ? '#/admin' : '#/dashboard');
+      } catch(error) {
+        if (msg) msg.innerHTML=`<span class="error">${escapeHtml(error.message)}</span>`;
+        else toast(error.message);
+      }
+    }
+
+    let mapsReadyPromise = null;
+    function ensureGoogleMaps() {
+      if (window.google?.maps) return Promise.resolve(window.google.maps);
+      if (!PUBLIC_CONFIG.googleMapsApiKey) return Promise.reject(new Error('Google address autocomplete is not configured.'));
+      if (!mapsReadyPromise) {
+        mapsReadyPromise = loadExternalScript(
+          'google-maps-places',
+          `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(PUBLIC_CONFIG.googleMapsApiKey)}&libraries=places&v=weekly&loading=async`
+        ).then(()=>window.google.maps);
+      }
+      return mapsReadyPromise;
+    }
+
+    function addressComponentValue(components, type, short=false) {
+      const component=(components||[]).find(c=>(c.types||[]).includes(type));
+      return short ? (component?.shortText || component?.short_name || '') : (component?.longText || component?.long_name || '');
+    }
+
+    function fillAddressFields(formId, place) {
+      const form=document.getElementById(formId);
+      if (!form) return;
+      const c=place.addressComponents || place.address_components || [];
+      const street=[addressComponentValue(c,'street_number'),addressComponentValue(c,'route')].filter(Boolean).join(' ');
+      const area=addressComponentValue(c,'sublocality_level_1') || addressComponentValue(c,'sublocality') || addressComponentValue(c,'neighborhood');
+      const city=addressComponentValue(c,'locality') || addressComponentValue(c,'administrative_area_level_2');
+      const state=addressComponentValue(c,'administrative_area_level_1');
+      const pincode=addressComponentValue(c,'postal_code');
+      const line1=[street,area].filter(Boolean).join(', ') || place.formattedAddress || place.formatted_address || '';
+      if (form.elements.line1 && line1) form.elements.line1.value=line1;
+      if (form.elements.city && city) form.elements.city.value=city;
+      if (form.elements.state && state) form.elements.state.value=state;
+      if (form.elements.pincode && pincode) {
+        form.elements.pincode.value=pincode;
+        if (formId==='checkoutForm') updateCheckoutDelivery(pincode);
+      }
+    }
+
+    async function initAddressAutocomplete(hostId, formId) {
+      const host=document.getElementById(hostId);
+      if (!host) return;
+      if (!PUBLIC_CONFIG.googleMapsApiKey) {
+        host.innerHTML='<div class="google-config-note">Address search activates when GOOGLE_MAPS_API_KEY is configured. Saved-address autofill still works.</div>';
+        return;
+      }
+      try {
+        await ensureGoogleMaps();
+        const placesLib = window.google.maps.importLibrary ? await window.google.maps.importLibrary('places') : window.google.maps.places;
+        if (placesLib?.PlaceAutocompleteElement) {
+          const widget = new placesLib.PlaceAutocompleteElement();
+          widget.setAttribute('aria-label','Search delivery address');
+          host.innerHTML=''; host.appendChild(widget);
+          const pick = async event => {
+            const prediction=event.placePrediction || event.detail?.placePrediction;
+            const place=prediction?.toPlace ? prediction.toPlace() : event.place || event.detail?.place;
+            if (!place) return;
+            if (place.fetchFields) await place.fetchFields({fields:['addressComponents','formattedAddress']});
+            fillAddressFields(formId,place);
+          };
+          widget.addEventListener('gmp-select',pick);
+          widget.addEventListener('gmp-placeselect',pick);
+        } else if (window.google.maps.places?.Autocomplete) {
+          host.innerHTML='<input class="input" id="'+hostId+'Input" placeholder="Start typing your address">';
+          const input=document.getElementById(hostId+'Input');
+          const autocomplete=new google.maps.places.Autocomplete(input,{componentRestrictions:{country:'in'},fields:['address_components','formatted_address']});
+          autocomplete.addListener('place_changed',()=>fillAddressFields(formId,autocomplete.getPlace()));
+        }
+      } catch(error) {
+        host.innerHTML=`<div class="google-config-note">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    function fillCheckoutFromSaved(index) {
+      const address=(auth.user?.addresses||[])[Number(index)];
+      const form=document.getElementById('checkoutForm');
+      if (!address || !form) return;
+      ['line1','city','state','pincode'].forEach(key=>{ if(form.elements[key]) form.elements[key].value=address[key]||''; });
+      if(address.pincode) updateCheckoutDelivery(address.pincode);
+      toast(`${address.label || 'Saved address'} selected`);
+    }
+
     function productArt(product, cls='') {
       const src = product.image || (product.gallery && product.gallery[0]);
       const alt = product.name || 'RIVAYAT product image';
@@ -1194,21 +1597,23 @@
       return `<div class="pants-art ${product.art === 'white' ? 'white' : ''} ${product.type === 'full' ? 'full' : ''} ${cls}"></div>`;
     }
     function productCard(product) {
-      const off = Math.round((product.mrp - product.price) / product.mrp * 100);
+      const off = product.mrp ? Math.max(0,Math.round((product.mrp-product.price)/product.mrp*100)) : 0;
       const stock = totalProductStock(product);
-      const smartBadge = (product.soldCount || 0) >= 5 ? 'Best Seller' : ((product.reviews || 0) >= 50 ? 'Trending' : product.badge);
-      return `<article class="card product-card">
+      const isPremium = (product.tier || 'standard') === 'premium';
+      const smartBadge = isPremium ? 'RIVAYAT Privé' : ((product.soldCount||0)>=5 ? 'Best Seller' : ((product.reviews||0)>=50 ? 'Trending' : product.badge));
+      return `<article class="card product-card ${isPremium?'premium-product':''}">
         <div class="product-media" style="--product-bg:${product.bg}">
-          <span class="product-badge">${smartBadge}</span>
-          <button class="icon-btn wish-btn" onclick="event.stopPropagation(); wishlist.toggle('${product.id}')">${wishlist.has(product.id) ? '♥' : '♡'}</button>
-          <a href="#/product/${product.slug}" aria-label="View ${product.name}">${productArt(product)}</a>
+          <span class="product-badge">${escapeHtml(smartBadge || 'RIVAYAT')}</span>
+          <button class="icon-btn wish-btn" onclick="event.stopPropagation(); wishlist.toggle('${product.id}')" aria-label="Toggle wishlist">${wishlist.has(product.id)?'♥':'♡'}</button>
+          <a href="#/product/${product.slug}" aria-label="View ${escapeHtml(product.name)}">${productArt(product)}</a>
         </div>
         <div class="product-info">
-          <div class="product-title"><h3><a href="#/product/${product.slug}">${product.name}</a></h3><span class="muted">★ ${product.rating}</span></div>
-          <div class="price"><span class="sale">${money(product.price)}</span><span class="mrp">${money(product.mrp)}</span><span class="off">${off}% OFF</span></div>
-          <div class="sizes">${product.sizes.map(s=>`<span class="size-chip">${s}</span>`).join('')}</div>
-          <p class="muted" style="font-size:13px;margin:10px 0 0">${stock > 0 ? stock + ' in stock' : 'Out of stock'}</p>
-          <div style="display:flex; gap:8px; margin-top:14px"><button class="btn small full" ${stock <= 0 ? 'disabled' : ''} onclick="quickAddToCart('${product.id}')">${stock <= 0 ? 'Out of Stock' : 'Quick Add'}</button><a class="btn secondary small" href="#/product/${product.slug}">View</a></div>
+          ${isPremium?'<span class="premium-tag">Elevated limited collection</span>':''}
+          <div class="product-title"><h3><a href="#/product/${product.slug}">${escapeHtml(product.name)}</a></h3><span class="muted">★ ${Number(product.rating||0).toFixed(1)}</span></div>
+          <div class="price"><span class="sale">${money(product.price)}</span>${product.mrp?`<span class="mrp">${money(product.mrp)}</span>`:''}${off?`<span class="off">${off}% OFF</span>`:''}</div>
+          <div class="sizes">${(product.sizes||SIZES).map(size=>`<span class="size-chip">${size}</span>`).join('')}</div>
+          <p class="muted" style="font-size:13px;margin:10px 0 0">${stock>0 ? `${stock} in stock` : 'Out of stock'}</p>
+          <div style="display:flex;gap:8px;margin-top:14px"><button class="btn small full" ${stock<=0?'disabled':''} onclick="quickAddToCart('${product.id}')">${stock<=0?'Out of Stock':'Quick Add'}</button><a class="btn secondary small" href="#/product/${product.slug}">View</a></div>
         </div>
       </article>`;
     }
@@ -1216,80 +1621,149 @@
     async function quickAddToCart(productId) { const p = await ProductService.get(productId); if (p) cart.add(p, 'M', 1); }
 
     async function renderHome() {
-      setSEO('Premium Indian Fashion', 'RIVAYAT premium men’s fashion built for comfort and modern style.');
-      const products = await ProductService.list({ sort: 'rating' });
+      setSEO('Premium Indian Fashion', 'RIVAYAT essentials and RIVAYAT Privé premium menswear with a modern, reliable shopping experience.');
+      const products = await ProductService.list({ sort:'rating' });
       const home = await SettingsService.getHomepage();
+      const premium = products.filter(p=>(p.tier||'standard')==='premium').slice(0,3);
+      const essentials = products.filter(p=>(p.tier||'standard')!=='premium').slice(0,4);
+      const best = [...products].sort((a,b)=>(b.soldCount||0)-(a.soldCount||0)).slice(0,4);
       return `<div class="page">
-        <section class="hero">
+        <section class="hero home-section">
           <div class="container hero-grid">
             <div>
               <span class="pill">${escapeHtml(home.heroPill)}</span>
               <h1 class="serif">${escapeHtml(home.heroTitle)}</h1>
               <p>${escapeHtml(home.heroSubtitle)}</p>
-              <div class="hero-actions"><a class="btn" href="#/shop">${escapeHtml(home.primaryButtonText)}</a><a class="btn secondary" href="https://wa.me/${BRAND.whatsappDigits}?text=${encodeURIComponent('Hi RIVAYAT, I want to shop your collection.') }" target="_blank">${escapeHtml(home.secondaryButtonText)}</a></div>
-              <div class="grid grid-3" style="margin-top:28px"><div class="pill">COD Available</div><div class="pill">Secure Checkout</div><div class="pill">Premium Packaging</div></div>
+              <div class="hero-actions"><a class="btn" href="#/shop">${escapeHtml(home.primaryButtonText)}</a><a class="btn secondary" href="#/premium">Discover Privé</a></div>
+              <div class="grid grid-3" style="margin-top:28px"><div class="pill">✓ Email-verified accounts</div><div class="pill">COD available</div><div class="pill">Premium packaging</div></div>
             </div>
-            <div class="hero-card"><div class="hero-inner"><img class="hero-product-photo" src="${home.heroImage || ASSETS.blackModel}" alt="RIVAYAT hero product"><div class="hero-copy"><h2 class="serif">Launch Drop</h2><p>${escapeHtml(home.heroOffer)}</p></div></div></div>
+            <div class="hero-card"><div class="hero-inner"><img class="hero-product-photo" src="${home.heroImage || ASSETS.blackModel}" alt="RIVAYAT hero product"><div class="hero-copy"><span class="premium-kicker">RIVAYAT Store</span><h2 class="serif">New Season</h2><p>${escapeHtml(home.heroOffer)}</p></div></div></div>
           </div>
         </section>
-        <section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">Featured Products</h2><p>Clean silhouettes, premium neutral palette, and comfort-focused pricing for everyday Indian style.</p></div><a class="btn secondary" href="#/shop">View all</a></div><div class="grid grid-3">${products.map(productCard).join('')}</div></div></section>
-        <section class="section tight"><div class="container grid grid-2"><div class="card pad" style="background:#111;color:#fff"><span class="pill" style="background:rgba(255,255,255,.1);border-color:var(--line-dark);color:#e9dcc5">New Arrivals</span><h2 class="serif" style="font-size:48px;margin:18px 0 8px">Minimal essentials for this season.</h2><p style="color:rgba(255,255,255,.68);line-height:1.7">Black, white, and neutral pieces made for easy styling.</p><a class="btn gold" href="#/shop" style="margin-top:16px">Explore New Drop</a></div><div class="card pad"><span class="pill">Best Sellers</span><h2 class="serif" style="font-size:48px;margin:18px 0 8px">Half Pant Black</h2><p class="muted" style="line-height:1.7">The first RIVAYAT hero product: everyday comfort with a premium black finish.</p><a class="btn" href="#/product/rivayat-half-pant-black" style="margin-top:16px">Shop Best Seller</a></div></div></section>
-        <section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">Why Choose Rivayat</h2><p>Built with real ecommerce features: invoices, tracking, returns, reviews, coupons, and admin controls.</p></div></div><div class="grid grid-4">${['PDF Invoices','Live Tracking','Returns & Exchange','Admin Managed Store'].map((t,i)=>`<div class="card feature-card"><div><div class="feature-icon">${['▣','↗','↺','⚙'][i]}</div><strong>${t}</strong></div><p>${['Clean invoice layout with customer, address, items, and total details.','Order statuses with a visible timeline from placed to delivered.','Customers can request returns or exchanges after delivery.','Products, images, coupons, reviews, stock, orders, and hero banner can be managed from admin.'][i]}</p></div>`).join('')}</div></div></section>
-        <section class="section tight"><div class="container"><div class="section-head"><div><h2 class="serif">Customer Testimonials</h2><p>Real-style feedback from customers who love clean, comfortable everyday fits.</p></div></div><div class="grid grid-3">${['Fit is comfortable and looks premium for the price.','Black half pant is perfect for gym and casual wear.','Clean design, fast checkout, and good WhatsApp support.'].map((t,i)=>`<div class="card testimonial"><div class="stars">★★★★★</div><p>“${t}”</p><strong>${['Aman','Ritik','Harsh'][i]}</strong><br><span class="muted">Verified Buyer</span></div>`).join('')}</div></div></section>
+
+        <div class="section-nav"><div class="container"><nav class="section-nav-inner" aria-label="Homepage sections">
+          <a href="#/" onclick="event.preventDefault();scrollToSection('collections')">Collections</a><a href="#/" onclick="event.preventDefault();scrollToSection('new-drop')">New Drop</a><a href="#/" onclick="event.preventDefault();scrollToSection('prive')">RIVAYAT Privé</a><a href="#/" onclick="event.preventDefault();scrollToSection('best-sellers')">Best Sellers</a><a href="#/" onclick="event.preventDefault();scrollToSection('why-rivayat')">Why RIVAYAT</a>
+        </nav></div></div>
+
+        <section class="section home-section" id="collections"><div class="container">
+          <div class="section-head"><div><span class="pill">Shop by collection</span><h2 class="serif">Find your fit faster.</h2><p>The storefront is now split into clear collections instead of one continuous catalogue.</p></div></div>
+          <div class="collection-grid">
+            <a class="collection-card" href="#/shop?category=Half+Pants"><div><span class="premium-kicker">Daily Rotation</span><h3 class="serif">Half Pants</h3><p>Relaxed essentials for summer, gym, travel, and everyday styling.</p></div><strong>Shop Half Pants →</strong></a>
+            <a class="collection-card" href="#/shop?category=Full+Pants"><div><span class="premium-kicker">Sharp Comfort</span><h3 class="serif">Full Pants</h3><p>Clean full-length silhouettes built for repeat wear and easy pairing.</p></div><strong>Shop Full Pants →</strong></a>
+            <a class="collection-card dark" href="#/premium"><div><span class="premium-kicker">Limited Collection</span><h3 class="serif">RIVAYAT Privé</h3><p>Elevated finishes, limited drops, and premium packaging.</p></div><strong>Enter Privé →</strong></a>
+          </div>
+        </div></section>
+
+        <section class="section home-section tinted" id="new-drop"><div class="container">
+          <div class="section-head"><div><span class="pill">Fresh arrivals</span><h2 class="serif">New essentials.</h2><p>Core pieces with clear pricing, stock visibility, sizes, wishlist, and quick add.</p></div><a class="btn secondary" href="#/shop">View full shop</a></div>
+          <div class="grid grid-4">${essentials.map(productCard).join('')}</div>
+        </div></section>
+
+        <section class="section home-section" id="prive"><div class="container"><div class="premium-stage">
+          <div class="section-head"><div><span class="premium-kicker">RIVAYAT Privé</span><h2 class="serif" style="font-size:clamp(42px,6vw,72px);margin:10px 0">The elevated edit.</h2><p>Premium pieces for customers looking for a more refined finish, limited availability, and a distinct RIVAYAT experience.</p></div><a class="btn gold" href="#/premium">Explore Privé</a></div>
+          <div class="grid grid-3">${premium.map(productCard).join('')}</div>
+        </div></div></section>
+
+        <section class="section home-section tinted" id="best-sellers"><div class="container">
+          <div class="section-head"><div><span class="pill">Most loved</span><h2 class="serif">Best sellers.</h2><p>Popular pieces surfaced separately so shoppers can decide faster.</p></div></div>
+          <div class="grid grid-4">${best.map(productCard).join('')}</div>
+        </div></section>
+
+        <section class="section home-section" id="why-rivayat"><div class="container">
+          <div class="section-head"><div><span class="pill">Buy with confidence</span><h2 class="serif">A storefront designed to feel reliable.</h2><p>Clear account, checkout, order, support, and post-purchase tools reduce uncertainty at every step.</p></div></div>
+          <div class="trust-grid">
+            <div class="trust-item"><div class="trust-icon">✓</div><strong>Verified accounts</strong><span class="muted">New password accounts verify their email before login.</span></div>
+            <div class="trust-item"><div class="trust-icon">⌁</div><strong>Faster address entry</strong><span class="muted">Use saved addresses or Google-powered address search when configured.</span></div>
+            <div class="trust-item"><div class="trust-icon">▣</div><strong>Order transparency</strong><span class="muted">Invoices, tracking statuses, returns and exchange requests remain available.</span></div>
+            <div class="trust-item"><div class="trust-icon">◐</div><strong>Your preferred theme</strong><span class="muted">Dark and light mode are remembered on your device.</span></div>
+          </div>
+        </div></section>
+
+        <section class="section tight home-section"><div class="container grid grid-2">
+          <div class="card pad"><span class="pill">Customer voice</span><h2 class="serif" style="font-size:44px">Comfort first. Details matter.</h2><div class="stars">★★★★★</div><p style="font-size:20px;line-height:1.6">“Fit is comfortable, checkout is simple, and the clean styling makes it easy to wear every day.”</p><strong>RIVAYAT Customer</strong></div>
+          <div class="card pad"><span class="pill">Stay close</span><h2 class="serif" style="font-size:44px">Join the RIVAYAT circle.</h2><p class="muted">Get launch offers, new drops, premium collection updates, and styling notes.</p><form onsubmit="subscribeNewsletter(event)"><div class="coupon-row"><input class="input" name="email" type="email" required placeholder="Your email"><button class="btn">Subscribe</button></div></form><div class="divider"></div><a class="btn secondary" href="#/contact">Contact & Support</a></div>
+        </div></section>
+
         ${renderFoundersSection()}
-        <section class="section tight"><div class="container"><div class="section-head"><div><h2 class="serif">Instagram</h2><p>Follow ${BRAND.instagram} for drops, styling, and behind-the-brand updates.</p></div><a class="btn secondary" target="_blank" href="https://instagram.com/houseofrivayat">Follow</a></div><div class="insta-grid">${[ASSETS.blackFront, ASSETS.whiteFront, ASSETS.blackPocket, ASSETS.whiteSide, ASSETS.fullFront, ASSETS.fullDetails].map((src,i)=>`<div class="insta-tile"><img src="${src}" alt="RIVAYAT product ${i+1}" loading="lazy"></div>`).join('')}</div></div></section>
-        <section class="section"><div class="container grid grid-2"><div class="card pad"><h2 class="serif" style="font-size:44px;margin-top:0">Join the Rivayat circle.</h2><p class="muted">Get launch offers, new drops, and styling tips.</p><form onsubmit="subscribeNewsletter(event)"><div class="coupon-row"><input class="input" name="email" type="email" required placeholder="Your email"><button class="btn">Subscribe</button></div></form></div><div class="card pad"><h2 class="serif" style="font-size:44px;margin-top:0">Contact</h2><p class="muted">Email ${BRAND.email}<br>Instagram ${BRAND.instagram}<br>Facebook ${BRAND.facebook}<br>WhatsApp ${BRAND.whatsapp}</p><a class="btn" href="#/contact">Contact Us</a></div></div></section>
       </div>`;
-    }
-    function renderFoundersSection() {
-      const people = [
-        ['Shashvat Shukla','Founder','@shasvat_shukla__','SS'], ['Swastik Shukla','Manager','@swastik_shukla__','SS'], ['Navneet Tiwari','Operations Head','@_navneet006','NT'], ['Shantanu Shukla','Business Team','—','ST']
-      ];
-      return `<section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">People Behind RIVAYAT</h2><p>Elegant founder and team cards for brand trust and premium storytelling.</p></div></div><div class="grid grid-4">${people.map(p=>`<div class="card founder-card"><div class="avatar">${p[3]}</div><div><h3 style="margin:0">${p[0]}</h3><p class="muted" style="margin:5px 0 8px">${p[1]}</p><span class="pill">${p[2]}</span></div></div>`).join('')}</div></div></section>`;
     }
 
     function renderFoundersSection() {
       const people = [
-        { name: 'Shashvat Shukla', role: 'Founder', tag: 'Portfolio', initials: 'SS', links: [['Portfolio','https://my-portfolio-blond-delta-39.vercel.app'], ['GitHub','https://github.com/shashvatshukla-coder'], ['LinkedIn','https://www.linkedin.com/in/shashvat-shukla-03225b397']] },
-        { name: 'Swastik Shukla', role: 'Manager', tag: 'Developer', initials: 'SS', links: [['Portfolio','https://swastikshukla.netlify.app/'], ['Rivayat','https://rivayat.shop/'], ['GitHub','https://github.com/SwastikShukla006'], ['LinkedIn','https://www.linkedin.com/in/swastikshukla009'], ['Instagram','https://www.instagram.com/swastik_shukla__/'], ['Email','mailto:swastikshukla522@gmail.com']] },
-        { name: 'Navneet Tiwari', role: 'Operations Head', tag: '@_navneet006', initials: 'NT', links: [] },
-        { name: 'Shantanu Shukla', role: 'Business Team', tag: 'Team', initials: 'ST', links: [] }
+        { name:'Shashvat Shukla', role:'Founder', tag:'Portfolio', initials:'SS', links:[['Portfolio','https://my-portfolio-blond-delta-39.vercel.app'],['GitHub','https://github.com/shashvatshukla-coder'],['LinkedIn','https://www.linkedin.com/in/shashvat-shukla-03225b397']] },
+        { name:'Swastik Shukla', role:'Manager', tag:'Developer', initials:'SS', links:[['Portfolio','https://swastikshukla.netlify.app/'],['Rivayat','https://rivayat.shop/'],['GitHub','https://github.com/SwastikShukla006'],['LinkedIn','https://www.linkedin.com/in/swastikshukla009']] },
+        { name:'Navneet Tiwari', role:'Operations Head', tag:'Operations', initials:'NT', links:[] },
+        { name:'Shantanu Shukla', role:'Business Team', tag:'Team', initials:'ST', links:[] }
       ];
-      return `<section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">People Behind RIVAYAT</h2><p>Meet the team and creators building the RIVAYAT shopping experience.</p></div></div><div class="grid grid-4">${people.map(p=>`<div class="card founder-card"><div class="avatar">${p.initials}</div><div><h3 style="margin:0">${p.name}</h3><p class="muted" style="margin:5px 0 8px">${p.role}</p><span class="pill">${p.tag}</span>${p.links.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${p.links.map(([label,url])=>`<a class="btn ghost small" target="_blank" href="${url}">${label}</a>`).join('')}</div>` : ''}</div></div>`).join('')}</div></div></section>`;
+      return `<section class="section tight home-section"><div class="container"><div class="section-head"><div><span class="pill">The team</span><h2 class="serif">People behind RIVAYAT.</h2><p>Brand and team information stays available without interrupting the main shopping journey.</p></div></div><div class="grid grid-4">${people.map(p=>`<div class="card founder-card"><div class="avatar">${p.initials}</div><div><h3 style="margin:0">${p.name}</h3><p class="muted" style="margin:5px 0 8px">${p.role}</p><span class="pill">${p.tag}</span>${p.links.length?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${p.links.map(([label,url])=>`<a class="btn ghost small" target="_blank" href="${url}">${label}</a>`).join('')}</div>`:''}</div></div>`).join('')}</div></div></section>`;
+    }
+
+    async function renderPremium() {
+      setSEO('RIVAYAT Privé', 'Explore RIVAYAT Privé, the elevated premium edit.');
+      const products = await ProductService.list({ tier:'premium', sort:'rating' });
+      return `<div class="page">
+        <section class="section"><div class="container"><div class="premium-stage">
+          <span class="premium-kicker">RIVAYAT Privé • Limited Collection</span>
+          <h1 class="serif" style="font-size:clamp(58px,9vw,108px);line-height:.88;margin:20px 0">Quietly premium.<br>Distinctly RIVAYAT.</h1>
+          <p class="muted" style="max-width:650px;font-size:18px;line-height:1.7">A focused edit with elevated finishing, deeper neutral tones, limited stock, and premium packaging. Designed as a separate experience from the everyday essentials range.</p>
+          <div class="hero-actions"><button class="btn gold" onclick="scrollToSection('premium-products')">Shop Privé</button><a class="btn secondary" href="#/shop">Shop Essentials</a></div>
+        </div></div></section>
+        <section class="section" id="premium-products"><div class="container"><div class="section-head"><div><span class="pill">${products.length} premium pieces</span><h2 class="serif">The Privé edit.</h2><p>Limited-stock premium products with clear sizing, wishlist and quick-add support.</p></div></div>${products.length?`<div class="grid grid-3">${products.map(productCard).join('')}</div>`:'<div class="empty">Premium products are being prepared.</div>'}</div></section>
+        <section class="section tinted home-section"><div class="container"><div class="trust-grid">
+          <div class="trust-item"><strong>Premium packaging</strong><span class="muted">A more elevated unboxing experience.</span></div>
+          <div class="trust-item"><strong>Limited availability</strong><span class="muted">Lower-stock, more focused drops.</span></div>
+          <div class="trust-item"><strong>Account benefits</strong><span class="muted">Wishlist, saved addresses, orders and returns.</span></div>
+          <div class="trust-item"><strong>Direct support</strong><span class="muted">WhatsApp and email support remain one click away.</span></div>
+        </div></div></section>
+      </div>`;
     }
 
     async function renderShop() {
-      setSEO('Shop Collection', 'Shop RIVAYAT launch collection: black half pant, white half pant, and full pant.');
+      setSEO('Shop Collection', 'Shop RIVAYAT essentials and premium menswear with search, filters and sorting.');
       const params = new URLSearchParams(location.hash.split('?')[1] || '');
-      const products = await ProductService.list({ search: params.get('q') || '', category: params.get('category') || 'All', color: params.get('color') || 'All', size: params.get('size') || 'All', sort: params.get('sort') || 'featured' });
-      const val = k => params.get(k) || (k==='sort' ? 'featured' : 'All');
+      const filters = {
+        search:params.get('q')||'',
+        category:params.get('category')||'All',
+        color:params.get('color')||'All',
+        size:params.get('size')||'All',
+        tier:params.get('tier')||'All',
+        sort:params.get('sort')||'featured'
+      };
+      const products = await ProductService.list(filters);
+      const val = key => filters[key] || (key==='sort'?'featured':'All');
+      const colors=['All','Black','White','Ivory','Onyx','Graphite'];
       return `<div class="page section"><div class="container">
-        <div class="section-head"><div><span class="pill">${products.length} products</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">Shop RIVAYAT</h1><p>Search, filter, sort, wishlist, and shop the official RIVAYAT catalogue.</p></div></div>
+        <div class="section-head"><div><span class="pill">${products.length} products</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">Shop RIVAYAT</h1><p>Essentials and Privé are now organized with collection, color, size and tier filters.</p></div><a class="btn gold" href="#/premium">RIVAYAT Privé</a></div>
         <div class="shop-layout">
           <aside class="card filter-panel">
-            <h3 style="margin-top:0">Filters</h3>
+            <h3 style="margin-top:0">Refine</h3>
+            <div class="filter-group"><label>Collection<select class="select" id="tierFilter"><option value="All">All collections</option><option value="standard" ${val('tier')==='standard'?'selected':''}>Essentials</option><option value="premium" ${val('tier')==='premium'?'selected':''}>RIVAYAT Privé</option></select></label></div>
             <div class="filter-group"><label>Category<select class="select" id="categoryFilter"><option>All</option><option ${val('category')==='Half Pants'?'selected':''}>Half Pants</option><option ${val('category')==='Full Pants'?'selected':''}>Full Pants</option></select></label></div>
-            <div class="filter-group"><label>Color<select class="select" id="colorFilter"><option>All</option><option ${val('color')==='Black'?'selected':''}>Black</option><option ${val('color')==='White'?'selected':''}>White</option></select></label></div>
-            <div class="filter-group"><label>Size<select class="select" id="sizeFilter"><option>All</option>${SIZES.map(s=>`<option ${val('size')===s?'selected':''}>${s}</option>`).join('')}</select></label></div>
+            <div class="filter-group"><label>Color<select class="select" id="colorFilter">${colors.map(c=>`<option ${val('color')===c?'selected':''}>${c}</option>`).join('')}</select></label></div>
+            <div class="filter-group"><label>Size<select class="select" id="sizeFilter"><option>All</option>${SIZES.map(size=>`<option ${val('size')===size?'selected':''}>${size}</option>`).join('')}</select></label></div>
             <button class="btn full" onclick="applyShopFilters()">Apply Filters</button>
             <button class="btn secondary full" style="margin-top:8px" onclick="go('#/shop')">Reset</button>
           </aside>
           <section>
             <div class="toolbar card pad">
-              <input class="input" id="searchInput" placeholder="Search products" value="${params.get('q') || ''}" onkeydown="if(event.key==='Enter') applyShopFilters()">
-              <select class="select" id="sortFilter" style="max-width:210px"><option value="featured">Featured</option><option value="price-low" ${val('sort')==='price-low'?'selected':''}>Price: Low to High</option><option value="price-high" ${val('sort')==='price-high'?'selected':''}>Price: High to Low</option><option value="rating" ${val('sort')==='rating'?'selected':''}>Top Rated</option><option value="bestseller" ${val('sort')==='bestseller'?'selected':''}>Best Selling</option></select>
+              <input class="input" id="searchInput" placeholder="Search by product, color, collection…" value="${escapeHtml(filters.search)}" onkeydown="if(event.key==='Enter') applyShopFilters()">
+              <select class="select" id="sortFilter" style="max-width:210px"><option value="featured">Featured</option><option value="price-low" ${val('sort')==='price-low'?'selected':''}>Price: Low to High</option><option value="price-high" ${val('sort')==='price-high'?'selected':''}>Price: High to Low</option><option value="rating" ${val('sort')==='rating'?'selected':''}>Top Rated</option></select>
             </div>
-            ${products.length ? `<div class="grid grid-3">${products.map(productCard).join('')}</div>` : `<div class="empty"><h3>No products found</h3><p class="muted">Try changing filters.</p></div>`}
+            ${products.length?`<div class="grid grid-3">${products.map(productCard).join('')}</div>`:`<div class="empty"><h3>No products found</h3><p class="muted">Try changing a filter or search term.</p><button class="btn" onclick="go('#/shop')">Reset filters</button></div>`}
           </section>
         </div>
       </div></div>`;
     }
     function applyShopFilters() {
-      const p = new URLSearchParams();
-      const q = document.getElementById('searchInput').value.trim();
-      const category = document.getElementById('categoryFilter').value; const color = document.getElementById('colorFilter').value; const size = document.getElementById('sizeFilter').value; const sort = document.getElementById('sortFilter').value;
-      if(q) p.set('q', q); if(category !== 'All') p.set('category', category); if(color !== 'All') p.set('color', color); if(size !== 'All') p.set('size', size); if(sort !== 'featured') p.set('sort', sort);
-      go('#/shop' + (p.toString() ? '?' + p.toString() : ''));
+      const p=new URLSearchParams();
+      const q=document.getElementById('searchInput')?.value.trim()||'';
+      const category=document.getElementById('categoryFilter')?.value||'All';
+      const color=document.getElementById('colorFilter')?.value||'All';
+      const size=document.getElementById('sizeFilter')?.value||'All';
+      const tier=document.getElementById('tierFilter')?.value||'All';
+      const sort=document.getElementById('sortFilter')?.value||'featured';
+      if(q)p.set('q',q); if(category!=='All')p.set('category',category); if(color!=='All')p.set('color',color); if(size!=='All')p.set('size',size); if(tier!=='All')p.set('tier',tier); if(sort!=='featured')p.set('sort',sort);
+      go('#/shop'+(p.toString()?'?'+p.toString():''));
     }
 
     async function renderProduct(slug) {
@@ -1335,36 +1809,83 @@
     async function applyCoupon() { const code = document.getElementById('couponInput').value.trim(); if(!code) return toast('Enter a coupon code'); try { cart.coupon = await CouponService.validate(code, cart.subtotal()); save(); toast(`Coupon applied: ${money(cart.coupon.discount)} off`); render(); } catch(e) { cart.coupon = null; save(); toast(e.message); render(); } }
 
     function renderCheckout() {
-      setSEO('Checkout', 'Secure checkout with COD and online payment options.');
+      setSEO('Checkout', 'Secure RIVAYAT checkout with saved-address and Google-powered address autofill.');
       if (!cart.items.length) return `<div class="page section"><div class="container"><div class="empty"><h1 class="serif">Cart required</h1><a class="btn" href="#/shop">Shop Now</a></div></div></div>`;
-      const u = auth.user || {};
-      return `<div class="page section"><div class="container"><div class="section-head"><div><h1 class="serif" style="font-size:62px;margin:0">Checkout</h1><p>Complete your shipping details, apply coupons, and place your RIVAYAT order securely.</p></div></div><div class="checkout-layout"><form class="card pad" id="checkoutForm" onsubmit="placeOrder(event)">
-        <h2>Contact Details</h2><div class="form-grid"><label>Name<input class="input" name="name" required value="${u.name || ''}"></label><label>Phone<input class="input" name="phone" required pattern="[0-9]{10}" placeholder="10 digit mobile" value="${u.phone || ''}"></label><label style="grid-column:1/-1">Email<input class="input" name="email" required type="email" value="${u.email || ''}"></label></div>
-        <div class="divider"></div><h2>Shipping Address</h2><div class="form-grid"><label style="grid-column:1/-1">Address line<input class="input" name="line1" required placeholder="House no, street, area"></label><label>City<input class="input" name="city" required></label><label>State<input class="input" name="state" required></label><label>Pincode<input class="input" name="pincode" required pattern="[0-9]{6}" value="${db.get('rivayat_checkout_pincode','')}" oninput="updateCheckoutDelivery(this.value)"></label></div>
-        <div class="divider"></div><h2>Payment Method</h2><div class="grid grid-2"><label class="card pad"><span><input type="radio" name="payment" value="COD" checked> Cash On Delivery</span><small class="muted">Pay when your order arrives.</small></label><label class="card pad"><span><input type="radio" name="payment" value="Online Payment"> Online Payment</span><small class="muted">Secure online payment powered by Razorpay.</small></label></div>
-        <button class="btn full" style="margin-top:22px" type="submit">Place Order</button><div id="checkoutMsg" style="margin-top:12px"></div>
-      </form>${renderCartSummary(false, db.get('rivayat_checkout_pincode',''))}</div></div></div>`;
+      const u=auth.user||{};
+      const saved=u.addresses||[];
+      return `<div class="page section"><div class="container">
+        <div class="section-head"><div><span class="pill">Secure checkout</span><h1 class="serif" style="font-size:62px;margin:14px 0 0">Checkout</h1><p>Contact, address, payment, and order summary are separated into clear steps.</p></div></div>
+        <div class="checkout-layout"><form class="card pad" id="checkoutForm" onsubmit="placeOrder(event)">
+          <h2>1. Contact details</h2>
+          <div class="form-grid">
+            <label>Name<input class="input" name="name" required autocomplete="name" value="${escapeHtml(u.name||'')}"></label>
+            <label>Phone<input class="input" name="phone" required pattern="[0-9]{10}" inputmode="numeric" autocomplete="tel" placeholder="10 digit mobile" value="${escapeHtml(u.phone||'')}"></label>
+            <label style="grid-column:1/-1">Email<input class="input" name="email" required type="email" autocomplete="email" value="${escapeHtml(u.email||'')}"></label>
+          </div>
+
+          <div class="divider"></div><h2>2. Shipping address</h2>
+          <div class="address-tools">
+            ${saved.length?`<div class="saved-address-picker"><label>Use a saved address<select class="select" onchange="if(this.value!=='') fillCheckoutFromSaved(this.value)"><option value="">Choose saved address</option>${saved.map((a,i)=>`<option value="${i}">${escapeHtml(a.label||`Address ${i+1}`)} — ${escapeHtml(a.city||'')}</option>`).join('')}</select></label></div>`:''}
+            <div><label class="muted" style="display:block;margin-bottom:7px">Search address</label><div class="place-autocomplete-shell" id="checkoutAddressAutocomplete"></div></div>
+          </div>
+          <div class="form-grid">
+            <label style="grid-column:1/-1">Address line<input class="input" name="line1" required autocomplete="street-address" placeholder="House no, street, area"></label>
+            <label>City<input class="input" name="city" required autocomplete="address-level2"></label>
+            <label>State<input class="input" name="state" required autocomplete="address-level1"></label>
+            <label>Pincode<input class="input" name="pincode" required pattern="[0-9]{6}" inputmode="numeric" autocomplete="postal-code" value="${escapeHtml(db.get('rivayat_checkout_pincode',''))}" oninput="updateCheckoutDelivery(this.value)"></label>
+          </div>
+          ${auth.user?`<label style="display:flex;gap:9px;align-items:center;margin-top:14px"><input type="checkbox" name="saveAddress" value="1"> Save this address to my account</label>`:''}
+
+          <div class="divider"></div><h2>3. Payment method</h2>
+          <div class="grid grid-2">
+            <label class="card pad"><span><input type="radio" name="payment" value="COD" checked> Cash On Delivery</span><small class="muted">Pay when your order arrives.</small></label>
+            <label class="card pad"><span><input type="radio" name="payment" value="Online Payment"> Online Payment</span><small class="muted">Razorpay-ready secure payment flow.</small></label>
+          </div>
+          <div class="notice" style="margin-top:18px">Your order details, delivery address, payment status, invoice, and tracking remain available in the existing RIVAYAT order flow.</div>
+          <button class="btn full" style="margin-top:22px" type="submit">Place Order</button><div id="checkoutMsg" style="margin-top:12px"></div>
+        </form>${renderCartSummary(false,db.get('rivayat_checkout_pincode',''))}</div>
+      </div></div>`;
     }
+
     async function placeOrder(event) {
-      event.preventDefault(); const form = event.target; const fd = new FormData(form); const msg = document.getElementById('checkoutMsg');
-      const orderId = 'RIV-' + Math.floor(10000 + Math.random() * 89999);
-      const paymentMethod = fd.get('payment');
-      db.set('rivayat_checkout_pincode', fd.get('pincode'));
-      msg.innerHTML = '<span class="muted">Creating your order...</span>';
-      let paymentStatus = paymentMethod === 'COD' ? 'Pending on Delivery' : 'Pending';
-      if (paymentMethod === 'Online Payment') {
-        const rzOrder = await PaymentService.createRazorpayOrder({ amount: cart.total(fd.get('pincode')), orderId });
-        const payment = await PaymentService.openRazorpayCheckout(rzOrder);
-        if (!payment.success) { msg.innerHTML = `<span class="error">${payment.message || 'Payment failed. Try COD or retry online payment.'}</span>`; return; }
-        paymentStatus = 'Paid';
+      event.preventDefault();
+      const form=event.target, fd=new FormData(form), msg=document.getElementById('checkoutMsg');
+      const submit=form.querySelector('button[type="submit"]');
+      const orderId='RIV-'+Math.floor(10000+Math.random()*89999);
+      const paymentMethod=fd.get('payment');
+      try {
+        if(submit){submit.disabled=true;submit.textContent='Placing order…';}
+        db.set('rivayat_checkout_pincode',fd.get('pincode'));
+        msg.innerHTML='<span class="muted">Creating your order securely…</span>';
+        let paymentStatus=paymentMethod==='COD'?'Pending on Delivery':'Pending';
+        if(paymentMethod==='Online Payment'){
+          const rzOrder=await PaymentService.createRazorpayOrder({amount:cart.total(fd.get('pincode')),orderId});
+          const payment=await PaymentService.openRazorpayCheckout(rzOrder);
+          if(!payment.success) throw new Error(payment.message||'Payment failed. Try COD or retry online payment.');
+          paymentStatus='Paid';
+        }
+        const delivery=cart.delivery(fd.get('pincode'));
+        const total=Math.max(0,cart.subtotal()-cart.discount()+delivery);
+        const address={line1:String(fd.get('line1')||'').trim(),city:String(fd.get('city')||'').trim(),state:String(fd.get('state')||'').trim(),pincode:String(fd.get('pincode')||'').trim()};
+        const order={id:orderId,createdAt:new Date().toISOString(),status:'Pending',paymentMethod,paymentStatus,
+          customer:{name:fd.get('name'),phone:fd.get('phone'),email:fd.get('email')},address,
+          items:cart.items.map(({productId,name,size,qty,price})=>({productId,name,size,qty,price})),
+          subtotal:cart.subtotal(),discount:cart.discount(),delivery,total,referralCode:cart.coupon?.referral?.code||''};
+        await OrderService.create(order);
+
+        if(auth.user && fd.get('saveAddress')==='1'){
+          const exists=(auth.user.addresses||[]).some(a=>a.line1===address.line1 && a.pincode===address.pincode);
+          if(!exists){
+            try { await UserService.addAddress(auth.user.id,{id:uid('addr'),label:'Checkout',...address}); }
+            catch(error){ console.warn('Order placed, but address could not be saved:',error.message); }
+          }
+        }
+        cart.clear(); toast('Order placed successfully'); go('#/confirmation/'+order.id);
+      } catch(error) {
+        msg.innerHTML=`<span class="error">${escapeHtml(error.message)}</span>`;
+      } finally {
+        if(submit){submit.disabled=false;submit.textContent='Place Order';}
       }
-      db.set('rivayat_checkout_pincode', fd.get('pincode'));
-      const delivery = cart.delivery(fd.get('pincode'));
-      const total = Math.max(0, cart.subtotal() - cart.discount() + delivery);
-      const order = { id: orderId, createdAt: new Date().toISOString(), status: 'Pending', paymentMethod, paymentStatus,
-        customer: { name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email') }, address: { line1: fd.get('line1'), city: fd.get('city'), state: fd.get('state'), pincode: fd.get('pincode') },
-        items: cart.items.map(({productId,name,size,qty,price})=>({productId,name,size,qty,price})), subtotal: cart.subtotal(), discount: cart.discount(), delivery, total, referralCode: cart.coupon?.referral?.code || '' };
-      await OrderService.create(order); cart.clear(); toast('Order placed successfully'); go('#/confirmation/' + order.id);
     }
 
     async function renderConfirmation(id) {
@@ -1418,67 +1939,130 @@
     }
 
     function renderAuth(mode='login') {
-      setSEO(mode === 'signup' ? 'Signup' : mode === 'forgot' ? 'Forgot Password' : 'Login', 'RIVAYAT account login and signup.');
-      const isSignup = mode === 'signup'; const isForgot = mode === 'forgot';
-      return `<div class="page section"><div class="container auth-shell"><div class="card pad"><span class="pill">RIVAYAT Account</span><h1 class="serif" style="font-size:54px;margin:18px 0 8px">${isSignup ? 'Create account' : isForgot ? 'Reset password' : 'Welcome back'}</h1><p class="muted">${isForgot ? 'Enter your email to receive a reset code.' : 'Use your registered email/username and password.'}</p>
-        <form onsubmit="handleAuth(event,'${mode}')" class="grid" style="margin-top:18px">
-          ${isForgot ? '<input type="hidden" name="stage" value="request">' : ''}
-          ${isSignup ? '<label>Name<input class="input" name="name" required></label><label>Phone<input class="input" name="phone" required pattern="[0-9]{10}"></label>' : ''}
-          <label>${isSignup || isForgot ? 'Email' : 'Email or Username'}<input class="input" type="${isSignup || isForgot ? 'email' : 'text'}" name="email" required></label>
-          ${isForgot ? '<div id="resetFields" class="grid" style="display:none"><label>Reset Code<input class="input" name="code" inputmode="numeric" pattern="[0-9]{6}"></label><label>New Password<input class="input" type="password" name="password" minlength="4"></label><label>Confirm Password<input class="input" type="password" name="confirmPassword" minlength="4"></label></div>' : ''}
-          ${!isForgot ? '<label>Password<input class="input" type="password" name="password" required minlength="4"></label>' : ''}
-          <button class="btn full" id="authSubmitBtn">${isSignup ? 'Sign Up' : isForgot ? 'Send Reset Code' : 'Login'}</button>
-          <div id="authMsg"></div>
-        </form>
-        <div class="divider"></div><p class="muted">${isSignup ? 'Already have an account?' : isForgot ? 'Remembered it?' : 'New here?'} <a class="accent" href="${isSignup || isForgot ? '#/login' : '#/signup'}">${isSignup || isForgot ? 'Login' : 'Create Account'}</a>${!isForgot ? ' • <a class="accent" href="#/forgot-password">Forgot Password?</a>' : ''}</p>
+      const isSignup=mode==='signup', isForgot=mode==='forgot', isVerify=mode==='verify';
+      const title=isSignup?'Create account':isForgot?'Reset password':isVerify?'Verify your email':'Welcome back';
+      setSEO(title,'RIVAYAT account access with password login, email verification, and Google sign-in.');
+      const pendingEmail=localStorage.getItem('rivayat_pending_verification_email')||'';
+      const devCode=sessionStorage.getItem('rivayat_pending_verification_code')||'';
+      const subtitle=isVerify?'Enter the 6-digit code we sent to your email.':isForgot?'We’ll send a reset code to your registered email.':isSignup?'Create your account, verify your email, then shop with saved addresses and order history.':'Use your password or continue securely with Google.';
+      return `<div class="page section"><div class="container auth-shell"><div class="auth-layout">
+        <aside class="auth-story">
+          <div><span class="premium-kicker">RIVAYAT Account</span><h2 class="serif">One account.<br>A smoother store.</h2><p style="color:rgba(255,255,255,.68);line-height:1.7">Wishlist, saved addresses, order history, returns, referrals and faster checkout stay connected to your profile.</p></div>
+          <div class="auth-benefits"><div>✓ Email verification for password accounts</div><div>G Google sign-in support</div><div>⌁ Saved-address checkout</div><div>◐ Dark & light mode preference</div></div>
+        </aside>
+        <div class="card pad">
+          <span class="pill">${isVerify?'Email verification':'RIVAYAT Account'}</span>
+          <h1 class="serif" style="font-size:54px;margin:18px 0 8px">${title}</h1><p class="muted">${subtitle}</p>
+          <form onsubmit="handleAuth(event,'${mode}')" class="grid" style="margin-top:18px">
+            ${isForgot?'<input type="hidden" name="stage" value="request">':''}
+            ${isSignup?'<label>Name<input class="input" name="name" autocomplete="name" required></label><label>Phone<input class="input" name="phone" autocomplete="tel" required pattern="[0-9]{10}" inputmode="numeric"></label>':''}
+            ${isVerify?`<label>Email<input class="input" type="email" name="email" value="${escapeHtml(pendingEmail)}" required></label><label>6-digit verification code<input class="input verification-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required value="${escapeHtml(devCode)}"></label>${devCode?`<div class="notice">Local testing code: <strong>${devCode}</strong>. Production emails never show the code here.</div>`:''}`:`<label>${isSignup||isForgot?'Email':'Email or Username'}<input class="input" type="${isSignup||isForgot?'email':'text'}" name="email" autocomplete="${isForgot?'email':'username'}" required></label>`}
+            ${isForgot?'<div id="resetFields" class="grid" style="display:none"><label>Reset Code<input class="input verification-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"></label><label>New Password<input class="input" type="password" name="password" minlength="8" autocomplete="new-password"></label><label>Confirm Password<input class="input" type="password" name="confirmPassword" minlength="8" autocomplete="new-password"></label></div>':''}
+            ${!isForgot&&!isVerify?'<label>Password<input class="input" type="password" name="password" required minlength="8" autocomplete="'+(isSignup?'new-password':'current-password')+'"></label>':''}
+            <button class="btn full" id="authSubmitBtn">${isSignup?'Create & Verify Account':isForgot?'Send Reset Code':isVerify?'Verify Email':'Login'}</button>
+            <div id="authMsg"></div>
+          </form>
+          ${isVerify?`<div class="divider"></div><button class="btn secondary full" onclick="resendVerification()">Resend verification code</button><p class="muted" style="text-align:center">Wrong email? <a class="accent" href="#/signup">Create account again</a></p>`:(!isForgot?`<div class="auth-divider">or</div><div class="google-auth-wrap" id="googleAuthButton"></div>`:'')}
+          <div class="divider"></div><p class="muted">${isSignup?'Already have an account?':isForgot||isVerify?'Back to account access':'New here?'} <a class="accent" href="${isSignup?'#/login':isForgot||isVerify?'#/login':'#/signup'}">${isSignup?'Login':isForgot||isVerify?'Login':'Create Account'}</a>${!isForgot&&!isVerify?' • <a class="accent" href="#/forgot-password">Forgot Password?</a>':''}</p>
+        </div>
       </div></div></div>`;
     }
-    async function handleAuth(event, mode) {
-      event.preventDefault(); const fd = new FormData(event.target); const msg = document.getElementById('authMsg');
-      try { if (mode === 'forgot') {
-        const email = String(fd.get('email') || '').trim();
-        const stage = String(fd.get('stage') || 'request');
-        if (stage === 'request') {
-          const message = await AuthService.forgotPassword(email);
-          event.target.querySelector('[name="stage"]').value = 'reset';
-          document.getElementById('resetFields').style.display = 'grid';
-          document.getElementById('authSubmitBtn').textContent = 'Reset Password';
-          msg.innerHTML = `<span class="success-text">${message}</span>`;
-          toast('Reset code sent');
-          return;
+
+    async function handleAuth(event,mode) {
+      event.preventDefault();
+      const fd=new FormData(event.target), msg=document.getElementById('authMsg'), button=document.getElementById('authSubmitBtn');
+      try {
+        if(button)button.disabled=true;
+        if(mode==='forgot'){
+          const email=String(fd.get('email')||'').trim();
+          const stage=String(fd.get('stage')||'request');
+          if(stage==='request'){
+            const message=await AuthService.forgotPassword(email);
+            event.target.querySelector('[name="stage"]').value='reset';
+            document.getElementById('resetFields').style.display='grid';
+            document.getElementById('authSubmitBtn').textContent='Reset Password';
+            msg.innerHTML=`<span class="success-text">${escapeHtml(message)}</span>`;
+            toast('Reset code sent'); return;
+          }
+          const password=String(fd.get('password')||''), confirmPassword=String(fd.get('confirmPassword')||'');
+          if(password.length<8)throw new Error('Password must be at least 8 characters');
+          if(password!==confirmPassword)throw new Error('Passwords do not match');
+          const message=await AuthService.resetPassword(email,fd.get('code'),password);
+          msg.innerHTML=`<span class="success-text">${escapeHtml(message)}</span>`;
+          toast('Password updated'); setTimeout(()=>go('#/login'),700); return;
         }
-        const password = String(fd.get('password') || '');
-        const confirmPassword = String(fd.get('confirmPassword') || '');
-        if (password !== confirmPassword) throw new Error('Passwords do not match');
-        const message = await AuthService.resetPassword(email, fd.get('code'), password);
-        msg.innerHTML = `<span class="success-text">${message}</span>`;
-        toast('Password updated');
-        setTimeout(() => go('#/login'), 900);
-        return;
+
+        if(mode==='verify'){
+          const email=String(fd.get('email')||'').trim();
+          const data=await AuthService.verifyEmail(email,fd.get('code'));
+          localStorage.removeItem('rivayat_pending_verification_email');
+          sessionStorage.removeItem('rivayat_pending_verification_code');
+          toast(data.message||'Email verified');
+          go(auth.user?.role==='admin'?'#/admin':'#/dashboard'); return;
+        }
+
+        if(mode==='signup'){
+          const data=await AuthService.signup({name:fd.get('name'),email:fd.get('email'),phone:fd.get('phone'),password:fd.get('password')});
+          const email=data.email||String(fd.get('email')||'').trim();
+          localStorage.setItem('rivayat_pending_verification_email',email);
+          if(data.verificationCode)sessionStorage.setItem('rivayat_pending_verification_code',data.verificationCode);
+          else sessionStorage.removeItem('rivayat_pending_verification_code');
+          toast(data.message||'Verification code sent');
+          go('#/verify-email'); return;
+        }
+
+        const user=await AuthService.login(fd.get('email'),fd.get('password'));
+        toast(`Welcome back, ${user.name}`);
+        go(user.role==='admin'?'#/admin':'#/dashboard');
+      } catch(error) {
+        if(error.requiresVerification){
+          localStorage.setItem('rivayat_pending_verification_email',error.email||String(fd.get('email')||''));
+          toast(error.message||'Email verification required');
+          go('#/verify-email'); return;
+        }
+        msg.innerHTML=`<span class="error">${escapeHtml(error.message)}</span>`;
+      } finally {
+        if(button)button.disabled=false;
       }
-        const user = mode === 'signup' ? await AuthService.signup({ name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone'), password: fd.get('password') }) : await AuthService.login(fd.get('email'), fd.get('password'));
-        toast(`Logged in as ${user.name}`); go(user.role === 'admin' ? '#/admin' : '#/dashboard');
-      } catch(e) { msg.innerHTML = `<span class="error">${e.message}</span>`; }
+    }
+
+    async function resendVerification() {
+      const email=document.querySelector('form [name="email"]')?.value.trim() || localStorage.getItem('rivayat_pending_verification_email') || '';
+      const msg=document.getElementById('authMsg');
+      if(!email){ if(msg)msg.innerHTML='<span class="error">Enter your email first.</span>'; return; }
+      try {
+        const data=await AuthService.resendVerification(email);
+        if(data.verificationCode)sessionStorage.setItem('rivayat_pending_verification_code',data.verificationCode);
+        if(msg)msg.innerHTML=`<span class="success-text">${escapeHtml(data.message)}</span>`;
+        toast(data.message);
+      } catch(error) {
+        if(msg)msg.innerHTML=`<span class="error">${escapeHtml(error.message)}</span>`;
+      }
     }
 
     async function renderDashboard(tab='profile') {
-      setSEO('User Dashboard', 'Manage RIVAYAT profile, addresses, wishlist, and orders.');
-      if (!auth.user) return renderAuth('login');
-      const orders = (await OrderService.list()).filter(o => !auth.user.email || o.customer.email === auth.user.email || auth.user.role === 'admin');
-      const tabs = [['profile','Profile'],['addresses','Saved Addresses'],['orders','My Orders'],['wishlist','Wishlist'],['referral','Referral'],['settings','Account Settings']];
-      return `<div class="page section"><div class="container dashboard-layout"><aside class="card side-nav">${tabs.map(t=>`<a class="${tab===t[0]?'active':''}" href="#/dashboard/${t[0]}">${t[1]}</a>`).join('')}<button onclick="logoutUser()">Logout</button></aside><section>${dashboardPanel(tab, orders)}</section></div></div>`;
+      setSEO('User Dashboard','Manage RIVAYAT profile, addresses, wishlist, and orders.');
+      if(!auth.user)return renderAuth('login');
+      const orders=(await OrderService.list()).filter(o=>!auth.user.email||o.customer.email===auth.user.email||auth.user.role==='admin');
+      const tabs=[['profile','Profile'],['addresses','Saved Addresses'],['orders','My Orders'],['wishlist','Wishlist'],['referral','Referral'],['settings','Account Settings']];
+      return `<div class="page section"><div class="container dashboard-layout"><aside class="card side-nav">${tabs.map(t=>`<a class="${tab===t[0]?'active':''}" href="#/dashboard/${t[0]}">${t[1]}</a>`).join('')}<button onclick="logoutUser()">Logout</button></aside><section>${dashboardPanel(tab,orders)}</section></div></div>`;
     }
-    function dashboardPanel(tab, orders) {
-      const u = auth.user;
-      if (tab==='addresses') return `<div class="card pad"><h1 class="serif">Saved Addresses</h1>${(u.addresses||[]).map(a=>`<div class="card pad" style="margin:10px 0"><strong>${a.label}</strong><p class="muted">${a.line1}, ${a.city}, ${a.state} - ${a.pincode}</p></div>`).join('') || '<p class="muted">No saved addresses.</p>'}<div class="divider"></div><h3>Add Address</h3><form class="form-grid" onsubmit="addAddress(event)"><label>Label<input class="input" name="label" required value="Home"></label><label>Address<input class="input" name="line1" required></label><label>City<input class="input" name="city" required></label><label>State<input class="input" name="state" required></label><label>Pincode<input class="input" name="pincode" required pattern="[0-9]{6}"></label><button class="btn">Save Address</button></form></div>`;
-      if (tab==='orders') return `<div class="grid">${orders.map(o=>orderCard(o)).join('') || '<div class="empty">No orders for this account.</div>'}</div>`;
-      if (tab==='wishlist') return `<div class="card pad"><h1 class="serif">Wishlist</h1><a class="btn" href="#/wishlist">Open Wishlist</a></div>`;
-      if (tab==='referral') { const code = `RIV${String(u.email).split('@')[0].replace(/[^a-z0-9]/gi,'').slice(0,8).toUpperCase()}50`; return `<div class="card pad"><h1 class="serif">Referral Program</h1><p class="muted">Share your referral code. Friend gets ₹50 off, and admin can track usage.</p><div class="notice"><strong>${code}</strong><br>${location.origin}${location.pathname}#/shop?ref=${code}</div><button class="btn" onclick="generateReferralCode()">Activate / Sync Referral</button></div>`; }
-      if (tab==='settings') return `<div class="card pad"><h1 class="serif">Account Settings</h1><p class="muted">Manage your password, notifications, and privacy preferences for your RIVAYAT account.</p><button class="btn danger" onclick="logoutUser()">Logout</button></div>`;
-      return `<div class="card pad"><h1 class="serif">Hello, ${u.name}</h1><p class="muted">Manage your RIVAYAT profile and shopping details from your account dashboard.</p><form class="form-grid" onsubmit="updateProfile(event)"><label>Name<input class="input" name="name" value="${u.name}" required></label><label>Phone<input class="input" name="phone" value="${u.phone || ''}" required></label><label style="grid-column:1/-1">Email<input class="input" name="email" value="${u.email}" type="email" required></label><button class="btn">Update Profile</button></form></div>`;
+    function dashboardPanel(tab,orders) {
+      const u=auth.user;
+      if(tab==='addresses')return `<div class="card pad"><div class="section-head"><div><h1 class="serif" style="margin:0">Saved Addresses</h1><p>Save delivery locations once and reuse them at checkout.</p></div></div>
+        ${(u.addresses||[]).map(a=>`<div class="card pad" style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start"><div><strong>${escapeHtml(a.label||'Address')}</strong><p class="muted">${escapeHtml(a.line1||'')}, ${escapeHtml(a.city||'')}, ${escapeHtml(a.state||'')} - ${escapeHtml(a.pincode||'')}</p></div><button class="btn ghost small" onclick="removeAddress('${a.id}')">Remove</button></div></div>`).join('')||'<p class="muted">No saved addresses yet.</p>'}
+        <div class="divider"></div><h3>Add address</h3><div class="place-autocomplete-shell" id="dashboardAddressAutocomplete" style="margin-bottom:14px"></div>
+        <form class="form-grid" id="addressBookForm" onsubmit="addAddress(event)"><label>Label<input class="input" name="label" required value="Home"></label><label style="grid-column:1/-1">Address<input class="input" name="line1" required autocomplete="street-address"></label><label>City<input class="input" name="city" required></label><label>State<input class="input" name="state" required></label><label>Pincode<input class="input" name="pincode" required pattern="[0-9]{6}" inputmode="numeric"></label><button class="btn">Save Address</button></form></div>`;
+      if(tab==='orders')return `<div class="grid">${orders.map(o=>orderCard(o)).join('')||'<div class="empty">No orders for this account.</div>'}</div>`;
+      if(tab==='wishlist')return `<div class="card pad"><h1 class="serif">Wishlist</h1><p class="muted">Keep products ready for later.</p><a class="btn" href="#/wishlist">Open Wishlist</a></div>`;
+      if(tab==='referral'){const code=`RIV${String(u.email).split('@')[0].replace(/[^a-z0-9]/gi,'').slice(0,8).toUpperCase()}50`;return `<div class="card pad"><h1 class="serif">Referral Program</h1><p class="muted">Share your referral code. Friend gets ₹50 off, and admin can track usage.</p><div class="notice"><strong>${code}</strong><br>${location.origin}${location.pathname}#/shop?ref=${code}</div><button class="btn" onclick="generateReferralCode()">Activate / Sync Referral</button></div>`;}
+      if(tab==='settings')return `<div class="card pad"><h1 class="serif">Account Settings</h1><p>${u.emailVerified?'<span class="verified-chip">✓ Email verified</span>':'<span class="pill">Email verification pending</span>'}</p><p class="muted">Sign-in method: ${escapeHtml(u.authProvider||'password')}. Your theme preference is stored on this device.</p><a class="btn secondary" href="#/forgot-password">Change / set password</a> <button class="btn danger" onclick="logoutUser()">Logout</button></div>`;
+      return `<div class="card pad"><div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap"><div><h1 class="serif" style="margin:0">Hello, ${escapeHtml(u.name)}</h1><p class="muted">Manage your RIVAYAT profile and shopping details.</p></div>${u.emailVerified?'<span class="verified-chip">✓ Verified email</span>':''}</div><form class="form-grid" onsubmit="updateProfile(event)"><label>Name<input class="input" name="name" value="${escapeHtml(u.name)}" required></label><label>Phone<input class="input" name="phone" value="${escapeHtml(u.phone||'')}" required></label><label style="grid-column:1/-1">Email<input class="input" value="${escapeHtml(u.email)}" type="email" readonly><small class="muted">Email changes are disabled here to protect account identity.</small></label><button class="btn">Update Profile</button></form></div>`;
     }
-    async function updateProfile(event) { event.preventDefault(); const fd = new FormData(event.target); await AuthService.updateProfile({ name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email') }); toast('Profile updated'); render(); }
-    async function addAddress(event) { event.preventDefault(); const fd = new FormData(event.target); await UserService.addAddress(auth.user.id, Object.fromEntries(fd.entries())); toast('Address saved'); render(); }
+    async function updateProfile(event){event.preventDefault();const fd=new FormData(event.target);await AuthService.updateProfile({name:fd.get('name'),phone:fd.get('phone')});toast('Profile updated');render();}
+    async function addAddress(event){event.preventDefault();const fd=new FormData(event.target);await UserService.addAddress(auth.user.id,Object.fromEntries(fd.entries()));toast('Address saved');render();}
+    async function removeAddress(addressId){try{await UserService.removeAddress(auth.user.id,addressId);toast('Address removed');render();}catch(error){toast(error.message);}}
+
     async function generateReferralCode() { try { const ref = await ReferralService.me(); toast('Referral active: ' + ref.code); render(); } catch(e) { toast(e.message); } }
     async function logoutUser() { 
   auth.user = null; 
@@ -1517,7 +2101,7 @@
       return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Analytics Dashboard</h1><p>Live backend-ready overview for orders, stock, products, returns, and customers.</p></div></div><div class="stat-grid"><div class="card stat"><span class="muted">Revenue</span><div class="value">${money(revenue)}</div></div><div class="card stat"><span class="muted">Orders</span><div class="value">${orders.length}</div></div><div class="card stat"><span class="muted">Pending</span><div class="value">${pending}</div></div><div class="card stat"><span class="muted">Delivered</span><div class="value">${delivered}</div></div><div class="card stat"><span class="muted">Cancelled</span><div class="value">${cancelled}</div></div><div class="card stat"><span class="muted">Return Requests</span><div class="value">${returns.length}</div></div><div class="card stat"><span class="muted">Low Stock</span><div class="value">${lowStockProducts.length}</div></div><div class="card stat"><span class="muted">Customers</span><div class="value">${users.filter(u=>u.role==='customer').length}</div></div></div><div class="card pad" style="margin-top:18px"><h2>Low Stock Alert</h2>${lowStockProducts.length ? `<div class="low-stock-list">${lowStockProducts.map(p=>`<div class="low-stock-item"><div><strong>${escapeHtml(p.name)}</strong><br><span class="muted">${SIZES.map(s=>`${s}: ${productStock(p,s)}`).join(' • ')}</span></div><a class="btn secondary small" href="#/admin/products">Update Stock</a></div>`).join('')}</div>` : '<p class="muted">No low-stock products right now.</p>'}</div></div>`;
     }
     function adminProducts(products) {
-      return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Manage Products</h1><p>Add, edit, delete products, set product images, gallery, size chart, and size-wise inventory.</p></div></div><div class="card pad"><h2>Bulk Upload Products</h2><p class="muted">CSV columns: name,category,color,mrp,price,stockS,stockM,stockL,stockXL,stockXXL,image</p><textarea class="textarea" id="bulkProductCsv" placeholder="Black Shorts,Half Pants,Black,449,349,10,10,10,10,10,https://..."></textarea><button class="btn secondary" style="margin-top:10px" onclick="importProductsCSV()">Import CSV Products</button></div><div class="card pad" style="margin-top:18px"><h2>Add / Edit Product</h2><form class="form-grid" onsubmit="saveProduct(event)" enctype="multipart/form-data"><input type="hidden" name="id" id="productId"><label>Name<input class="input" name="name" required></label><label>Category<select class="select" name="category"><option>Half Pants</option><option>Full Pants</option><option>T-Shirts</option><option>New Arrivals</option></select></label><label>Color<input class="input" name="color" placeholder="Black / White / Navy" required></label><label>Badge<input class="input" name="badge" value="New Arrival"></label><label>MRP<input class="input" name="mrp" type="number" required></label><label>Selling Price<input class="input" name="price" type="number" required></label><label>Stock S<input class="input" name="stockS" type="number" min="0" value="10"></label><label>Stock M<input class="input" name="stockM" type="number" min="0" value="10"></label><label>Stock L<input class="input" name="stockL" type="number" min="0" value="10"></label><label>Stock XL<input class="input" name="stockXL" type="number" min="0" value="10"></label><label>Stock XXL<input class="input" name="stockXXL" type="number" min="0" value="10"></label><label style="grid-column:1/-1">Main Image URL<input class="input" name="image" placeholder="Paste main product image URL"></label><label style="grid-column:1/-1">Upload Main Image<input class="input" name="imageFile" type="file" accept="image/*"></label><label style="grid-column:1/-1">Gallery Image URLs<input class="input" name="gallery" placeholder="Front, back, side, close-up URLs separated by commas"></label><label style="grid-column:1/-1">Size Chart Image URL<input class="input" name="sizeChartImage" placeholder="Optional size chart image URL"></label><label>Size S Measurement<input class="input" name="sizeS" placeholder="Waist 28-30 • Length 17"></label><label>Size M Measurement<input class="input" name="sizeM" placeholder="Waist 30-32 • Length 18"></label><label>Size L Measurement<input class="input" name="sizeL" placeholder="Waist 32-34 • Length 19"></label><label>Size XL Measurement<input class="input" name="sizeXL" placeholder="Waist 34-36 • Length 20"></label><label>Size XXL Measurement<input class="input" name="sizeXXL" placeholder="Waist 36-38 • Length 21"></label><label style="grid-column:1/-1">Variants <span class="muted">one per line: Color|Size|Stock|Price|Image URL</span><textarea class="textarea" name="variants" placeholder="Black|M|10|349|https://...
+      return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Manage Products</h1><p>Add, edit, delete products, set product images, gallery, size chart, and size-wise inventory.</p></div></div><div class="card pad"><h2>Bulk Upload Products</h2><p class="muted">CSV columns: name,category,color,mrp,price,stockS,stockM,stockL,stockXL,stockXXL,image</p><textarea class="textarea" id="bulkProductCsv" placeholder="Black Shorts,Half Pants,Black,449,349,10,10,10,10,10,https://..."></textarea><button class="btn secondary" style="margin-top:10px" onclick="importProductsCSV()">Import CSV Products</button></div><div class="card pad" style="margin-top:18px"><h2>Add / Edit Product</h2><form class="form-grid" onsubmit="saveProduct(event)" enctype="multipart/form-data"><input type="hidden" name="id" id="productId"><label>Name<input class="input" name="name" required></label><label>Category<select class="select" name="category"><option>Half Pants</option><option>Full Pants</option><option>T-Shirts</option><option>New Arrivals</option></select></label><label>Color<input class="input" name="color" placeholder="Black / White / Navy" required></label><label>Collection<select class="select" name="tier"><option value="standard">Essentials</option><option value="premium">RIVAYAT Privé</option></select></label><label>Badge<input class="input" name="badge" value="New Arrival"></label><label>MRP<input class="input" name="mrp" type="number" required></label><label>Selling Price<input class="input" name="price" type="number" required></label><label>Stock S<input class="input" name="stockS" type="number" min="0" value="10"></label><label>Stock M<input class="input" name="stockM" type="number" min="0" value="10"></label><label>Stock L<input class="input" name="stockL" type="number" min="0" value="10"></label><label>Stock XL<input class="input" name="stockXL" type="number" min="0" value="10"></label><label>Stock XXL<input class="input" name="stockXXL" type="number" min="0" value="10"></label><label style="grid-column:1/-1">Main Image URL<input class="input" name="image" placeholder="Paste main product image URL"></label><label style="grid-column:1/-1">Upload Main Image<input class="input" name="imageFile" type="file" accept="image/*"></label><label style="grid-column:1/-1">Gallery Image URLs<input class="input" name="gallery" placeholder="Front, back, side, close-up URLs separated by commas"></label><label style="grid-column:1/-1">Size Chart Image URL<input class="input" name="sizeChartImage" placeholder="Optional size chart image URL"></label><label>Size S Measurement<input class="input" name="sizeS" placeholder="Waist 28-30 • Length 17"></label><label>Size M Measurement<input class="input" name="sizeM" placeholder="Waist 30-32 • Length 18"></label><label>Size L Measurement<input class="input" name="sizeL" placeholder="Waist 32-34 • Length 19"></label><label>Size XL Measurement<input class="input" name="sizeXL" placeholder="Waist 34-36 • Length 20"></label><label>Size XXL Measurement<input class="input" name="sizeXXL" placeholder="Waist 36-38 • Length 21"></label><label style="grid-column:1/-1">Variants <span class="muted">one per line: Color|Size|Stock|Price|Image URL</span><textarea class="textarea" name="variants" placeholder="Black|M|10|349|https://...
 White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">Description<input class="input" name="description" required></label><button class="btn">Save Product</button></form><p class="muted" style="margin-top:12px">Best for live website: paste image URLs. Upload also works, but very large images can make database/browser heavy.</p></div><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Image</th><th>Product</th><th>Price</th><th>Sizes</th><th>Inventory</th><th>Actions</th></tr></thead><tbody>${products.map(p=>`<tr><td><div style="width:62px;height:62px;border-radius:14px;overflow:hidden;background:#f7f2e9;display:flex;align-items:center;justify-content:center">${productArt(p)}</div></td><td><strong>${escapeHtml(p.name)}</strong><br><span class="muted">${escapeHtml(p.category)} • ${escapeHtml(p.color)}</span></td><td>${money(p.price)} <span class="mrp">${money(p.mrp)}</span></td><td>${(p.sizes || SIZES).join(', ')}</td><td>${SIZES.map(s=>`${s}: ${productStock(p,s)}`).join('<br>')}<br><strong>${totalProductStock(p)} total</strong></td><td><button class="btn secondary small" onclick='fillProduct(${JSON.stringify(p).replaceAll("'","&#39;")})'>Edit</button> <button class="btn danger small" onclick="deleteProduct('${p.id}')">Delete</button></td></tr>`).join('')}</tbody></table></div></div>`;
     }
     function fileToDataUrl(file) {
@@ -1537,11 +2121,11 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
       const inventory = { S: Number(fd.get('stockS') || 0), M: Number(fd.get('stockM') || 0), L: Number(fd.get('stockL') || 0), XL: Number(fd.get('stockXL') || 0), XXL: Number(fd.get('stockXXL') || 0) };
       const sizeChart = { S: fd.get('sizeS') || 'Waist 28-30 • Length 17', M: fd.get('sizeM') || 'Waist 30-32 • Length 18', L: fd.get('sizeL') || 'Waist 32-34 • Length 19', XL: fd.get('sizeXL') || 'Waist 34-36 • Length 20', XXL: fd.get('sizeXXL') || 'Waist 36-38 • Length 21' };
       const variants = parseVariants(fd.get('variants'));
-      const product = { id, slug, name: fd.get('name'), category: fd.get('category'), color: fd.get('color'), badge: fd.get('badge'), mrp: Number(fd.get('mrp')), price: Number(fd.get('price')), sizes: SIZES, inventory, rating: existingProduct?.rating || 4.7, reviews: existingProduct?.reviews || 0, description: fd.get('description'), details: existingProduct?.details || ['Official RIVAYAT product', 'Added from admin dashboard'], image: mainImage, gallery, sizeChartImage: String(fd.get('sizeChartImage') || '').trim(), sizeChart, variants, bg: String(fd.get('color')).toLowerCase()==='white' ? 'linear-gradient(135deg,#ece4d5,#fffaf1 54%,#111111)' : 'linear-gradient(135deg,#090909,#2d2923 55%,#d9c5a4)', art: String(fd.get('color')).toLowerCase()==='white' ? 'white' : 'black', type: fd.get('category')==='Full Pants' ? 'full' : 'short', active: true };
+      const product = { id, slug, name: fd.get('name'), category: fd.get('category'), color: fd.get('color'), tier: fd.get('tier') || existingProduct?.tier || 'standard', badge: fd.get('badge'), mrp: Number(fd.get('mrp')), price: Number(fd.get('price')), sizes: SIZES, inventory, rating: existingProduct?.rating || 4.7, reviews: existingProduct?.reviews || 0, description: fd.get('description'), details: existingProduct?.details || ['Official RIVAYAT product', 'Added from admin dashboard'], image: mainImage, gallery, sizeChartImage: String(fd.get('sizeChartImage') || '').trim(), sizeChart, variants, bg: String(fd.get('color')).toLowerCase()==='white' ? 'linear-gradient(135deg,#ece4d5,#fffaf1 54%,#111111)' : 'linear-gradient(135deg,#090909,#2d2923 55%,#d9c5a4)', art: String(fd.get('color')).toLowerCase()==='white' ? 'white' : 'black', type: fd.get('category')==='Full Pants' ? 'full' : 'short', active: true };
       await ProductService.upsert(product); toast('Product saved with images, size chart, and stock'); render();
     }
     function fillProduct(p) {
-      document.querySelector('[name="id"]').value = p.id; document.querySelector('[name="name"]').value = p.name; document.querySelector('[name="category"]').value = p.category; document.querySelector('[name="color"]').value = p.color; document.querySelector('[name="badge"]').value = p.badge; document.querySelector('[name="mrp"]').value = p.mrp; document.querySelector('[name="price"]').value = p.price;
+      document.querySelector('[name="id"]').value = p.id; document.querySelector('[name="name"]').value = p.name; document.querySelector('[name="category"]').value = p.category; document.querySelector('[name="color"]').value = p.color; if(document.querySelector('[name="tier"]')) document.querySelector('[name="tier"]').value = p.tier || 'standard'; document.querySelector('[name="badge"]').value = p.badge; document.querySelector('[name="mrp"]').value = p.mrp; document.querySelector('[name="price"]').value = p.price;
       document.querySelector('[name="stockS"]').value = productStock(p, 'S'); document.querySelector('[name="stockM"]').value = productStock(p, 'M'); document.querySelector('[name="stockL"]').value = productStock(p, 'L'); document.querySelector('[name="stockXL"]').value = productStock(p, 'XL'); document.querySelector('[name="stockXXL"]').value = productStock(p, 'XXL');
       document.querySelector('[name="image"]').value = p.image || ''; document.querySelector('[name="gallery"]').value = (p.gallery || []).join(', '); document.querySelector('[name="sizeChartImage"]').value = p.sizeChartImage || ''; document.querySelector('[name="sizeS"]').value = p.sizeChart?.S || ''; document.querySelector('[name="sizeM"]').value = p.sizeChart?.M || ''; document.querySelector('[name="sizeL"]').value = p.sizeChart?.L || ''; document.querySelector('[name="sizeXL"]').value = p.sizeChart?.XL || ''; document.querySelector('[name="sizeXXL"]').value = p.sizeChart?.XXL || ''; document.querySelector('[name="imageFile"]').value = ''; document.querySelector('[name="variants"]').value = variantsToText(p.variants || []); document.querySelector('[name="description"]').value = p.description; scrollTo({top:0,behavior:'smooth'});
     }
@@ -1660,28 +2244,59 @@ Business WhatsApp: ${BRAND.whatsapp}`],
 
     async function render() {
       updateBadges();
-      const app = document.getElementById('app'); const hash = location.hash || '#/'; const parts = hash.replace('#/','').split('/'); const route = parts[0] || 'home';
+      const app=document.getElementById('app');
+      const hash=location.hash||'#/';
+      const cleanPath=hash.replace('#/','').split('?')[0];
+      const parts=cleanPath.split('/');
+      const route=parts[0]||'home';
+      app.innerHTML=renderRouteLoader();
       try {
-        if (route === 'home') app.innerHTML = await renderHome();
-        else if (route === 'shop') app.innerHTML = await renderShop();
-        else if (route === 'product') app.innerHTML = await renderProduct(parts[1]);
-        else if (route === 'cart') app.innerHTML = renderCart();
-        else if (route === 'checkout') app.innerHTML = renderCheckout();
-        else if (route === 'confirmation') app.innerHTML = await renderConfirmation(parts[1]);
-        else if (route === 'orders') app.innerHTML = await renderOrders();
-        else if (route === 'wishlist') app.innerHTML = await renderWishlist();
-        else if (route === 'login') app.innerHTML = renderAuth('login');
-        else if (route === 'signup') app.innerHTML = renderAuth('signup');
-        else if (route === 'forgot-password') app.innerHTML = renderAuth('forgot');
-        else if (route === 'dashboard') app.innerHTML = await renderDashboard(parts[1] || 'profile');
-        else if (route === 'admin') app.innerHTML = await renderAdmin(parts[1] || 'analytics');
-        else if (['about','contact','privacy','terms','refund'].includes(route)) app.innerHTML = renderStaticPage(route);
-        else app.innerHTML = notFound();
-        updateBadges(); window.scrollTo({top:0, behavior:'smooth'}); if (route === 'home') setTimeout(showOfferPopup, 900); showAbandonedCartReminder();
-      } catch (e) { console.error(e); app.innerHTML = `<div class="section"><div class="container"><div class="empty"><h1>Something went wrong</h1><p class="muted">${e.message}</p></div></div></div>`; }
+        if(route==='home') app.innerHTML=await renderHome();
+        else if(route==='shop') app.innerHTML=await renderShop();
+        else if(route==='premium') app.innerHTML=await renderPremium();
+        else if(route==='product') app.innerHTML=await renderProduct(parts[1]);
+        else if(route==='cart') app.innerHTML=renderCart();
+        else if(route==='checkout') app.innerHTML=renderCheckout();
+        else if(route==='confirmation') app.innerHTML=await renderConfirmation(parts[1]);
+        else if(route==='orders') app.innerHTML=await renderOrders();
+        else if(route==='wishlist') app.innerHTML=await renderWishlist();
+        else if(route==='login') app.innerHTML=renderAuth('login');
+        else if(route==='signup') app.innerHTML=renderAuth('signup');
+        else if(route==='verify-email') app.innerHTML=renderAuth('verify');
+        else if(route==='forgot-password') app.innerHTML=renderAuth('forgot');
+        else if(route==='dashboard') app.innerHTML=await renderDashboard(parts[1]||'profile');
+        else if(route==='admin') app.innerHTML=await renderAdmin(parts[1]||'analytics');
+        else if(['about','contact','privacy','terms','refund'].includes(route)) app.innerHTML=renderStaticPage(route);
+        else app.innerHTML=notFound();
+
+        updateBadges();
+        applyTheme(document.documentElement.dataset.theme||'light');
+
+        if(route==='login'||route==='signup') setTimeout(initGoogleButton,0);
+        if(route==='checkout') setTimeout(()=>initAddressAutocomplete('checkoutAddressAutocomplete','checkoutForm'),0);
+        if(route==='dashboard' && (parts[1]||'profile')==='addresses') setTimeout(()=>initAddressAutocomplete('dashboardAddressAutocomplete','addressBookForm'),0);
+
+        window.scrollTo({top:0,behavior:'smooth'});
+        if(route==='home') setTimeout(showOfferPopup,900);
+        showAbandonedCartReminder();
+      } catch(error) {
+        console.error(error);
+        app.innerHTML=`<div class="section"><div class="container"><div class="empty"><h1>Something went wrong</h1><p class="muted">${escapeHtml(error.message)}</p><button class="btn" onclick="render()">Try again</button></div></div></div>`;
+      } finally {
+        hideSiteLoader();
+      }
     }
-    window.addEventListener('hashchange', render);
-    updateBadges(); render();
+
+    async function bootstrap() {
+      applyTheme(document.documentElement.dataset.theme||'light');
+      await loadPublicConfig();
+      await render();
+      hideSiteLoader();
+    }
+
+    window.addEventListener('hashchange',render);
+    updateBadges();
+    bootstrap();
   </script>
 </body>
 </html>

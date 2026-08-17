@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || "";
 const APP_SECRET = process.env.APP_SECRET || "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "RIVAYAT <orders@rivayat.in>";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
@@ -28,18 +30,37 @@ const DEFAULT_ADMIN = process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD ? {
   password: process.env.ADMIN_PASSWORD
 } : null;
 const DEFAULT_HOMEPAGE = {
-  heroPill: "Premium Indian D2C Fashion - Launch Collection",
-  heroTitle: "Own Your Vibe with RIVAYAT.",
-  heroSubtitle: "A luxury-minimal menswear experience for clean fits, comfortable movement, and elevated daily style.",
+  heroPill: "NEW ARRIVALS • DROP 01",
+  heroTitle: "Everyday streetwear, done better.",
+  heroSubtitle: "Clean silhouettes, useful details and dependable quality—designed to become the pieces you reach for most.",
   heroImage: "",
-  heroOffer: "Half Pants from Rs 349 - Full Pant from Rs 359",
-  primaryButtonText: "Shop Collection",
-  secondaryButtonText: "Buy on WhatsApp"
+  heroOffer: "Free shipping above Rs 999 • VIBE10 for 10% off",
+  primaryButtonText: "Shop now",
+  secondaryButtonText: "Explore categories"
 };
 const DEFAULT_COUPONS = [
   { id: "c1", code: "RIVAYAT150", type: "fixed", value: 150, minCart: 699, active: true, expiry: "2027-12-31", description: "Rs 150 off above Rs 699" },
   { id: "c2", code: "VIBE10", type: "percent", value: 10, minCart: 0, active: true, expiry: "2027-12-31", description: "10% off on all orders" },
   { id: "c3", code: "LAUNCH20", type: "percent", value: 20, minCart: 999, active: false, expiry: "2027-12-31", description: "20% launch discount above Rs 999" }
+];
+
+const LEGACY_STOREFRONT_PRODUCT_IDS = ["rivayat-half-pant-black", "rivayat-half-pant-white", "rivayat-full-pant", "rivayat-motion-half-pant", "rivayat-everyday-half-pant-ivory", "rivayat-travel-full-pant-graphite", "rivayat-everyday-full-pant-black", "rivayat-prive-signature-black", "rivayat-prive-ivory-half", "rivayat-prive-onyx-half", "rivayat-prive-travel-trouser", "rivayat-prive-pearl-half"];
+const DEFAULT_PRODUCTS = [
+  { id:"static-noise-oversized-tee", slug:"static-noise-oversized-tee", name:"Static Noise Oversized Tee", category:"T-Shirts", color:"Bone", badge:"DROP 01", mrp:1299, price:849, rating:4.9, reviews:46, soldCount:31, bg:"linear-gradient(145deg,#e9e4d8,#f7f3ea 58%,#d8ff3e 58%)", art:"bone", type:"tee", tier:"standard" },
+  { id:"after-hours-oversized-tee", slug:"after-hours-oversized-tee", name:"After Hours Oversized Tee", category:"T-Shirts", color:"Black", badge:"AFTER DARK", mrp:1399, price:899, rating:4.9, reviews:39, soldCount:26, bg:"linear-gradient(145deg,#0c0c0e,#26262b 66%,#ff5c8a 66%)", art:"black", type:"tee", tier:"standard" },
+  { id:"signal-boxy-tee-acid-grey", slug:"signal-boxy-tee-acid-grey", name:"Signal Boxy Tee", category:"T-Shirts", color:"Acid Grey", badge:"NEW SIGNAL", mrp:1499, price:949, rating:4.8, reviews:28, soldCount:18, bg:"linear-gradient(145deg,#b7b6b2,#deddd8 63%,#5b4dff 63%)", art:"grey", type:"tee", tier:"standard" },
+  { id:"studio-cargo-01-graphite", slug:"studio-cargo-01-graphite", name:"Studio Cargo 01", category:"Cargos", color:"Graphite", badge:"UTILITY 01", mrp:2299, price:1599, rating:4.9, reviews:34, soldCount:24, bg:"linear-gradient(145deg,#222326,#4b4d51 68%,#d8ff3e 68%)", art:"graphite", type:"cargo", tier:"standard" },
+  { id:"utility-cargo-02-olive", slug:"utility-cargo-02-olive", name:"Utility Cargo 02", category:"Cargos", color:"Olive", badge:"FIELD UNIT", mrp:2399, price:1699, rating:4.8, reviews:25, soldCount:15, bg:"linear-gradient(145deg,#3e4637,#6d775f 68%,#f2c94c 68%)", art:"olive", type:"cargo", tier:"standard" },
+  { id:"wide-leg-denim-01", slug:"wide-leg-denim-01", name:"Wide-Leg Denim 01", category:"Denim", color:"Washed Blue", badge:"DENIM LAB", mrp:2699, price:1899, rating:4.9, reviews:31, soldCount:20, bg:"linear-gradient(145deg,#6480a4,#a9bdd1 68%,#ff6b35 68%)", art:"blue", type:"denim", tier:"standard" },
+  { id:"night-shift-denim-02", slug:"night-shift-denim-02", name:"Night Shift Denim 02", category:"Denim", color:"Black Wash", badge:"NIGHT SHIFT", mrp:2799, price:1999, rating:4.9, reviews:22, soldCount:14, bg:"linear-gradient(145deg,#17171a,#55555c 68%,#00d4ff 68%)", art:"black", type:"denim", tier:"standard" },
+  { id:"sunday-heavyweight-hoodie", slug:"sunday-heavyweight-hoodie", name:"Sunday Heavyweight Hoodie", category:"Hoodies", color:"Ash", badge:"OFF DUTY", mrp:2899, price:2099, rating:4.9, reviews:27, soldCount:17, bg:"linear-gradient(145deg,#c6c4bf,#efede8 68%,#5b4dff 68%)", art:"ash", type:"hoodie", tier:"standard" },
+  { id:"zero-hour-hoodie-black", slug:"zero-hour-hoodie-black", name:"Zero Hour Hoodie", category:"Hoodies", color:"Black", badge:"ZERO HOUR", mrp:2999, price:2199, rating:4.9, reviews:24, soldCount:16, bg:"linear-gradient(145deg,#09090b,#2a2a30 68%,#ff5c8a 68%)", art:"black", type:"hoodie", tier:"standard" },
+  { id:"mono-coord-set-stone", slug:"mono-coord-set-stone", name:"Mono Co-ord Set", category:"Co-ords", color:"Stone", badge:"SET 001", mrp:3499, price:2499, rating:4.8, reviews:19, soldCount:11, bg:"linear-gradient(145deg,#b9a994,#e3dbd0 68%,#d8ff3e 68%)", art:"stone", type:"coord", tier:"standard" },
+  { id:"archive-zip-shirt-ecru", slug:"archive-zip-shirt-ecru", name:"Archive Zip Shirt", category:"Shirts", color:"Ecru", badge:"ARCHIVE", mrp:2199, price:1499, rating:4.8, reviews:21, soldCount:13, bg:"linear-gradient(145deg,#e8dfd0,#f8f3ea 68%,#ff6b35 68%)", art:"ecru", type:"shirt", tier:"standard" },
+  { id:"noir-sculpt-overshirt", slug:"noir-sculpt-overshirt", name:"NOIR Sculpt Overshirt", category:"Overshirts", color:"Ink", badge:"RIVAYAT / NOIR", mrp:4299, price:3199, rating:5.0, reviews:13, soldCount:8, bg:"linear-gradient(145deg,#050506,#1c1c21 70%,#d8ff3e 70%)", art:"ink", type:"overshirt", tier:"premium" },
+  { id:"noir-tailored-cargo", slug:"noir-tailored-cargo", name:"NOIR Tailored Cargo", category:"Cargos", color:"Deep Charcoal", badge:"RIVAYAT / NOIR", mrp:3999, price:2999, rating:5.0, reviews:12, soldCount:7, bg:"linear-gradient(145deg,#111216,#34353c 70%,#5b4dff 70%)", art:"charcoal", type:"cargo", tier:"premium" },
+  { id:"noir-varsity-jacket", slug:"noir-varsity-jacket", name:"NOIR Varsity Jacket", category:"Jackets", color:"Black / Bone", badge:"RIVAYAT / NOIR", mrp:5499, price:3999, rating:5.0, reviews:9, soldCount:5, bg:"linear-gradient(145deg,#070708,#26262a 52%,#e8dfd0 52% 78%,#ff5c8a 78%)", art:"black", type:"jacket", tier:"premium" },
+  { id:"noir-structured-trouser", slug:"noir-structured-trouser", name:"NOIR Structured Trouser", category:"Trousers", color:"Obsidian", badge:"RIVAYAT / NOIR", mrp:3799, price:2799, rating:4.9, reviews:11, soldCount:6, bg:"linear-gradient(145deg,#08090b,#25262b 70%,#00d4ff 70%)", art:"obsidian", type:"trouser", tier:"premium" }
 ];
 
 app.disable("x-powered-by");
@@ -60,16 +81,21 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
   phone: { type: String, default: "" },
-  password: { type: String, required: true },
+  password: { type: String, default: "" },
   role: { type: String, enum: ["customer", "admin"], default: "customer" },
   addresses: { type: Array, default: [] },
+  emailVerified: { type: Boolean, default: false },
+  authProvider: { type: String, enum: ["password", "google", "hybrid"], default: "password" },
+  googleSub: { type: String, unique: true, sparse: true },
+  avatar: { type: String, default: "" },
+  lastLoginAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 const ProductSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   slug: { type: String, required: true, index: true },
   name: { type: String, required: true },
-  category: { type: String, default: "Half Pants" },
+  category: { type: String, default: "T-Shirts" },
   color: { type: String, default: "Black" },
   badge: { type: String, default: "New Arrival" },
   mrp: { type: Number, default: 0 },
@@ -78,8 +104,8 @@ const ProductSchema = new mongoose.Schema({
   inventory: { type: Object, default: () => ({ S: 10, M: 10, L: 10, XL: 10, XXL: 10 }) },
   rating: { type: Number, default: 4.7 },
   reviews: { type: Number, default: 0 },
-  description: { type: String, default: "Official RIVAYAT product" },
-  details: { type: [String], default: ["Official RIVAYAT product"] },
+  description: { type: String, default: "Official RIVAYAT piece" },
+  details: { type: [String], default: ["Official RIVAYAT piece"] },
   image: { type: String, default: "" },
   gallery: { type: [String], default: [] },
   sizeChartImage: { type: String, default: "" },
@@ -87,6 +113,7 @@ const ProductSchema = new mongoose.Schema({
   bg: { type: String, default: "" },
   art: { type: String, default: "black" },
   type: { type: String, default: "short" },
+  tier: { type: String, enum: ["standard", "premium"], default: "standard" },
   active: { type: Boolean, default: true },
   variants: { type: Array, default: [] },
   soldCount: { type: Number, default: 0 },
@@ -175,6 +202,13 @@ const PasswordResetSchema = new mongoose.Schema({
   usedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
+const EmailVerificationSchema = new mongoose.Schema({
+  email: { type: String, required: true, lowercase: true, index: true },
+  codeHash: { type: String, required: true },
+  expiresAt: { type: Date, required: true, expires: 0 },
+  usedAt: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now }
+});
 
 const User = mongoose.model("User", UserSchema);
 const Product = mongoose.model("Product", ProductSchema);
@@ -186,6 +220,7 @@ const SiteSetting = mongoose.model("SiteSetting", SiteSettingSchema);
 const Newsletter = mongoose.model("Newsletter", NewsletterSchema);
 const Referral = mongoose.model("Referral", ReferralSchema);
 const PasswordReset = mongoose.model("PasswordReset", PasswordResetSchema);
+const EmailVerification = mongoose.model("EmailVerification", EmailVerificationSchema);
 
 const normalizeEmail = (email) => String(email || "").toLowerCase().trim();
 const slugify = (value = "") => String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `product-${Date.now()}`;
@@ -196,7 +231,10 @@ const publicUser = (user) => ({
   email: user.email,
   phone: user.phone,
   role: user.role,
-  addresses: user.addresses || []
+  addresses: user.addresses || [],
+  emailVerified: Boolean(user.emailVerified),
+  authProvider: user.authProvider || "password",
+  avatar: user.avatar || ""
 });
 function base64url(input) {
   return Buffer.from(input).toString("base64url");
@@ -240,6 +278,111 @@ function sameHash(a = "", b = "") {
   const left = Buffer.from(String(a));
   const right = Buffer.from(String(b));
   return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
+function hashVerificationCode(email, code) {
+  return crypto.createHmac("sha256", APP_SECRET).update(`verify:${normalizeEmail(email)}:${String(code).trim()}`).digest("hex");
+}
+
+async function createEmailVerification(user, { throttle = false } = {}) {
+  const email = normalizeEmail(user?.email);
+  if (!email) throw new Error("A valid email is required for verification.");
+
+  if (throttle) {
+    const recent = await EmailVerification.findOne({
+      email,
+      usedAt: null,
+      createdAt: { $gt: new Date(Date.now() - 60 * 1000) }
+    }).sort({ createdAt: -1 });
+    if (recent) {
+      const error = new Error("Please wait one minute before requesting another verification code.");
+      error.statusCode = 429;
+      throw error;
+    }
+  }
+
+  const code = String(crypto.randomInt(100000, 1000000));
+  await EmailVerification.updateMany({ email, usedAt: null }, { $set: { usedAt: new Date() } });
+  await EmailVerification.create({
+    email,
+    codeHash: hashVerificationCode(email, code),
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+  });
+
+  const emailResult = await sendEmail({
+    to: email,
+    subject: "Verify your RIVAYAT email",
+    html: `<div style="font-family:Arial,sans-serif;color:#111;max-width:560px;margin:auto"><h1 style="letter-spacing:4px">RIVAYAT</h1><p>Hi ${user.name || "Customer"},</p><p>Use this code to verify your email and activate your account:</p><p style="font-size:30px;font-weight:800;letter-spacing:8px;margin:24px 0">${code}</p><p>This code expires in 15 minutes. If you did not create this account, you can ignore this email.</p></div>`
+  });
+
+  const exposeCode = process.env.NODE_ENV !== "production" && !emailResult.success;
+  return {
+    delivered: Boolean(emailResult.success),
+    email: emailResult,
+    code: exposeCode ? code : undefined
+  };
+}
+
+let googleJwksCache = { keys: [], expiresAt: 0 };
+async function getGoogleJwks() {
+  if (googleJwksCache.keys.length && googleJwksCache.expiresAt > Date.now()) return googleJwksCache.keys;
+  const response = await fetch("https://www.googleapis.com/oauth2/v3/certs");
+  if (!response.ok) throw new Error(`Unable to load Google signing keys (${response.status}).`);
+  const data = await response.json();
+  const cacheControl = response.headers.get("cache-control") || "";
+  const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
+  const maxAgeMs = Math.max(5 * 60 * 1000, Number(maxAgeMatch?.[1] || 3600) * 1000);
+  googleJwksCache = { keys: Array.isArray(data.keys) ? data.keys : [], expiresAt: Date.now() + maxAgeMs };
+  return googleJwksCache.keys;
+}
+
+function decodeJwtPart(part) {
+  return JSON.parse(Buffer.from(String(part), "base64url").toString("utf8"));
+}
+
+function verifyGoogleIdTokenWithKey(encodedHeader, encodedPayload, encodedSignature, payload, jwk) {
+  const publicKey = crypto.createPublicKey({ key: jwk, format: "jwk" });
+  const validSignature = crypto.verify(
+    "RSA-SHA256",
+    Buffer.from(`${encodedHeader}.${encodedPayload}`),
+    publicKey,
+    Buffer.from(encodedSignature, "base64url")
+  );
+  if (!validSignature) throw new Error("Invalid Google credential signature.");
+
+  const issuerOk = payload.iss === "https://accounts.google.com" || payload.iss === "accounts.google.com";
+  const audience = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  const now = Math.floor(Date.now() / 1000);
+  if (!issuerOk) throw new Error("Invalid Google credential issuer.");
+  if (!audience.includes(GOOGLE_CLIENT_ID)) throw new Error("Google credential was issued for a different app.");
+  if (!payload.exp || Number(payload.exp) <= now) throw new Error("Google credential has expired.");
+  if (payload.iat && Number(payload.iat) > now + 300) throw new Error("Invalid Google credential time.");
+  if (!payload.sub || !payload.email || payload.email_verified !== true) throw new Error("Google account email is not verified.");
+  return payload;
+}
+
+async function verifyGoogleIdToken(idToken) {
+  if (!GOOGLE_CLIENT_ID) {
+    const error = new Error("Google sign-in is not configured on the server.");
+    error.statusCode = 503;
+    throw error;
+  }
+  const parts = String(idToken || "").split(".");
+  if (parts.length !== 3) throw new Error("Invalid Google credential.");
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const header = decodeJwtPart(encodedHeader);
+  const payload = decodeJwtPart(encodedPayload);
+  if (header.alg !== "RS256" || !header.kid) throw new Error("Unsupported Google credential.");
+
+  let keys = await getGoogleJwks();
+  let jwk = keys.find((key) => key.kid === header.kid);
+  if (!jwk) {
+    googleJwksCache.expiresAt = 0;
+    keys = await getGoogleJwks();
+    jwk = keys.find((key) => key.kid === header.kid);
+  }
+  if (!jwk) throw new Error("Google signing key was not found.");
+  return verifyGoogleIdTokenWithKey(encodedHeader, encodedPayload, encodedSignature, payload, jwk);
 }
 function deliveryChargeByPincode(pincode = "", subtotal = 0) {
   const pin = String(pincode || "").trim();
@@ -285,6 +428,12 @@ async function sendEmail({ to, subject, html }) {
   }
 }
 async function ensureDefaultData() {
+  // Existing accounts created before email verification was introduced should keep working.
+  await User.collection.updateMany(
+    { emailVerified: { $exists: false } },
+    { $set: { emailVerified: true, authProvider: "password" } }
+  );
+
   if (DEFAULT_ADMIN) {
     const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
     if (!existingAdmin) {
@@ -294,17 +443,44 @@ async function ensureDefaultData() {
         email: DEFAULT_ADMIN.email,
         phone: DEFAULT_ADMIN.phone,
         password: await bcrypt.hash(DEFAULT_ADMIN.password, 12),
-        role: "admin"
+        role: "admin",
+        emailVerified: true,
+        authProvider: "password"
       });
-    } else if (existingAdmin.role !== "admin") {
+    } else {
       existingAdmin.role = "admin";
       existingAdmin.username = existingAdmin.username || DEFAULT_ADMIN.username;
+      existingAdmin.emailVerified = true;
+      existingAdmin.authProvider = existingAdmin.googleSub ? "hybrid" : "password";
       await existingAdmin.save();
     }
   }
+
   for (const coupon of DEFAULT_COUPONS) {
-    await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true });
+    await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true, setDefaultsOnInsert: true });
   }
+  await Product.updateMany(
+    { id: { $in: LEGACY_STOREFRONT_PRODUCT_IDS } },
+    { $set: { active: false, updatedAt: new Date() } }
+  );
+  for (const product of DEFAULT_PRODUCTS) {
+    await Product.findOneAndUpdate(
+      { id: product.id },
+      { $set: { ...product, active: true, updatedAt: new Date() } },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+  }
+  await SiteSetting.updateOne(
+    {
+      key: "homepage",
+      $or: [
+        { "value.heroTitle": /Own Your Vibe/i },
+        { "value.heroPill": /Premium Indian D2C Fashion/i },
+        { "value.heroOffer": /Half Pants from/i }
+      ]
+    },
+    { $set: { value: DEFAULT_HOMEPAGE, updatedAt: new Date() } }
+  );
   await SiteSetting.findOneAndUpdate(
     { key: "homepage" },
     { $setOnInsert: { key: "homepage", value: DEFAULT_HOMEPAGE } },
@@ -314,6 +490,13 @@ async function ensureDefaultData() {
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
 app.get("/health", (req, res) => res.json({ success: true }));
+app.get("/public-config", (req, res) => res.json({
+  success: true,
+  config: {
+    googleClientId: GOOGLE_CLIENT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY
+  }
+}));
 
 app.post("/telegram/test", async (req, res) => {
   if (!requireAdmin(req, res)) return;
@@ -327,25 +510,187 @@ app.post("/signup", async (req, res) => {
     const { name, email, phone, password } = req.body;
     if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email, and password are required." });
     const cleanEmail = normalizeEmail(email);
-    if (await User.findOne({ email: cleanEmail })) return res.status(400).json({ success: false, message: "Email already registered. Please login." });
     if (String(password).length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
-    const user = await User.create({ name, email: cleanEmail, phone: phone || "", password: await bcrypt.hash(password, 12), role: "customer" });
-    res.json({ success: true, message: "Account created successfully!", user: { ...publicUser(user), token: createToken(user) } });
+
+    let user = await User.findOne({ email: cleanEmail });
+    if (user?.emailVerified) return res.status(400).json({ success: false, message: "Email already registered. Please login." });
+
+    if (!user) {
+      user = await User.create({
+        name: String(name).trim(),
+        email: cleanEmail,
+        phone: String(phone || "").trim(),
+        password: await bcrypt.hash(password, 12),
+        role: "customer",
+        emailVerified: false,
+        authProvider: "password"
+      });
+    } else {
+      user.name = String(name).trim();
+      user.phone = String(phone || "").trim();
+      user.password = await bcrypt.hash(password, 12);
+      user.authProvider = user.googleSub ? "hybrid" : "password";
+      await user.save();
+    }
+
+    const verification = await createEmailVerification(user);
+    if (!verification.delivered && process.env.NODE_ENV === "production") {
+      return res.status(503).json({
+        success: false,
+        requiresVerification: true,
+        email: cleanEmail,
+        message: "Your account was created, but verification email delivery is not configured. Add RESEND_API_KEY and EMAIL_FROM, then resend the code."
+      });
+    }
+
+    res.json({
+      success: true,
+      requiresVerification: true,
+      email: cleanEmail,
+      message: verification.delivered
+        ? "Account created. We sent a 6-digit verification code to your email."
+        : "Account created. Email delivery is not configured, so a local testing code was generated.",
+      verificationCode: verification.code
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
+
+app.post("/verify-email", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const code = String(req.body.code || "").trim();
+    if (!email || !code) return res.status(400).json({ success: false, message: "Email and verification code are required." });
+
+    const verification = await EmailVerification.findOne({ email, usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
+    if (!verification || !sameHash(verification.codeHash, hashVerificationCode(email, code))) {
+      return res.status(400).json({ success: false, message: "Invalid or expired verification code." });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ success: false, message: "Account not found." });
+
+    verification.usedAt = new Date();
+    user.emailVerified = true;
+    user.authProvider = user.googleSub && user.password ? "hybrid" : (user.googleSub ? "google" : "password");
+    user.lastLoginAt = new Date();
+    await Promise.all([verification.save(), user.save()]);
+
+    res.json({
+      success: true,
+      message: "Email verified successfully. Welcome to RIVAYAT!",
+      user: { ...publicUser(user), token: createToken(user) }
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ success: false, message: error.message });
+  }
+});
+
+app.post("/resend-verification", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
+    const user = await User.findOne({ email });
+    if (!user) return res.json({ success: true, message: "If this account exists, a verification code has been sent." });
+    if (user.emailVerified) return res.json({ success: true, verified: true, message: "This email is already verified. You can login." });
+
+    const verification = await createEmailVerification(user, { throttle: true });
+    if (!verification.delivered && process.env.NODE_ENV === "production") {
+      return res.status(503).json({ success: false, message: "Verification email delivery is not configured." });
+    }
+    res.json({
+      success: true,
+      message: verification.delivered ? "A new verification code was sent." : "A local testing verification code was generated.",
+      verificationCode: verification.code
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ success: false, message: error.message });
+  }
+});
+
 app.post("/login", async (req, res) => {
   try {
     const identifier = String(req.body.identifier || req.body.email || "").trim();
     const password = String(req.body.password || "");
     if (!identifier || !password) return res.status(400).json({ success: false, message: "Email/username and password are required." });
+
     const user = await User.findOne({ $or: [{ email: normalizeEmail(identifier) }, { username: identifier }] });
     if (!user) return res.status(401).json({ success: false, message: "No account found with this email/username." });
+    if (!user.password) return res.status(401).json({ success: false, message: "This account uses Google sign-in. Continue with Google or set a password using Forgot Password." });
     if (!(await bcrypt.compare(password, user.password))) return res.status(401).json({ success: false, message: "Incorrect password. Please try again." });
+
+    if (!user.emailVerified) {
+      let verificationMessage = "Please verify your email before logging in.";
+      try {
+        const verification = await createEmailVerification(user, { throttle: true });
+        if (verification.delivered) verificationMessage = "Please verify your email before logging in. A new code was sent.";
+      } catch (error) {
+        if (error.statusCode !== 429) console.warn("Verification resend during login failed:", error.message);
+      }
+      return res.status(403).json({
+        success: false,
+        requiresVerification: true,
+        email: user.email,
+        message: verificationMessage
+      });
+    }
+
+    user.lastLoginAt = new Date();
+    await user.save();
     res.json({ success: true, message: "Login successful!", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(error.statusCode || 500).json({ success: false, message: error.message });
+  }
+});
+
+app.post("/auth/google", async (req, res) => {
+  try {
+    const claims = await verifyGoogleIdToken(req.body.credential);
+    const email = normalizeEmail(claims.email);
+    const googleIsAuthoritativeForEmail = email.endsWith("@gmail.com") || Boolean(claims.hd && claims.email_verified === true);
+    if (!googleIsAuthoritativeForEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "For Google accounts using a non-Gmail, non-Workspace email, please use email signup so RIVAYAT can verify the mailbox directly."
+      });
+    }
+    let user = await User.findOne({ googleSub: claims.sub });
+    if (!user) user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        name: claims.name || email.split("@")[0],
+        email,
+        phone: "",
+        password: "",
+        role: "customer",
+        emailVerified: true,
+        authProvider: "google",
+        googleSub: claims.sub,
+        avatar: claims.picture || "",
+        lastLoginAt: new Date()
+      });
+    } else {
+      if (user.googleSub && user.googleSub !== claims.sub) {
+        return res.status(409).json({ success: false, message: "This email is linked to a different Google account." });
+      }
+      user.googleSub = claims.sub;
+      user.emailVerified = true;
+      user.avatar = claims.picture || user.avatar || "";
+      user.name = user.name || claims.name || email.split("@")[0];
+      user.authProvider = user.password ? "hybrid" : "google";
+      user.lastLoginAt = new Date();
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      message: "Google sign-in successful!",
+      user: { ...publicUser(user), token: createToken(user) }
+    });
+  } catch (error) {
+    res.status(error.statusCode || 401).json({ success: false, message: error.message });
   }
 });
 
@@ -389,15 +734,7 @@ app.put("/profile", async (req, res) => {
     res.json({
       success: true,
       message: "Profile updated successfully.",
-      user: {
-        id: user._id,
-        username: user.username,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        addresses: user.addresses || []
-      }
+      user: { ...publicUser(user), token: createToken(user) }
     });
 
   } catch (error) {
@@ -457,7 +794,8 @@ app.post("/reset-password", async (req, res) => {
     if (!reset || !sameHash(reset.codeHash, hashResetCode(email, code))) return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
-    user.password = await bcrypt.hash(password, 10);
+    user.password = await bcrypt.hash(password, 12);
+    user.authProvider = user.googleSub ? "hybrid" : "password";
     await user.save();
     reset.usedAt = new Date();
     await reset.save();
