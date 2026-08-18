@@ -7,12 +7,14 @@
   <meta name="description" content="RIVAYAT modern streetwear. Discover limited hoodies, cargos, jackets and shirts built for everyday rotation.">
   <meta name="theme-color" content="#f4f2ed">
   <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="rivayat-api-base" content="https://rivayat.onrender.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20260817-launch">
-  <link rel="stylesheet" href="/hq-images.css?v=20260817-launch">
-  <link rel="stylesheet" href="/launch-polish.css?v=20260817-launch">
+  <link rel="stylesheet" href="/styles.css?v=20260818-platform">
+  <link rel="stylesheet" href="/hq-images.css?v=20260818-platform">
+  <link rel="stylesheet" href="/launch-polish.css?v=20260818-platform">
+  <link rel="stylesheet" href="/platform-ui.css?v=20260818-platform">
 </head>
 <body>
 <div class="loader" id="loader"><div class="loader-mark">RIVAYAT</div></div>
@@ -20,7 +22,7 @@
 <header class="header">
   <div class="shell header-inner">
     <nav class="desktop-nav">
-      <a href="#/shop">New Drop</a><a href="#/shop?cat=Hoodies">Hoodies</a><a href="#/shop?cat=Cargos">Cargos</a><a href="#/shop?cat=Jackets">Jackets</a><a href="#/shop?cat=Shirts">Shirts</a>
+      <a href="#/shop">New Drop</a><a href="#/shop?cat=Hoodies">Hoodies</a><a href="#/shop?cat=Cargos">Cargos</a><a href="#/shop?cat=Jackets">Jackets</a><a href="#/shop?cat=Shirts">Shirts</a><a href="#/about">About</a>
     </nav>
     <a class="brand" href="#/" aria-label="RIVAYAT home">RIVAYAT</a>
     <div class="header-actions">
@@ -36,35 +38,29 @@
   <div class="shell footer-grid">
     <div><span class="brand">RIVAYAT</span><p>Streetwear with intention. Small drops, useful details and dependable customer support.</p><p>© 2026 RIVAYAT. All rights reserved.</p></div>
     <div><h4>Shop</h4><a href="#/shop">New Drop</a><a href="#/shop?cat=Hoodies">Hoodies</a><a href="#/shop?cat=Cargos">Cargos</a><a href="#/shop?cat=Jackets">Jackets</a><a href="#/shop?cat=Shirts">Shirts</a></div>
-    <div><h4>Account</h4><a href="#/login?mode=otp">Email sign-in</a><a href="#/profile">Profile</a><a href="#/profile?tab=orders">Orders</a><a href="#/cart">Bag</a></div>
+    <div><h4>RIVAYAT</h4><a href="#/about">About us</a><a href="#/login?mode=otp">Email sign-in</a><a href="#/profile">Profile</a><a href="#/profile?tab=orders">Orders</a><a href="#/cart">Bag</a></div>
     <div><h4>Customer care</h4><a href="#/returns-policy">Returns & refunds</a><a href="#/shipping">Shipping</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><a href="#/cookies">Cookies</a><a href="mailto:support@rivayat.in">support@rivayat.in</a></div>
   </div>
 </footer>
-
 <nav class="mobile-bottom" id="mobileBottom">
   <button data-route="/" onclick="location.hash='#/'">Home</button>
   <button data-route="/shop" onclick="location.hash='#/shop'">Shop</button>
   <button data-route="/profile" onclick="goAccount()">Account</button>
   <button data-route="/cart" onclick="openCart()">Bag <span id="mobileCartCount"></span></button>
 </nav>
-
-<div class="search-overlay" id="searchOverlay">
-  <div class="search-inner">
-    <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Search RIVAYAT</span><button class="icon-btn" onclick="closeSearch()">×</button></div>
-    <input class="search-input" id="searchInput" placeholder="What are you looking for?" autocomplete="off">
-    <div class="search-results" id="searchResults"></div>
-  </div>
-</div>
+<div class="search-overlay" id="searchOverlay"><div class="search-inner"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">Search RIVAYAT</span><button class="icon-btn" onclick="closeSearch()">×</button></div><input class="search-input" id="searchInput" placeholder="What are you looking for?" autocomplete="off"><div class="search-results" id="searchResults"></div></div></div>
 <div class="cart-drawer" id="cartDrawer" onclick="cartBackdrop(event)"><aside class="cart-panel"><div class="modal-head"><h2>Your bag</h2><button class="icon-btn" onclick="closeCart()">×</button></div><div id="cartLines"></div><div id="cartDrawerSummary"></div></aside></div>
 <div class="modal-backdrop" id="modalBackdrop" onclick="modalBackdrop(event)"><div class="modal" id="modal"></div></div>
 <div class="toast-stack" id="toasts"></div>
-
-<script src="/catalog-hq-loader.js?v=20260817-launch" defer></script>
-<script src="/app-core.js?v=20260817-launch" defer></script>
-<script src="/app-account.js?v=20260817-launch" defer></script>
-<script src="/app-admin.js?v=20260817-launch" defer></script>
-<script src="/app-legal.js?v=20260817-launch" defer></script>
-<script src="/launch-ui.js?v=20260817-launch" defer></script>
-<script src="/app-runtime.js?v=20260817-launch" defer></script>
+<script src="/api-bridge.js?v=20260818-platform" defer></script>
+<script src="/catalog-hq-loader.js?v=20260818-platform" defer></script>
+<script src="/app-core.js?v=20260818-platform" defer></script>
+<script src="/app-account.js?v=20260818-platform" defer></script>
+<script src="/app-admin.js?v=20260818-platform" defer></script>
+<script src="/app-legal.js?v=20260818-platform" defer></script>
+<script src="/launch-ui.js?v=20260818-platform" defer></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+<script src="/app-runtime.js?v=20260818-platform" defer></script>
+<script src="/platform-ui.js?v=20260818-platform" defer></script>
 </body>
 </html>
