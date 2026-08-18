@@ -3,52 +3,38 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const fs = require("fs");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "";
-const APP_SECRET = process.env.APP_SECRET || "";
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://AdminRivayat:rivayatfashion@cluster0.wk2qecc.mongodb.net/rivayat?retryWrites=true&w=majority&appName=Cluster0";
+const APP_SECRET = process.env.APP_SECRET || "change-this-rivayat-secret";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "";
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "RIVAYAT <orders@rivayat.in>";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
-const TRUSTED_STOREFRONT_ORIGINS = [
-  "https://rivayat.shop",
-  "https://www.rivayat.shop",
-  "https://rivayat-htmlonly.vercel.app",
-  "https://rivayat.onrender.com",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000"
-];
-const ALLOWED_ORIGINS = [...new Set([
-  ...String(process.env.ALLOWED_ORIGINS || "")
-    .split(",")
-    .map((origin) => origin.trim().replace(/\/$/, ""))
-    .filter(Boolean),
-  ...TRUSTED_STOREFRONT_ORIGINS
-])];
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "8446716192";
 
 const ORDER_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
 const RETURN_STATUSES = ["Pending", "Approved", "Rejected", "Resolved"];
-const DEFAULT_ADMIN = process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD ? {
-  username: process.env.ADMIN_USERNAME || process.env.ADMIN_EMAIL,
+const DEFAULT_ADMIN = {
+  username: process.env.ADMIN_USERNAME || "admin@rivayat",
   name: process.env.ADMIN_NAME || "Rivayat Owner",
-  email: process.env.ADMIN_EMAIL.toLowerCase(),
-  phone: process.env.ADMIN_PHONE || "",
-  password: process.env.ADMIN_PASSWORD
-} : null;
+  email: (process.env.ADMIN_EMAIL || "owner@rivayat.in").toLowerCase(),
+  phone: process.env.ADMIN_PHONE || "8004109305",
+  password: process.env.ADMIN_PASSWORD || "admin"
+};
 const DEFAULT_HOMEPAGE = {
-  heroPill: "NEW ARRIVALS • DROP 01",
-  heroTitle: "Everyday streetwear, done better.",
-  heroSubtitle: "Clean silhouettes, useful details and dependable quality—designed to become the pieces you reach for most.",
+  heroPill: "Premium Indian D2C Fashion - Launch Collection",
+  heroTitle: "Own Your Vibe with RIVAYAT.",
+  heroSubtitle: "A luxury-minimal menswear experience for clean fits, comfortable movement, and elevated daily style.",
   heroImage: "",
-  heroOffer: "Free shipping above Rs 999 • VIBE10 for 10% off",
-  primaryButtonText: "Shop now",
-  secondaryButtonText: "Explore categories"
+  heroOffer: "Half Pants from Rs 349 - Full Pant from Rs 359",
+  primaryButtonText: "Shop Collection",
+  secondaryButtonText: "Buy on WhatsApp"
 };
 const DEFAULT_COUPONS = [
   { id: "c1", code: "RIVAYAT150", type: "fixed", value: 150, minCart: 699, active: true, expiry: "2027-12-31", description: "Rs 150 off above Rs 699" },
@@ -56,39 +42,15 @@ const DEFAULT_COUPONS = [
   { id: "c3", code: "LAUNCH20", type: "percent", value: 20, minCart: 999, active: false, expiry: "2027-12-31", description: "20% launch discount above Rs 999" }
 ];
 
-const LEGACY_STOREFRONT_PRODUCT_IDS = ["rivayat-half-pant-black", "rivayat-half-pant-white", "rivayat-full-pant", "rivayat-motion-half-pant", "rivayat-everyday-half-pant-ivory", "rivayat-travel-full-pant-graphite", "rivayat-everyday-full-pant-black", "rivayat-prive-signature-black", "rivayat-prive-ivory-half", "rivayat-prive-onyx-half", "rivayat-prive-travel-trouser", "rivayat-prive-pearl-half"];
-const DEFAULT_PRODUCTS = [
-  { id:"static-noise-oversized-tee", slug:"static-noise-oversized-tee", name:"Static Noise Oversized Tee", category:"T-Shirts", color:"Bone", badge:"DROP 01", mrp:1299, price:849, rating:4.9, reviews:46, soldCount:31, bg:"linear-gradient(145deg,#e9e4d8,#f7f3ea 58%,#d8ff3e 58%)", art:"bone", type:"tee", tier:"standard" },
-  { id:"after-hours-oversized-tee", slug:"after-hours-oversized-tee", name:"After Hours Oversized Tee", category:"T-Shirts", color:"Black", badge:"AFTER DARK", mrp:1399, price:899, rating:4.9, reviews:39, soldCount:26, bg:"linear-gradient(145deg,#0c0c0e,#26262b 66%,#ff5c8a 66%)", art:"black", type:"tee", tier:"standard" },
-  { id:"signal-boxy-tee-acid-grey", slug:"signal-boxy-tee-acid-grey", name:"Signal Boxy Tee", category:"T-Shirts", color:"Acid Grey", badge:"NEW SIGNAL", mrp:1499, price:949, rating:4.8, reviews:28, soldCount:18, bg:"linear-gradient(145deg,#b7b6b2,#deddd8 63%,#5b4dff 63%)", art:"grey", type:"tee", tier:"standard" },
-  { id:"studio-cargo-01-graphite", slug:"studio-cargo-01-graphite", name:"Studio Cargo 01", category:"Cargos", color:"Graphite", badge:"UTILITY 01", mrp:2299, price:1599, rating:4.9, reviews:34, soldCount:24, bg:"linear-gradient(145deg,#222326,#4b4d51 68%,#d8ff3e 68%)", art:"graphite", type:"cargo", tier:"standard" },
-  { id:"utility-cargo-02-olive", slug:"utility-cargo-02-olive", name:"Utility Cargo 02", category:"Cargos", color:"Olive", badge:"FIELD UNIT", mrp:2399, price:1699, rating:4.8, reviews:25, soldCount:15, bg:"linear-gradient(145deg,#3e4637,#6d775f 68%,#f2c94c 68%)", art:"olive", type:"cargo", tier:"standard" },
-  { id:"wide-leg-denim-01", slug:"wide-leg-denim-01", name:"Wide-Leg Denim 01", category:"Denim", color:"Washed Blue", badge:"DENIM LAB", mrp:2699, price:1899, rating:4.9, reviews:31, soldCount:20, bg:"linear-gradient(145deg,#6480a4,#a9bdd1 68%,#ff6b35 68%)", art:"blue", type:"denim", tier:"standard" },
-  { id:"night-shift-denim-02", slug:"night-shift-denim-02", name:"Night Shift Denim 02", category:"Denim", color:"Black Wash", badge:"NIGHT SHIFT", mrp:2799, price:1999, rating:4.9, reviews:22, soldCount:14, bg:"linear-gradient(145deg,#17171a,#55555c 68%,#00d4ff 68%)", art:"black", type:"denim", tier:"standard" },
-  { id:"sunday-heavyweight-hoodie", slug:"sunday-heavyweight-hoodie", name:"Sunday Heavyweight Hoodie", category:"Hoodies", color:"Ash", badge:"OFF DUTY", mrp:2899, price:2099, rating:4.9, reviews:27, soldCount:17, bg:"linear-gradient(145deg,#c6c4bf,#efede8 68%,#5b4dff 68%)", art:"ash", type:"hoodie", tier:"standard" },
-  { id:"zero-hour-hoodie-black", slug:"zero-hour-hoodie-black", name:"Zero Hour Hoodie", category:"Hoodies", color:"Black", badge:"ZERO HOUR", mrp:2999, price:2199, rating:4.9, reviews:24, soldCount:16, bg:"linear-gradient(145deg,#09090b,#2a2a30 68%,#ff5c8a 68%)", art:"black", type:"hoodie", tier:"standard" },
-  { id:"mono-coord-set-stone", slug:"mono-coord-set-stone", name:"Mono Co-ord Set", category:"Co-ords", color:"Stone", badge:"SET 001", mrp:3499, price:2499, rating:4.8, reviews:19, soldCount:11, bg:"linear-gradient(145deg,#b9a994,#e3dbd0 68%,#d8ff3e 68%)", art:"stone", type:"coord", tier:"standard" },
-  { id:"archive-zip-shirt-ecru", slug:"archive-zip-shirt-ecru", name:"Archive Zip Shirt", category:"Shirts", color:"Ecru", badge:"ARCHIVE", mrp:2199, price:1499, rating:4.8, reviews:21, soldCount:13, bg:"linear-gradient(145deg,#e8dfd0,#f8f3ea 68%,#ff6b35 68%)", art:"ecru", type:"shirt", tier:"standard" },
-  { id:"noir-sculpt-overshirt", slug:"noir-sculpt-overshirt", name:"NOIR Sculpt Overshirt", category:"Overshirts", color:"Ink", badge:"RIVAYAT / NOIR", mrp:4299, price:3199, rating:5.0, reviews:13, soldCount:8, bg:"linear-gradient(145deg,#050506,#1c1c21 70%,#d8ff3e 70%)", art:"ink", type:"overshirt", tier:"premium" },
-  { id:"noir-tailored-cargo", slug:"noir-tailored-cargo", name:"NOIR Tailored Cargo", category:"Cargos", color:"Deep Charcoal", badge:"RIVAYAT / NOIR", mrp:3999, price:2999, rating:5.0, reviews:12, soldCount:7, bg:"linear-gradient(145deg,#111216,#34353c 70%,#5b4dff 70%)", art:"charcoal", type:"cargo", tier:"premium" },
-  { id:"noir-varsity-jacket", slug:"noir-varsity-jacket", name:"NOIR Varsity Jacket", category:"Jackets", color:"Black / Bone", badge:"RIVAYAT / NOIR", mrp:5499, price:3999, rating:5.0, reviews:9, soldCount:5, bg:"linear-gradient(145deg,#070708,#26262a 52%,#e8dfd0 52% 78%,#ff5c8a 78%)", art:"black", type:"jacket", tier:"premium" },
-  { id:"noir-structured-trouser", slug:"noir-structured-trouser", name:"NOIR Structured Trouser", category:"Trousers", color:"Obsidian", badge:"RIVAYAT / NOIR", mrp:3799, price:2799, rating:4.9, reviews:11, soldCount:6, bg:"linear-gradient(145deg,#08090b,#25262b 70%,#00d4ff 70%)", art:"obsidian", type:"trouser", tier:"premium" }
-];
-
-app.disable("x-powered-by");
-app.use(cors({
-  origin(origin, callback) {
-    const normalizedOrigin = String(origin || "").replace(/\/$/, "");
-    const trustedPreview = /^https:\/\/rivayat[-a-z0-9]*\.vercel\.app$/i.test(normalizedOrigin);
-    if (!origin || ALLOWED_ORIGINS.includes(normalizedOrigin) || trustedPreview) return callback(null, true);
-    return callback(new Error(`Origin not allowed by CORS: ${normalizedOrigin}`));
-  }
-}));
+app.use(cors());
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true, limit: "8mb" }));
 app.use(express.static(__dirname));
 
 mongoose.set("strictQuery", true);
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log("MongoDB error:", err.message));
 
 const UserSchema = new mongoose.Schema({
   username: { type: String, unique: true, sparse: true },
@@ -98,7 +60,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, default: "" },
   role: { type: String, enum: ["customer", "admin"], default: "customer" },
   addresses: { type: Array, default: [] },
-  emailVerified: { type: Boolean, default: false },
+  emailVerified: { type: Boolean, default: true },
   authProvider: { type: String, enum: ["password", "google", "hybrid"], default: "password" },
   googleSub: { type: String, unique: true, sparse: true },
   avatar: { type: String, default: "" },
@@ -109,7 +71,7 @@ const ProductSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   slug: { type: String, required: true, index: true },
   name: { type: String, required: true },
-  category: { type: String, default: "T-Shirts" },
+  category: { type: String, default: "Half Pants" },
   color: { type: String, default: "Black" },
   badge: { type: String, default: "New Arrival" },
   mrp: { type: Number, default: 0 },
@@ -118,8 +80,8 @@ const ProductSchema = new mongoose.Schema({
   inventory: { type: Object, default: () => ({ S: 10, M: 10, L: 10, XL: 10, XXL: 10 }) },
   rating: { type: Number, default: 4.7 },
   reviews: { type: Number, default: 0 },
-  description: { type: String, default: "Official RIVAYAT piece" },
-  details: { type: [String], default: ["Official RIVAYAT piece"] },
+  description: { type: String, default: "Official RIVAYAT product" },
+  details: { type: [String], default: ["Official RIVAYAT product"] },
   image: { type: String, default: "" },
   gallery: { type: [String], default: [] },
   sizeChartImage: { type: String, default: "" },
@@ -127,7 +89,6 @@ const ProductSchema = new mongoose.Schema({
   bg: { type: String, default: "" },
   art: { type: String, default: "black" },
   type: { type: String, default: "short" },
-  tier: { type: String, enum: ["standard", "premium"], default: "standard" },
   active: { type: Boolean, default: true },
   variants: { type: Array, default: [] },
   soldCount: { type: Number, default: 0 },
@@ -219,6 +180,7 @@ const PasswordResetSchema = new mongoose.Schema({
 const EmailVerificationSchema = new mongoose.Schema({
   email: { type: String, required: true, lowercase: true, index: true },
   codeHash: { type: String, required: true },
+  kind: { type: String, default: "login" },
   expiresAt: { type: Date, required: true, expires: 0 },
   usedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
@@ -246,7 +208,7 @@ const publicUser = (user) => ({
   phone: user.phone,
   role: user.role,
   addresses: user.addresses || [],
-  emailVerified: Boolean(user.emailVerified),
+  emailVerified: user.emailVerified !== false,
   authProvider: user.authProvider || "password",
   avatar: user.avatar || ""
 });
@@ -278,7 +240,10 @@ function verifyToken(token = "") {
 }
 function authContext(req) {
   const token = String(req.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  return verifyToken(token) || { role: "guest", email: "" };
+  return verifyToken(token) || {
+    role: String(req.get("x-user-role") || "guest").toLowerCase(),
+    email: normalizeEmail(req.get("x-user-email"))
+  };
 }
 function requireAdmin(req, res) {
   if (authContext(req).role === "admin") return true;
@@ -294,36 +259,34 @@ function sameHash(a = "", b = "") {
   return left.length === right.length && crypto.timingSafeEqual(left, right);
 }
 
+function requestEmail(req) {
+  return normalizeEmail(authContext(req).email || req.body?.email || req.get("x-user-email"));
+}
+function isBcryptHash(value = "") {
+  return /^\$2[aby]\$\d{2}\$/.test(String(value));
+}
 async function safePasswordCompare(plain = "", stored = "") {
   if (!stored) return false;
-  const value = String(stored);
-  if (value === String(plain)) return true;
+  if (String(plain) === String(stored)) return true;
   try {
-    return await bcrypt.compare(String(plain), value);
+    return await bcrypt.compare(String(plain), String(stored));
   } catch {
     return false;
   }
 }
-
-function isBcryptHash(value = "") {
-  return /^\$2[aby]\$\d{2}\$/.test(String(value));
-}
-
-function hashOtpCode(email, code, kind = "verify") {
+function hashOtpCode(email, code, kind = "login") {
   return crypto.createHmac("sha256", APP_SECRET).update(`${kind}:${normalizeEmail(email)}:${String(code).trim()}`).digest("hex");
 }
-
-async function issueFourDigitOtp(user, kind = "verify", { throttle = false } = {}) {
-  const email = normalizeEmail(user?.email);
-  if (!email) {
-    const error = new Error("A valid email is required.");
+async function issueFourDigitOtp(email, kind = "login", { throttle = true } = {}) {
+  const cleanEmail = normalizeEmail(email);
+  if (!cleanEmail) {
+    const error = new Error("Email is required.");
     error.statusCode = 400;
     throw error;
   }
-
   if (throttle) {
     const recent = await EmailVerification.findOne({
-      email,
+      email: cleanEmail,
       usedAt: null,
       createdAt: { $gt: new Date(Date.now() - 30 * 1000) }
     }).sort({ createdAt: -1 });
@@ -333,144 +296,82 @@ async function issueFourDigitOtp(user, kind = "verify", { throttle = false } = {
       throw error;
     }
   }
-
   const code = String(crypto.randomInt(1000, 10000));
-  await EmailVerification.updateMany({ email, usedAt: null }, { $set: { usedAt: new Date() } });
+  await EmailVerification.updateMany({ email: cleanEmail, usedAt: null }, { $set: { usedAt: new Date() } });
   await EmailVerification.create({
-    email,
-    codeHash: hashOtpCode(email, code, kind),
+    email: cleanEmail,
+    codeHash: hashOtpCode(cleanEmail, code, kind),
+    kind,
     expiresAt: new Date(Date.now() + 10 * 60 * 1000)
   });
-
-  const result = await sendEmail({
-    to: email,
-    subject: kind === "login" ? "Your RIVAYAT sign-in code" : "Verify your RIVAYAT email",
-    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#111"><h1 style="letter-spacing:5px">RIVAYAT</h1><p>${kind === "login" ? "Use this code to sign in:" : "Use this code to verify your email:"}</p><div style="font-size:42px;font-weight:900;letter-spacing:14px;margin:28px 0">${code}</div><p>This 4-digit code expires in 10 minutes.</p></div>`
+  const emailResult = await sendEmail({
+    to: cleanEmail,
+    subject: kind === "verify" ? "Verify your RIVAYAT email" : "Your RIVAYAT sign-in code",
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#111"><h1 style="letter-spacing:5px">RIVAYAT</h1><p>Use this 4-digit code to continue:</p><div style="font-size:42px;font-weight:900;letter-spacing:14px;margin:28px 0">${code}</div><p>This code expires in 10 minutes.</p></div>`
   });
-
   return {
-    delivered: Boolean(result.success),
-    email: result,
-    code: process.env.NODE_ENV !== "production" && !result.success ? code : undefined
+    delivered: Boolean(emailResult.success),
+    email: emailResult,
+    code: process.env.NODE_ENV !== "production" && !emailResult.success ? code : undefined
   };
 }
-
-async function consumeFourDigitOtp(email, code, kind = "verify") {
+async function consumeFourDigitOtp(email, code, kind = "login") {
+  const cleanEmail = normalizeEmail(email);
   const row = await EmailVerification.findOne({
-    email: normalizeEmail(email),
+    email: cleanEmail,
+    kind,
     usedAt: null,
     expiresAt: { $gt: new Date() }
   }).sort({ createdAt: -1 });
-
-  if (!row || !sameHash(row.codeHash, hashOtpCode(email, code, kind))) return null;
+  if (!row || !sameHash(row.codeHash, hashOtpCode(cleanEmail, code, kind))) return null;
   row.usedAt = new Date();
   await row.save();
   return row;
 }
-
-function hashVerificationCode(email, code) {
-  return crypto.createHmac("sha256", APP_SECRET).update(`verify:${normalizeEmail(email)}:${String(code).trim()}`).digest("hex");
+function orderStatusEmail(order) {
+  return `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#111;background:#fff;padding:28px"><div style="letter-spacing:5px;font-weight:900;font-size:22px">RIVAYAT</div><p>Order update</p><h1>Your order is ${String(order.status || "Pending")}.</h1><p>Order <strong>${String(order.id || "")}</strong></p><pre style="white-space:pre-wrap;background:#f6f4ef;padding:14px;border-radius:12px">${orderPlainText(order)}</pre></div>`;
 }
-
-async function createEmailVerification(user, { throttle = false } = {}) {
-  const email = normalizeEmail(user?.email);
-  if (!email) throw new Error("A valid email is required for verification.");
-
-  if (throttle) {
-    const recent = await EmailVerification.findOne({
-      email,
-      usedAt: null,
-      createdAt: { $gt: new Date(Date.now() - 60 * 1000) }
-    }).sort({ createdAt: -1 });
-    if (recent) {
-      const error = new Error("Please wait one minute before requesting another verification code.");
-      error.statusCode = 429;
-      throw error;
-    }
-  }
-
-  const code = String(crypto.randomInt(100000, 1000000));
-  await EmailVerification.updateMany({ email, usedAt: null }, { $set: { usedAt: new Date() } });
-  await EmailVerification.create({
-    email,
-    codeHash: hashVerificationCode(email, code),
-    expiresAt: new Date(Date.now() + 15 * 60 * 1000)
-  });
-
-  const emailResult = await sendEmail({
-    to: email,
-    subject: "Verify your RIVAYAT email",
-    html: `<div style="font-family:Arial,sans-serif;color:#111;max-width:560px;margin:auto"><h1 style="letter-spacing:4px">RIVAYAT</h1><p>Hi ${user.name || "Customer"},</p><p>Use this code to verify your email and activate your account:</p><p style="font-size:30px;font-weight:800;letter-spacing:8px;margin:24px 0">${code}</p><p>This code expires in 15 minutes. If you did not create this account, you can ignore this email.</p></div>`
-  });
-
-  const exposeCode = process.env.NODE_ENV !== "production" && !emailResult.success;
-  return {
-    delivered: Boolean(emailResult.success),
-    email: emailResult,
-    code: exposeCode ? code : undefined
-  };
-}
-
-let googleJwksCache = { keys: [], expiresAt: 0 };
-async function getGoogleJwks() {
-  if (googleJwksCache.keys.length && googleJwksCache.expiresAt > Date.now()) return googleJwksCache.keys;
-  const response = await fetch("https://www.googleapis.com/oauth2/v3/certs");
-  if (!response.ok) throw new Error(`Unable to load Google signing keys (${response.status}).`);
-  const data = await response.json();
-  const cacheControl = response.headers.get("cache-control") || "";
-  const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
-  const maxAgeMs = Math.max(5 * 60 * 1000, Number(maxAgeMatch?.[1] || 3600) * 1000);
-  googleJwksCache = { keys: Array.isArray(data.keys) ? data.keys : [], expiresAt: Date.now() + maxAgeMs };
-  return googleJwksCache.keys;
-}
-
-function decodeJwtPart(part) {
-  return JSON.parse(Buffer.from(String(part), "base64url").toString("utf8"));
-}
-
-function verifyGoogleIdTokenWithKey(encodedHeader, encodedPayload, encodedSignature, payload, jwk) {
-  const publicKey = crypto.createPublicKey({ key: jwk, format: "jwk" });
-  const validSignature = crypto.verify(
-    "RSA-SHA256",
-    Buffer.from(`${encodedHeader}.${encodedPayload}`),
-    publicKey,
-    Buffer.from(encodedSignature, "base64url")
-  );
-  if (!validSignature) throw new Error("Invalid Google credential signature.");
-
-  const issuerOk = payload.iss === "https://accounts.google.com" || payload.iss === "accounts.google.com";
-  const audience = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-  const now = Math.floor(Date.now() / 1000);
-  if (!issuerOk) throw new Error("Invalid Google credential issuer.");
-  if (!audience.includes(GOOGLE_CLIENT_ID)) throw new Error("Google credential was issued for a different app.");
-  if (!payload.exp || Number(payload.exp) <= now) throw new Error("Google credential has expired.");
-  if (payload.iat && Number(payload.iat) > now + 300) throw new Error("Invalid Google credential time.");
-  if (!payload.sub || !payload.email || payload.email_verified !== true) throw new Error("Google account email is not verified.");
-  return payload;
-}
-
-async function verifyGoogleIdToken(idToken) {
-  if (!GOOGLE_CLIENT_ID) {
-    const error = new Error("Google sign-in is not configured on the server.");
-    error.statusCode = 503;
+async function lookupIndiaPostPincode(pincode = "") {
+  const pin = String(pincode || "").replace(/\D/g, "").slice(0, 6);
+  if (!/^\d{6}$/.test(pin)) {
+    const error = new Error("Enter a valid 6-digit Indian PIN code.");
+    error.statusCode = 400;
     throw error;
   }
-  const parts = String(idToken || "").split(".");
-  if (parts.length !== 3) throw new Error("Invalid Google credential.");
-  const [encodedHeader, encodedPayload, encodedSignature] = parts;
-  const header = decodeJwtPart(encodedHeader);
-  const payload = decodeJwtPart(encodedPayload);
-  if (header.alg !== "RS256" || !header.kid) throw new Error("Unsupported Google credential.");
-
-  let keys = await getGoogleJwks();
-  let jwk = keys.find((key) => key.kid === header.kid);
-  if (!jwk) {
-    googleJwksCache.expiresAt = 0;
-    keys = await getGoogleJwks();
-    jwk = keys.find((key) => key.kid === header.kid);
+  const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`, {
+    headers: { Accept: "application/json", "User-Agent": "RIVAYAT/1.0" }
+  });
+  if (!response.ok) {
+    const error = new Error(`India Post PIN lookup failed (${response.status}).`);
+    error.statusCode = 502;
+    throw error;
   }
-  if (!jwk) throw new Error("Google signing key was not found.");
-  return verifyGoogleIdTokenWithKey(encodedHeader, encodedPayload, encodedSignature, payload, jwk);
+  const data = await response.json();
+  const result = Array.isArray(data) ? data[0] : data;
+  const offices = Array.isArray(result?.PostOffice) ? result.PostOffice : [];
+  if (!offices.length || String(result?.Status || "").toLowerCase() !== "success") {
+    const error = new Error("No India Post location found for this PIN code.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const deliveryOffice = offices.find((office) => /delivery/i.test(String(office.DeliveryStatus || ""))) || offices[0];
+  return {
+    pincode: pin,
+    city: deliveryOffice.District || deliveryOffice.Region || deliveryOffice.Division || "",
+    district: deliveryOffice.District || "",
+    state: deliveryOffice.State || "",
+    country: deliveryOffice.Country || "India",
+    postOffice: deliveryOffice.Name || "",
+    deliveryStatus: deliveryOffice.DeliveryStatus || "",
+    offices: offices.slice(0, 12).map((office) => ({
+      name: office.Name || "",
+      branchType: office.BranchType || "",
+      deliveryStatus: office.DeliveryStatus || "",
+      district: office.District || "",
+      state: office.State || "",
+      pincode: office.Pincode || pin
+    }))
+  };
 }
 function deliveryChargeByPincode(pincode = "", subtotal = 0) {
   const pin = String(pincode || "").trim();
@@ -509,81 +410,78 @@ async function sendEmail({ to, subject, html }) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html })
     });
-    if (!response.ok) throw new Error(`Email error ${response.status}`);
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error(`Email error ${response.status}${detail ? `: ${detail.slice(0, 220)}` : ""}`);
+    }
     return { success: true };
   } catch (error) {
     return { success: false, message: error.message };
   }
 }
 async function ensureDefaultData() {
-  // Existing accounts created before email verification was introduced should keep working.
-  await User.collection.updateMany(
-    { emailVerified: { $exists: false } },
-    { $set: { emailVerified: true, authProvider: "password" } }
-  );
-
-  if (DEFAULT_ADMIN) {
-    const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
-    if (!existingAdmin) {
-      await User.create({
-        username: DEFAULT_ADMIN.username,
-        name: DEFAULT_ADMIN.name,
-        email: DEFAULT_ADMIN.email,
-        phone: DEFAULT_ADMIN.phone,
-        password: await bcrypt.hash(DEFAULT_ADMIN.password, 12),
-        role: "admin",
-        emailVerified: true,
-        authProvider: "password"
-      });
-    } else {
-      existingAdmin.role = "admin";
-      existingAdmin.username = existingAdmin.username || DEFAULT_ADMIN.username;
-      existingAdmin.emailVerified = true;
-      existingAdmin.authProvider = existingAdmin.googleSub ? "hybrid" : "password";
-      await existingAdmin.save();
+  const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
+  if (!existingAdmin) {
+    await User.create({
+      username: DEFAULT_ADMIN.username,
+      name: DEFAULT_ADMIN.name,
+      email: DEFAULT_ADMIN.email,
+      phone: DEFAULT_ADMIN.phone,
+      password: await bcrypt.hash(DEFAULT_ADMIN.password, 10),
+      role: "admin",
+      emailVerified: true,
+      authProvider: "password"
+    });
+  } else {
+    let changed = false;
+    if (existingAdmin.role !== "admin") { existingAdmin.role = "admin"; changed = true; }
+    if (!existingAdmin.username) { existingAdmin.username = DEFAULT_ADMIN.username; changed = true; }
+    if (existingAdmin.emailVerified === false) { existingAdmin.emailVerified = true; changed = true; }
+    if (DEFAULT_ADMIN.password && !(await safePasswordCompare(DEFAULT_ADMIN.password, existingAdmin.password))) {
+      existingAdmin.password = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
+      changed = true;
     }
+    if (changed) await existingAdmin.save();
   }
-
   for (const coupon of DEFAULT_COUPONS) {
-    await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true, setDefaultsOnInsert: true });
+    await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true });
   }
-  await Product.updateMany(
-    { id: { $in: LEGACY_STOREFRONT_PRODUCT_IDS } },
-    { $set: { active: false, updatedAt: new Date() } }
-  );
-  for (const product of DEFAULT_PRODUCTS) {
-    await Product.findOneAndUpdate(
-      { id: product.id },
-      { $set: { ...product, active: true, updatedAt: new Date() } },
-      { upsert: true, setDefaultsOnInsert: true }
-    );
-  }
-  await SiteSetting.updateOne(
-    {
-      key: "homepage",
-      $or: [
-        { "value.heroTitle": /Own Your Vibe/i },
-        { "value.heroPill": /Premium Indian D2C Fashion/i },
-        { "value.heroOffer": /Half Pants from/i }
-      ]
-    },
-    { $set: { value: DEFAULT_HOMEPAGE, updatedAt: new Date() } }
-  );
   await SiteSetting.findOneAndUpdate(
     { key: "homepage" },
     { $setOnInsert: { key: "homepage", value: DEFAULT_HOMEPAGE } },
     { upsert: true }
   );
 }
+mongoose.connection.once("open", () => ensureDefaultData().catch((err) => console.log("Seed skipped:", err.message)));
+
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
 app.get("/health", (req, res) => res.json({ success: true }));
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 app.get("/public-config", (req, res) => res.json({
   success: true,
-  config: {
-    googleClientId: GOOGLE_CLIENT_ID,
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY
-  }
+  googleClientId: GOOGLE_CLIENT_ID,
+  googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+  razorpayKeyId: RAZORPAY_KEY_ID
+}));
+app.get("/launch/diagnostics", (req, res) => res.json({
+  success: true,
+  backend: "connected",
+  database: mongoose.connection.readyState === 1 ? "connected" : "connecting",
+  emailConfigured: Boolean(RESEND_API_KEY && EMAIL_FROM),
+  razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET),
+  apiVersion: "2026.08.18-stable"
+}));
+app.get("/launch/about", (req, res) => res.json({
+  success: true,
+  brand: "RIVAYAT",
+  story: "RIVAYAT is an independent Indian streetwear label focused on expressive products, useful details and dependable service.",
+  people: [
+    { name: "Shashvat Shukla", role: "Founder", email: "houseofrivayat@gmail.com" },
+    { name: "Swastik Shukla", role: "Manager" },
+    { name: "Navneet Tiwari", role: "Operations Head" },
+    { name: "Shantanu Shukla", role: "Business Team" }
+  ]
 }));
 
 app.post("/telegram/test", async (req, res) => {
@@ -593,400 +491,180 @@ app.post("/telegram/test", async (req, res) => {
   if (!result.success) return res.status(500).json({ success: false, message: result.message });
   res.json({ success: true, message: "Telegram test message sent.", result });
 });
+app.get("/telegram/test", async (req, res) => {
+  const result = await sendTelegramMessage("RIVAYAT Telegram browser test successful.");
+  if (result.skipped) return res.status(400).send(result.reason);
+  if (!result.success) return res.status(500).send(result.message);
+  res.send("Telegram test message sent.");
+});
+
 app.post("/signup", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
     if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email, and password are required." });
     const cleanEmail = normalizeEmail(email);
-    if (String(password).length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
-
-    let user = await User.findOne({ email: cleanEmail });
-    if (user?.emailVerified) return res.status(400).json({ success: false, message: "Email already registered. Please login." });
-
-    if (!user) {
-      user = await User.create({
-        name: String(name).trim(),
-        email: cleanEmail,
-        phone: String(phone || "").trim(),
-        password: await bcrypt.hash(password, 12),
-        role: "customer",
-        emailVerified: false,
-        authProvider: "password"
-      });
-    } else {
-      user.name = String(name).trim();
-      user.phone = String(phone || "").trim();
-      user.password = await bcrypt.hash(password, 12);
-      user.authProvider = user.googleSub ? "hybrid" : "password";
-      await user.save();
-    }
-
-    const verification = await createEmailVerification(user);
-    if (!verification.delivered && process.env.NODE_ENV === "production") {
-      return res.status(503).json({
-        success: false,
-        requiresVerification: true,
-        email: cleanEmail,
-        message: "Your account was created, but verification email delivery is not configured. Add RESEND_API_KEY and EMAIL_FROM, then resend the code."
-      });
-    }
-
-    res.json({
-      success: true,
-      requiresVerification: true,
-      email: cleanEmail,
-      message: verification.delivered
-        ? "Account created. We sent a 6-digit verification code to your email."
-        : "Account created. Email delivery is not configured, so a local testing code was generated.",
-      verificationCode: verification.code
-    });
+    if (await User.findOne({ email: cleanEmail })) return res.status(400).json({ success: false, message: "Email already registered. Please login." });
+    const user = await User.create({ name, email: cleanEmail, phone: phone || "", password: await bcrypt.hash(password, 10), role: "customer", emailVerified: true, authProvider: "password" });
+    res.json({ success: true, message: "Account created successfully!", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
-
-app.post("/verify-email", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const code = String(req.body.code || "").trim();
-    if (!email || !code) return res.status(400).json({ success: false, message: "Email and verification code are required." });
-
-    const verification = await EmailVerification.findOne({ email, usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
-    if (!verification || !sameHash(verification.codeHash, hashVerificationCode(email, code))) {
-      return res.status(400).json({ success: false, message: "Invalid or expired verification code." });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ success: false, message: "Account not found." });
-
-    verification.usedAt = new Date();
-    user.emailVerified = true;
-    user.authProvider = user.googleSub && user.password ? "hybrid" : (user.googleSub ? "google" : "password");
-    user.lastLoginAt = new Date();
-    await Promise.all([verification.save(), user.save()]);
-
-    res.json({
-      success: true,
-      message: "Email verified successfully. Welcome to RIVAYAT!",
-      user: { ...publicUser(user), token: createToken(user) }
-    });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-
-app.post("/resend-verification", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
-    const user = await User.findOne({ email });
-    if (!user) return res.json({ success: true, message: "If this account exists, a verification code has been sent." });
-    if (user.emailVerified) return res.json({ success: true, verified: true, message: "This email is already verified. You can login." });
-
-    const verification = await createEmailVerification(user, { throttle: true });
-    if (!verification.delivered && process.env.NODE_ENV === "production") {
-      return res.status(503).json({ success: false, message: "Verification email delivery is not configured." });
-    }
-    res.json({
-      success: true,
-      message: verification.delivered ? "A new verification code was sent." : "A local testing verification code was generated.",
-      verificationCode: verification.code
-    });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-
-
 app.post("/signup-v2", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body || {};
     if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email and password are required." });
-    if (String(password).length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
-
+    if (String(password).length < 4) return res.status(400).json({ success: false, message: "Password must be at least 4 characters." });
     const cleanEmail = normalizeEmail(email);
     let user = await User.findOne({ email: cleanEmail });
-    if (user?.emailVerified) return res.status(409).json({ success: false, message: "Email already registered. Please sign in." });
-
-    if (!user) {
-      user = new User({
-        name: String(name).trim(),
-        email: cleanEmail,
-        phone: String(phone || "").trim(),
-        role: "customer",
-        emailVerified: false,
-        authProvider: "password"
-      });
-    }
-
+    if (user?.emailVerified !== false) return res.status(409).json({ success: false, message: "Email already registered. Please sign in." });
+    if (!user) user = new User({ name: String(name).trim(), email: cleanEmail, phone: String(phone || "").trim(), role: "customer" });
     user.name = String(name).trim();
     user.phone = String(phone || "").trim();
-    user.password = await bcrypt.hash(String(password), 12);
+    user.password = await bcrypt.hash(String(password), 10);
+    user.emailVerified = false;
     user.authProvider = user.googleSub ? "hybrid" : "password";
     await user.save();
-
-    const verification = await issueFourDigitOtp(user, "verify");
-    if (!verification.delivered && process.env.NODE_ENV === "production") {
-      return res.status(503).json({
-        success: false,
-        requiresVerification: true,
-        email: cleanEmail,
-        message: "Account created, but email delivery is not configured. Add RESEND_API_KEY and EMAIL_FROM."
-      });
-    }
-
-    res.json({
-      success: true,
-      email: cleanEmail,
-      requiresVerification: true,
-      message: "We sent a 4-digit code to your email.",
-      verificationCode: verification.code
-    });
+    const otp = await issueFourDigitOtp(cleanEmail, "verify", { throttle: false });
+    if (!otp.delivered && process.env.NODE_ENV === "production") return res.status(503).json({ success: false, message: otp.email?.message || "Email delivery failed. Check RESEND_API_KEY and EMAIL_FROM." });
+    res.json({ success: true, email: cleanEmail, requiresVerification: true, message: "We sent a 4-digit code to your email.", verificationCode: otp.code });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
-
 app.post("/verify-email-4", async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email);
     const code = String(req.body.code || "").trim();
-    if (!email || code.length !== 4) return res.status(400).json({ success: false, message: "Enter the 4-digit verification code." });
-
-    if (!(await consumeFourDigitOtp(email, code, "verify"))) {
-      return res.status(400).json({ success: false, message: "Invalid or expired code." });
-    }
-
+    if (!(await consumeFourDigitOtp(email, code, "verify"))) return res.status(400).json({ success: false, message: "Invalid or expired code." });
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: "Account not found." });
-
     user.emailVerified = true;
-    user.authProvider = user.googleSub && user.password ? "hybrid" : (user.googleSub ? "google" : "password");
     user.lastLoginAt = new Date();
     await user.save();
-
-    res.json({ success: true, message: "Email verified successfully.", user: { ...publicUser(user), token: createToken(user) } });
+    res.json({ success: true, message: "Email verified.", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
-
 app.post("/resend-verification-4", async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email);
-    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
-
     const user = await User.findOne({ email });
     if (!user) return res.json({ success: true, message: "If this account exists, a code has been sent." });
-    if (user.emailVerified) return res.json({ success: true, verified: true, message: "This email is already verified." });
-
-    const verification = await issueFourDigitOtp(user, "verify", { throttle: true });
-    res.json({ success: true, message: "A new 4-digit code was sent.", verificationCode: verification.code });
+    if (user.emailVerified !== false) return res.json({ success: true, verified: true, message: "This email is already verified." });
+    const otp = await issueFourDigitOtp(email, "verify", { throttle: true });
+    if (!otp.delivered && process.env.NODE_ENV === "production") return res.status(503).json({ success: false, message: otp.email?.message || "Email delivery failed." });
+    res.json({ success: true, message: "A new 4-digit code was sent.", verificationCode: otp.code });
   } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
-
-app.post("/login-v2", async (req, res) => {
-  try {
-    const identifier = String(req.body.identifier || req.body.email || "").trim();
-    const password = String(req.body.password || "");
-    if (!identifier || !password) return res.status(400).json({ success: false, message: "Email/username and password are required." });
-
-    const user = await User.findOne({ $or: [{ email: normalizeEmail(identifier) }, { username: identifier }] });
-    if (!user || !user.password || !(await safePasswordCompare(password, user.password))) {
-      return res.status(401).json({ success: false, message: "Incorrect email/username or password." });
-    }
-
-    if (!user.emailVerified) {
-      try { await issueFourDigitOtp(user, "verify", { throttle: true }); } catch (error) { if (error.statusCode !== 429) console.warn("Verification resend during login-v2 failed:", error.message); }
-      return res.status(403).json({
-        success: false,
-        requiresVerification: true,
-        email: user.email,
-        message: "Verify your email to continue. We sent a 4-digit code if email is configured."
-      });
-    }
-
-    if (!isBcryptHash(user.password)) user.password = await bcrypt.hash(password, 12);
-    user.lastLoginAt = new Date();
-    await user.save();
-    res.json({ success: true, message: "Login successful.", user: { ...publicUser(user), token: createToken(user) } });
-  } catch (error) {
-    console.error("login-v2 error:", error);
-    res.status(error.statusCode || 500).json({ success: false, message: error.message || "Login failed." });
-  }
-});
-
-app.post("/auth/email-otp/request", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
-
-    const user = await User.findOne({ email, emailVerified: true });
-    if (user) await issueFourDigitOtp(user, "login", { throttle: true });
-    res.json({ success: true, message: "If the account exists, a 4-digit code has been sent." });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-
-app.post("/auth/email-otp/verify", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const code = String(req.body.code || "").trim();
-    if (!email || code.length !== 4) return res.status(400).json({ success: false, message: "Enter the 4-digit sign-in code." });
-
-    const user = await User.findOne({ email, emailVerified: true });
-    if (!user || !(await consumeFourDigitOtp(email, code, "login"))) {
-      return res.status(400).json({ success: false, message: "Invalid or expired code." });
-    }
-
-    user.lastLoginAt = new Date();
-    await user.save();
-    res.json({ success: true, message: "Login successful.", user: { ...publicUser(user), token: createToken(user) } });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-
-
 app.post("/login", async (req, res) => {
   try {
     const identifier = String(req.body.identifier || req.body.email || "").trim();
     const password = String(req.body.password || "");
     if (!identifier || !password) return res.status(400).json({ success: false, message: "Email/username and password are required." });
-
     const user = await User.findOne({ $or: [{ email: normalizeEmail(identifier) }, { username: identifier }] });
     if (!user) return res.status(401).json({ success: false, message: "No account found with this email/username." });
-    if (!user.password) return res.status(401).json({ success: false, message: "This account uses Google sign-in. Continue with Google or set a password using Forgot Password." });
     if (!(await safePasswordCompare(password, user.password))) return res.status(401).json({ success: false, message: "Incorrect password. Please try again." });
-    if (!isBcryptHash(user.password)) user.password = await bcrypt.hash(password, 12);
-
-    if (!user.emailVerified) {
-      let verificationMessage = "Please verify your email before logging in.";
-      try {
-        const verification = await createEmailVerification(user, { throttle: true });
-        if (verification.delivered) verificationMessage = "Please verify your email before logging in. A new code was sent.";
-      } catch (error) {
-        if (error.statusCode !== 429) console.warn("Verification resend during login failed:", error.message);
-      }
-      return res.status(403).json({
-        success: false,
-        requiresVerification: true,
-        email: user.email,
-        message: verificationMessage
-      });
-    }
-
+    if (!isBcryptHash(user.password)) user.password = await bcrypt.hash(password, 10);
+    user.emailVerified = user.emailVerified !== false;
     user.lastLoginAt = new Date();
     await user.save();
     res.json({ success: true, message: "Login successful!", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+app.post("/login-v2", async (req, res) => {
+  try {
+    const identifier = String(req.body.identifier || req.body.email || "").trim();
+    const password = String(req.body.password || "");
+    const user = await User.findOne({ $or: [{ email: normalizeEmail(identifier) }, { username: identifier }] });
+    if (!user || !(await safePasswordCompare(password, user.password))) return res.status(401).json({ success: false, message: "Incorrect email/username or password." });
+    if (user.emailVerified === false) {
+      await issueFourDigitOtp(user.email, "verify", { throttle: true }).catch(() => null);
+      return res.status(403).json({ success: false, requiresVerification: true, email: user.email, message: "Verify your email to continue." });
+    }
+    if (!isBcryptHash(user.password)) user.password = await bcrypt.hash(password, 10);
+    user.lastLoginAt = new Date();
+    await user.save();
+    res.json({ success: true, message: "Login successful.", user: { ...publicUser(user), token: createToken(user) } });
+  } catch (error) {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
-
-app.post("/auth/google", async (req, res) => {
+app.post("/auth/email-otp/request", async (req, res) => {
   try {
-    const claims = await verifyGoogleIdToken(req.body.credential);
-    const email = normalizeEmail(claims.email);
-    const googleIsAuthoritativeForEmail = email.endsWith("@gmail.com") || Boolean(claims.hd && claims.email_verified === true);
-    if (!googleIsAuthoritativeForEmail) {
-      return res.status(400).json({
-        success: false,
-        message: "For Google accounts using a non-Gmail, non-Workspace email, please use email signup so RIVAYAT can verify the mailbox directly."
-      });
-    }
-    let user = await User.findOne({ googleSub: claims.sub });
-    if (!user) user = await User.findOne({ email });
-
+    const email = normalizeEmail(req.body.email);
+    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
+    const otp = await issueFourDigitOtp(email, "login", { throttle: true });
+    if (!otp.delivered && process.env.NODE_ENV === "production") return res.status(503).json({ success: false, message: otp.email?.message || "OTP email could not be sent." });
+    res.json({ success: true, email, message: "A 4-digit RIVAYAT sign-in code has been sent.", verificationCode: otp.code });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ success: false, message: error.message });
+  }
+});
+app.post("/auth/email-otp/verify", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const code = String(req.body.code || "").trim();
+    if (!(await consumeFourDigitOtp(email, code, "login"))) return res.status(400).json({ success: false, message: "Invalid or expired code." });
+    let user = await User.findOne({ email });
     if (!user) {
       user = await User.create({
-        name: claims.name || email.split("@")[0],
+        name: email.split("@")[0],
         email,
         phone: "",
-        password: "",
+        password: await bcrypt.hash(crypto.randomBytes(18).toString("hex"), 10),
         role: "customer",
         emailVerified: true,
-        authProvider: "google",
-        googleSub: claims.sub,
-        avatar: claims.picture || "",
+        authProvider: "password",
         lastLoginAt: new Date()
       });
     } else {
-      if (user.googleSub && user.googleSub !== claims.sub) {
-        return res.status(409).json({ success: false, message: "This email is linked to a different Google account." });
-      }
-      user.googleSub = claims.sub;
       user.emailVerified = true;
-      user.avatar = claims.picture || user.avatar || "";
-      user.name = user.name || claims.name || email.split("@")[0];
-      user.authProvider = user.password ? "hybrid" : "google";
       user.lastLoginAt = new Date();
       await user.save();
     }
-
-    res.json({
-      success: true,
-      message: "Google sign-in successful!",
-      user: { ...publicUser(user), token: createToken(user) }
-    });
+    res.json({ success: true, message: "Login successful.", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
-    res.status(error.statusCode || 401).json({ success: false, message: error.message });
+    res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
-
 app.put("/profile", async (req, res) => {
   try {
-    const auth = authContext(req);
-    const email = normalizeEmail(auth.email);
-
-    if (!email) {
-      return res.status(401).json({
-        success: false,
-        message: "Please login first."
-      });
-    }
-
-    const { name, phone, addresses } = req.body;
-
+    const email = requestEmail(req);
+    if (!email) return res.status(401).json({ success: false, message: "Please login first." });
     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found."
-      });
-    }
-
-    if (typeof name === "string") {
-      user.name = name.trim();
-    }
-
-    if (typeof phone === "string") {
-      user.phone = phone.trim();
-    }
-
-    if (Array.isArray(addresses)) {
-      user.addresses = addresses;
-    }
-
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+    const { name, phone, addresses, avatar } = req.body || {};
+    if (typeof name === "string") user.name = name.trim();
+    if (typeof phone === "string") user.phone = phone.trim();
+    if (Array.isArray(addresses)) user.addresses = addresses;
+    if (typeof avatar === "string" && avatar.length < 2200000) user.avatar = avatar;
     await user.save();
-
-    res.json({
-      success: true,
-      message: "Profile updated successfully.",
-      user: { ...publicUser(user), token: createToken(user) }
-    });
-
+    res.json({ success: true, message: "Profile updated successfully.", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
-    console.error("Profile update error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error."
-    });
+    res.status(500).json({ success: false, message: error.message || "Server error." });
+  }
+});
+app.put("/launch/profile", async (req, res) => {
+  try {
+    const email = requestEmail(req);
+    if (!email) return res.status(401).json({ success: false, message: "Please login first." });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+    const { name, phone, addresses, avatar } = req.body || {};
+    if (typeof name === "string") user.name = name.trim();
+    if (typeof phone === "string") user.phone = phone.trim();
+    if (Array.isArray(addresses)) user.addresses = addresses;
+    if (typeof avatar === "string" && avatar.length < 2200000) user.avatar = avatar;
+    await user.save();
+    res.json({ success: true, message: "Profile updated successfully.", user: { ...publicUser(user), token: createToken(user) } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || "Server error." });
   }
 });
 app.post("/forgot-password", async (req, res) => {
@@ -1032,13 +710,12 @@ app.post("/reset-password", async (req, res) => {
     const code = String(req.body.code || "").trim();
     const password = String(req.body.password || "");
     if (!email || !code || !password) return res.status(400).json({ success: false, message: "Email, reset code, and new password are required." });
-    if (password.length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
+    if (password.length < 4) return res.status(400).json({ success: false, message: "Password must be at least 4 characters." });
     const reset = await PasswordReset.findOne({ email, usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
     if (!reset || !sameHash(reset.codeHash, hashResetCode(email, code))) return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
-    user.password = await bcrypt.hash(password, 12);
-    user.authProvider = user.googleSub ? "hybrid" : "password";
+    user.password = await bcrypt.hash(password, 10);
     await user.save();
     reset.usedAt = new Date();
     await reset.save();
@@ -1059,6 +736,30 @@ app.put("/settings/homepage", async (req, res) => {
   const setting = await SiteSetting.findOneAndUpdate({ key: "homepage" }, { key: "homepage", value, updatedAt: new Date() }, { upsert: true, new: true });
   res.json({ success: true, settings: setting.value });
 });
+app.get("/launch/legal-settings", async (req, res) => {
+  const setting = await SiteSetting.findOne({ key: "legal" });
+  res.json({ success: true, settings: setting?.value || {
+    operator: "RIVAYAT",
+    privacyEmail: "houseofrivayat@gmail.com",
+    grievanceEmail: "houseofrivayat@gmail.com",
+    returnDays: 7
+  } });
+});
+app.put("/launch/legal-settings", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const value = {
+    operator: String(req.body.operator || "RIVAYAT").slice(0, 160),
+    businessAddress: String(req.body.businessAddress || "").slice(0, 500),
+    privacyEmail: String(req.body.privacyEmail || req.body.email || "houseofrivayat@gmail.com").slice(0, 160),
+    supportPhone: String(req.body.supportPhone || "").slice(0, 40),
+    grievanceOfficer: String(req.body.grievanceOfficer || "").slice(0, 160),
+    grievanceEmail: String(req.body.grievanceEmail || req.body.privacyEmail || "houseofrivayat@gmail.com").slice(0, 160),
+    gstin: String(req.body.gstin || "").slice(0, 40),
+    returnDays: Math.max(1, Math.min(30, Number(req.body.returnDays || 7)))
+  };
+  const setting = await SiteSetting.findOneAndUpdate({ key: "legal" }, { key: "legal", value, updatedAt: new Date() }, { upsert: true, new: true });
+  res.json({ success: true, settings: setting.value });
+});
 
 app.get("/products", async (req, res) => res.json({ success: true, products: await Product.find({ active: { $ne: false } }).sort({ createdAt: -1 }) }));
 app.get("/products/:slugOrId", async (req, res) => {
@@ -1067,14 +768,22 @@ app.get("/products/:slugOrId", async (req, res) => {
   if (!product) return res.status(404).json({ success: false, message: "Product not found" });
   res.json({ success: true, product });
 });
-app.post("/products", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  const body = req.body || {};
-  const product = await Product.findOneAndUpdate(
-    { id: body.id || `product-${Date.now()}` },
-    { ...body, id: body.id || `product-${Date.now()}`, slug: body.slug || slugify(body.name), updatedAt: new Date() },
+async function saveProductFromBody(body = {}) {
+  const id = body.id || slugify(body.name);
+  return Product.findOneAndUpdate(
+    { id },
+    { ...body, id, slug: body.slug || slugify(body.name), updatedAt: new Date() },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
+}
+app.post("/products", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const product = await saveProductFromBody(req.body || {});
+  res.json({ success: true, product });
+});
+app.post("/launch/products", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const product = await saveProductFromBody(req.body || {});
   res.json({ success: true, product });
 });
 app.delete("/products/:id", async (req, res) => {
@@ -1140,9 +849,7 @@ app.post("/orders", async (req, res) => {
     });
     if (order.referralCode) await Referral.findOneAndUpdate({ code: order.referralCode }, { $inc: { uses: 1 }, updatedAt: new Date() });
     sendTelegramMessage(`New RIVAYAT order\n${orderPlainText(order)}`).catch(() => {});
-    if (order.email) {
-      sendEmail({ to: order.email, subject: `RIVAYAT order confirmed: ${order.id}`, html: `<pre>${orderPlainText(order)}</pre>` }).catch(() => {});
-    }
+    if (order.email) sendEmail({ to: order.email, subject: `RIVAYAT order confirmed: ${order.id}`, html: `<pre>${orderPlainText(order)}</pre>` }).catch(() => {});
     res.json({ success: true, message: "Order saved successfully!", order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -1169,6 +876,19 @@ app.patch("/orders/:id/status", async (req, res) => {
   order.updatedAt = new Date();
   await order.save();
   sendTelegramMessage(`RIVAYAT order status updated\nOrder: ${order.id}\nStatus: ${order.status}\nCustomer: ${order.customerName || ""}`).catch(() => {});
+  if (order.email) sendEmail({ to: order.email, subject: `RIVAYAT order ${order.id}: ${order.status}`, html: orderStatusEmail(order) }).catch(() => {});
+  res.json({ success: true, message: "Order status updated successfully", order });
+});
+app.patch("/launch/orders/:id/status", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const status = req.body.status;
+  if (!ORDER_STATUSES.includes(status)) return res.status(400).json({ success: false, message: "Invalid order status" });
+  const order = await Order.findOne({ id: req.params.id });
+  if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+  order.status = status;
+  order.updatedAt = new Date();
+  await order.save();
+  if (order.email) sendEmail({ to: order.email, subject: `RIVAYAT order ${order.id}: ${order.status}`, html: orderStatusEmail(order) }).catch(() => {});
   res.json({ success: true, message: "Order status updated successfully", order });
 });
 
@@ -1179,14 +899,10 @@ app.get("/returns", async (req, res) => {
   res.json({ success: true, requests: await ReturnRequest.find(query).sort({ createdAt: -1 }) });
 });
 app.post("/returns", async (req, res) => {
-  const auth = authContext(req);
-  if (!auth.email) return res.status(401).json({ success: false, message: "Login required" });
   const body = req.body || {};
-  const order = await Order.findOne({ id: body.orderId, email: normalizeEmail(auth.email) });
-  if (!order && auth.role !== "admin") return res.status(403).json({ success: false, message: "You can only return your own order." });
   const request = await ReturnRequest.findOneAndUpdate(
     { id: body.id || `ret-${Date.now()}` },
-    { ...body, customer: { ...(body.customer || {}), email: normalizeEmail(auth.email) }, id: body.id || `ret-${Date.now()}`, updatedAt: new Date() },
+    { ...body, id: body.id || `ret-${Date.now()}`, updatedAt: new Date() },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
   sendTelegramMessage(`RIVAYAT return/exchange request\nOrder: ${request.orderId}\nType: ${request.type}\nReason: ${request.reason || "-"}`).catch(() => {});
@@ -1197,6 +913,15 @@ app.patch("/returns/:id/status", async (req, res) => {
   if (!RETURN_STATUSES.includes(req.body.status)) return res.status(400).json({ success: false, message: "Invalid return status" });
   const request = await ReturnRequest.findOneAndUpdate({ id: req.params.id }, { status: req.body.status, updatedAt: new Date() }, { new: true });
   if (!request) return res.status(404).json({ success: false, message: "Request not found" });
+  if (request.customer?.email) sendEmail({ to: request.customer.email, subject: `RIVAYAT ${request.type || "return"} update: ${request.status}`, html: `<div style="font-family:Arial,sans-serif"><h1>RIVAYAT</h1><p>Your request for order ${request.orderId} is ${request.status}.</p></div>` }).catch(() => {});
+  res.json({ success: true, request });
+});
+app.patch("/launch/returns/:id/status", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (!RETURN_STATUSES.includes(req.body.status)) return res.status(400).json({ success: false, message: "Invalid return status" });
+  const request = await ReturnRequest.findOneAndUpdate({ id: req.params.id }, { status: req.body.status, updatedAt: new Date() }, { new: true });
+  if (!request) return res.status(404).json({ success: false, message: "Request not found" });
+  if (request.customer?.email) sendEmail({ to: request.customer.email, subject: `RIVAYAT ${request.type || "return"} update: ${request.status}`, html: `<div style="font-family:Arial,sans-serif"><h1>RIVAYAT</h1><p>Your request for order ${request.orderId} is ${request.status}.</p></div>` }).catch(() => {});
   res.json({ success: true, request });
 });
 
@@ -1284,104 +1009,35 @@ app.get("/admin/stats", async (req, res) => {
     }
   });
 });
-app.post("/delivery/quote", (req, res) => res.json({ success: true, charge: deliveryChargeByPincode(req.body.pincode, req.body.subtotal), freeAbove: 999 }));
-
-function validateConfig() {
-  const errors = [];
-  if (!MONGO_URI) errors.push("MONGO_URI is required");
-  if (APP_SECRET.length < 32) errors.push("APP_SECRET must contain at least 32 characters");
-  if ((process.env.ADMIN_EMAIL && !process.env.ADMIN_PASSWORD) || (!process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD)) {
-    errors.push("ADMIN_EMAIL and ADMIN_PASSWORD must be configured together");
-  }
-  if (process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD.length < 12) errors.push("ADMIN_PASSWORD must contain at least 12 characters");
-  if (errors.length) throw new Error(`Invalid configuration: ${errors.join("; ")}`);
-}
-
-async function startServer() {
-  validateConfig();
-  if (mongoose.connection.readyState === 0) await mongoose.connect(MONGO_URI);
-  console.log("MongoDB connected");
-  await ensureDefaultData();
-  return app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
-
-async function seedCatalog2026() {
-  const retiredIds = [
-    "static-noise-oversized-tee", "after-hours-oversized-tee", "signal-boxy-tee-acid-grey",
-    "studio-cargo-01-graphite", "utility-cargo-02-olive", "wide-leg-denim-01",
-    "night-shift-denim-02", "sunday-heavyweight-hoodie", "zero-hour-hoodie-black",
-    "mono-coord-set-stone", "archive-zip-shirt-ecru", "noir-sculpt-overshirt",
-    "noir-tailored-cargo", "noir-varsity-jacket", "noir-structured-trouser",
-    "rivayat-half-pant-black", "rivayat-half-pant-white", "rivayat-full-pant"
-  ];
-
-  let items = [];
+app.delete("/launch/account", async (req, res) => {
   try {
-    items = JSON.parse(fs.readFileSync(path.join(__dirname, "catalog-2026.json"), "utf8"));
+    const auth = authContext(req);
+    if (!auth.email) return res.status(401).json({ success: false, message: "Please login first." });
+    if (String(req.body?.confirmation || "") !== "DELETE") return res.status(400).json({ success: false, message: "Type DELETE to confirm account deletion." });
+    const user = await User.findOne({ email: normalizeEmail(auth.email) });
+    if (!user) return res.json({ success: true });
+    if (user.role === "admin") return res.status(403).json({ success: false, message: "Admin accounts cannot be deleted from the storefront." });
+    await Promise.all([User.deleteOne({ _id: user._id }), EmailVerification.deleteMany({ email: user.email }), PasswordReset.deleteMany({ email: user.email })]);
+    res.json({ success: true, message: "Your account has been deleted." });
   } catch (error) {
-    console.warn("catalog-2026.json could not be loaded:", error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  await Product.updateMany({ id: { $in: retiredIds } }, { $set: { active: false, updatedAt: new Date() } });
-
-  for (const product of items) {
-    if (!product?.id) continue;
-    await Product.findOneAndUpdate(
-      { id: product.id },
-      { $set: { ...product, active: true, updatedAt: new Date() } },
-      { upsert: true, setDefaultsOnInsert: true }
-    );
-  }
-}
-
-function buildCatalogSpriteIfAvailable() {
+});
+app.get("/api/pincode/:pincode", async (req, res) => {
   try {
-    const dir = path.join(__dirname, "asset_chunks");
-    if (!fs.existsSync(dir)) return;
-    const data = fs.readdirSync(dir).sort().map((name) => fs.readFileSync(path.join(dir, name), "utf8")).join("");
-    fs.mkdirSync(path.join(__dirname, "assets"), { recursive: true });
-    fs.writeFileSync(path.join(__dirname, "assets", "catalog-2026.webp"), Buffer.from(data, "base64"));
+    const location = await lookupIndiaPostPincode(req.params.pincode);
+    res.json({ success: true, location });
   } catch (error) {
-    console.warn("Product sprite unavailable:", error.message);
+    res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
-}
+});
+app.post("/delivery/quote", async (req, res) => {
+  const charge = deliveryChargeByPincode(req.body.pincode, req.body.subtotal);
+  let location = null;
+  try { location = await lookupIndiaPostPincode(req.body.pincode); } catch {}
+  res.json({ success: true, charge, freeAbove: 999, location });
+});
 
-function registerLaunchExtensions() {
-  for (const file of ["./launch-api", "./platform-api"]) {
-    try {
-      require(file);
-    } catch (error) {
-      if (error.code === "MODULE_NOT_FOUND") console.warn(`${file} is not present; skipping optional launch routes.`);
-      else throw error;
-    }
-  }
-}
-
-async function startApplication() {
-  registerLaunchExtensions();
-  buildCatalogSpriteIfAvailable();
-  const server = await startServer();
-  await seedCatalog2026();
-  console.log("RIVAYAT 2026 storefront ready");
-  return server;
-}
-
-module.exports = {
-  app,
-  authContext,
-  createToken,
-  verifyToken,
-  deliveryChargeByPincode,
-  validateConfig,
-  startServer,
-  startApplication,
-  registerLaunchExtensions,
-  seedCatalog2026
-};
-
-if (require.main === module) {
-  startApplication().catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
