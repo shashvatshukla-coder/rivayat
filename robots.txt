@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /cart
+Disallow: /backend/
+
+Sitemap: https://rivayat.shop/sitemap.xml
