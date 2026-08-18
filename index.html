@@ -21,11 +21,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://rivayat.onrender.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20260818-merge1">
-  <link rel="stylesheet" href="/hq-images.css?v=20260818-merge1">
-  <link rel="stylesheet" href="/launch-polish.css?v=20260818-merge1">
-  <link rel="stylesheet" href="/platform-ui.css?v=20260818-merge1">
-  <link rel="stylesheet" href="/site-fixes.css?v=20260818-merge1">
+  <link rel="stylesheet" href="/styles.css?v=20260818-stable1">
+  <link rel="stylesheet" href="/hq-images.css?v=20260818-stable1">
+  <link rel="stylesheet" href="/launch-polish.css?v=20260818-stable1">
+  <link rel="stylesheet" href="/platform-ui.css?v=20260818-stable1">
+  <link rel="stylesheet" href="/site-fixes.css?v=20260818-stable1">
+  <link rel="stylesheet" href="/search-fix.css?v=20260818-stable1">
 </head>
 <body>
 <div class="loader" id="loader"><div class="loader-mark">RIVAYAT</div></div>
@@ -63,19 +64,68 @@
 <div class="cart-drawer" id="cartDrawer" onclick="cartBackdrop(event)"><aside class="cart-panel"><div class="modal-head"><h2>Your bag</h2><button class="icon-btn" onclick="closeCart()">×</button></div><div id="cartLines"></div><div id="cartDrawerSummary"></div></aside></div>
 <div class="modal-backdrop" id="modalBackdrop" onclick="modalBackdrop(event)"><div class="modal" id="modal"></div></div>
 <div class="toast-stack" id="toasts"></div>
-<script src="/api-bridge.js?v=20260818-merge1" defer></script>
-<script src="/catalog-hq-loader.js?v=20260818-merge1" defer></script>
-<script src="/app-core.js?v=20260818-merge1" defer></script>
-<script src="/app-account.js?v=20260818-merge1" defer></script>
-<script src="/app-admin.js?v=20260818-merge1" defer></script>
-<script src="/app-legal.js?v=20260818-merge1" defer></script>
-<script src="/launch-ui.js?v=20260818-merge1" defer></script>
+<script src="/api-bridge.js?v=20260818-stable1" defer></script>
+<script src="/catalog-hq-loader.js?v=20260818-stable1" defer></script>
+<script src="/app-core.js?v=20260818-stable1" defer></script>
+<script src="/app-account.js?v=20260818-stable1" defer></script>
+<script src="/app-admin.js?v=20260818-stable1" defer></script>
+<script src="/app-legal.js?v=20260818-stable1" defer></script>
+<script src="/launch-ui.js?v=20260818-stable1" defer></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
-<script src="/app-runtime.js?v=20260818-merge1" defer></script>
-<script src="/platform-ui.js?v=20260818-merge1" defer></script>
-<script src="/about-team.js?v=20260818-merge1" defer></script>
-<script src="/route-paths.js?v=20260818-merge1" defer></script>
-<script src="/seo.js?v=20260818-merge1" defer></script>
-<script src="/runtime-stability.js?v=20260818-merge1" defer></script>
+<script src="/app-runtime.js?v=20260818-stable1" defer></script>
+<script src="/platform-ui.js?v=20260818-stable1" defer></script>
+<script src="/about-team.js?v=20260818-stable1" defer></script>
+<script src="/route-paths.js?v=20260818-stable1" defer></script>
+<script src="/seo.js?v=20260818-stable1" defer></script>
+<script>
+(() => {
+  const cache = new Map();
+  let timer = null;
+  function setNote(input, text, type = "ok") {
+    const wrap = input.closest(".field") || input.parentElement;
+    if (!wrap) return;
+    let note = wrap.querySelector(".pincode-note");
+    if (!note) { note = document.createElement("div"); note.className = "form-note pincode-note"; wrap.appendChild(note); }
+    note.textContent = text;
+    note.dataset.type = type;
+  }
+  function fill(form, name, value) {
+    const input = form?.querySelector(`[name="${name}"]`);
+    if (input && value && !String(input.value || "").trim()) {
+      input.value = value;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+  async function lookup(pin) {
+    if (cache.has(pin)) return cache.get(pin);
+    const response = await fetch(`/api/pincode/${pin}`, { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.success === false) throw new Error(data.message || "PIN code lookup failed.");
+    cache.set(pin, data.location);
+    return data.location;
+  }
+  async function handle(input) {
+    const pin = String(input.value || "").replace(/\D/g, "").slice(0, 6);
+    if (input.value !== pin) input.value = pin;
+    if (pin.length !== 6) return;
+    try {
+      setNote(input, "Checking PIN code…");
+      const location = await lookup(pin);
+      const form = input.closest("form");
+      fill(form, "city", location.city || location.district);
+      fill(form, "state", location.state);
+      setNote(input, `${location.postOffice || location.district}, ${location.state} · ${location.deliveryStatus || "India Post"}`, "ok");
+    } catch (error) {
+      setNote(input, error.message || "Could not verify this PIN code.", "error");
+    }
+  }
+  document.addEventListener("input", (event) => {
+    if (event.target?.name !== "pincode") return;
+    clearTimeout(timer);
+    timer = setTimeout(() => handle(event.target), 350);
+  });
+})();
+</script>
+<script src="/runtime-stability.js?v=20260818-stable1" defer></script>
 </body>
 </html>
