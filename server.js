@@ -7,8 +7,8 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://AdminRivayat:rivayatfashion@cluster0.wk2qecc.mongodb.net/rivayat?retryWrites=true&w=majority&appName=Cluster0";
-const APP_SECRET = process.env.APP_SECRET || "change-this-rivayat-secret";
+const MONGO_URI = process.env.MONGO_URI || "";
+const APP_SECRET = process.env.APP_SECRET || crypto.randomBytes(32).toString("hex");
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "";
@@ -16,17 +16,17 @@ const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "RIVAYAT <orders@rivayat.in>";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "8446716192";
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 
 const ORDER_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
 const RETURN_STATUSES = ["Pending", "Approved", "Rejected", "Resolved"];
-const DEFAULT_ADMIN = {
-  username: process.env.ADMIN_USERNAME || "admin@rivayat",
+const DEFAULT_ADMIN = process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD ? {
+  username: process.env.ADMIN_USERNAME || process.env.ADMIN_EMAIL,
   name: process.env.ADMIN_NAME || "Rivayat Owner",
-  email: (process.env.ADMIN_EMAIL || "owner@rivayat.in").toLowerCase(),
-  phone: process.env.ADMIN_PHONE || "8004109305",
-  password: process.env.ADMIN_PASSWORD || "admin"
-};
+  email: process.env.ADMIN_EMAIL.toLowerCase(),
+  phone: process.env.ADMIN_PHONE || "",
+  password: process.env.ADMIN_PASSWORD
+} : null;
 const DEFAULT_HOMEPAGE = {
   heroPill: "Premium Indian D2C Fashion - Launch Collection",
   heroTitle: "Own Your Vibe with RIVAYAT.",
@@ -48,9 +48,16 @@ app.use(express.urlencoded({ extended: true, limit: "8mb" }));
 app.use(express.static(__dirname));
 
 mongoose.set("strictQuery", true);
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB error:", err.message));
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log("MongoDB connected"))
+    .catch((err) => console.log("MongoDB error:", err.message));
+} else {
+  console.error("MONGO_URI is required for database-backed features.");
+}
+if (!process.env.APP_SECRET) {
+  console.warn("APP_SECRET is not set; login sessions will reset when the server restarts.");
+}
 
 const UserSchema = new mongoose.Schema({
   username: { type: String, unique: true, sparse: true },
@@ -420,28 +427,30 @@ async function sendEmail({ to, subject, html }) {
   }
 }
 async function ensureDefaultData() {
-  const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
-  if (!existingAdmin) {
-    await User.create({
-      username: DEFAULT_ADMIN.username,
-      name: DEFAULT_ADMIN.name,
-      email: DEFAULT_ADMIN.email,
-      phone: DEFAULT_ADMIN.phone,
-      password: await bcrypt.hash(DEFAULT_ADMIN.password, 10),
-      role: "admin",
-      emailVerified: true,
-      authProvider: "password"
-    });
-  } else {
-    let changed = false;
-    if (existingAdmin.role !== "admin") { existingAdmin.role = "admin"; changed = true; }
-    if (!existingAdmin.username) { existingAdmin.username = DEFAULT_ADMIN.username; changed = true; }
-    if (existingAdmin.emailVerified === false) { existingAdmin.emailVerified = true; changed = true; }
-    if (DEFAULT_ADMIN.password && !(await safePasswordCompare(DEFAULT_ADMIN.password, existingAdmin.password))) {
-      existingAdmin.password = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
-      changed = true;
+  if (DEFAULT_ADMIN) {
+    const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
+    if (!existingAdmin) {
+      await User.create({
+        username: DEFAULT_ADMIN.username,
+        name: DEFAULT_ADMIN.name,
+        email: DEFAULT_ADMIN.email,
+        phone: DEFAULT_ADMIN.phone,
+        password: await bcrypt.hash(DEFAULT_ADMIN.password, 10),
+        role: "admin",
+        emailVerified: true,
+        authProvider: "password"
+      });
+    } else {
+      let changed = false;
+      if (existingAdmin.role !== "admin") { existingAdmin.role = "admin"; changed = true; }
+      if (!existingAdmin.username) { existingAdmin.username = DEFAULT_ADMIN.username; changed = true; }
+      if (existingAdmin.emailVerified === false) { existingAdmin.emailVerified = true; changed = true; }
+      if (!(await safePasswordCompare(DEFAULT_ADMIN.password, existingAdmin.password))) {
+        existingAdmin.password = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
+        changed = true;
+      }
+      if (changed) await existingAdmin.save();
     }
-    if (changed) await existingAdmin.save();
   }
   for (const coupon of DEFAULT_COUPONS) {
     await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true });
