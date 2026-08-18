@@ -2,16 +2,16 @@
   "name": "rivayat_backend",
   "version": "1.0.0",
   "description": "Rivayat fashion storefront and API",
-  "main": "modern-server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node -r ./runtime-env.js modern-server.js",
+    "start": "node -r ./runtime-env.js server.js",
     "check": "node --check runtime-env.js && node --check server.js && node --check modern-server.js && node --check launch-api.js && node --check platform-api.js && node scripts/check-frontend.js",
     "test": "node --test"
   },
   "engines": {
     "node": ">=20 <23"
   },
-  "keywords": ["rivayat","streetwear","fashion","india","ecommerce"],
+  "keywords": ["rivayat", "streetwear", "fashion", "india", "ecommerce"],
   "author": "RIVAYAT",
   "license": "ISC",
   "type": "commonjs",
