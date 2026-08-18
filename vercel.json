@@ -1,5 +1,13 @@
 {
   "rewrites": [
-    { "source": "/backend/:path*", "destination": "https://rivayat.onrender.com/:path*" }
+    { "source": "/backend/:path*", "destination": "https://rivayat.onrender.com/:path*" },
+    { "source": "/product/:slug", "destination": "/index.html" },
+    { "source": "/shop", "destination": "/index.html" },
+    { "source": "/about", "destination": "/index.html" },
+    { "source": "/privacy", "destination": "/index.html" },
+    { "source": "/terms", "destination": "/index.html" },
+    { "source": "/returns-policy", "destination": "/index.html" },
+    { "source": "/shipping", "destination": "/index.html" },
+    { "source": "/cookies", "destination": "/index.html" }
   ]
 }
