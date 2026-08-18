@@ -4,6 +4,7 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const path = require("path");
+const registerLaunchRoutes = require("./launch-routes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -132,6 +133,10 @@ const OrderSchema = new mongoose.Schema({
   address: Object,
   items: Array,
   referralCode: { type: String, default: "" },
+  razorpayOrderId: { type: String, default: "", index: true },
+  razorpayPaymentId: { type: String, default: "" },
+  paymentSignature: { type: String, default: "" },
+  statusHistory: { type: Array, default: [] },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -142,7 +147,11 @@ const ReviewSchema = new mongoose.Schema({
   rating: { type: Number, default: 5 },
   text: String,
   photo: { type: String, default: "" },
-  status: { type: String, default: "Pending" },
+  title: { type: String, default: "" },
+  reviewerName: { type: String, default: "" },
+  reviewerEmail: { type: String, default: "", lowercase: true, index: true },
+  verifiedPurchase: { type: Boolean, default: false },
+  status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -467,30 +476,34 @@ app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
 app.get("/health", (req, res) => res.json({ success: true }));
 app.get("/favicon.ico", (req, res) => res.status(204).end());
-app.get("/public-config", (req, res) => res.json({
-  success: true,
-  googleClientId: GOOGLE_CLIENT_ID,
-  googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-  razorpayKeyId: RAZORPAY_KEY_ID
-}));
+app.get("/public-config", (req, res) => {
+  const config = {
+    googleClientId: GOOGLE_CLIENT_ID,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    razorpayKeyId: RAZORPAY_KEY_ID
+  };
+  res.json({ success: true, config, ...config });
+});
 app.get("/launch/diagnostics", (req, res) => res.json({
   success: true,
   backend: "connected",
   database: mongoose.connection.readyState === 1 ? "connected" : "connecting",
   emailConfigured: Boolean(RESEND_API_KEY && EMAIL_FROM),
   razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET),
-  apiVersion: "2026.08.18-stable"
+  apiVersion: "2026.08.18-commerce-repair"
 }));
+const RIVAYAT_TEAM = [
+  { name: "Shashvat Shukla", role: "Founder", email: "houseofrivayat@gmail.com" },
+  { name: "Swastik Shukla", role: "Manager" },
+  { name: "Navneet Tiwari", role: "Operations Head" },
+  { name: "Shantanu Shukla", role: "Business Team" }
+];
 app.get("/launch/about", (req, res) => res.json({
   success: true,
   brand: "RIVAYAT",
   story: "RIVAYAT is an independent Indian streetwear label focused on expressive products, useful details and dependable service.",
-  people: [
-    { name: "Shashvat Shukla", role: "Founder", email: "houseofrivayat@gmail.com" },
-    { name: "Swastik Shukla", role: "Manager" },
-    { name: "Navneet Tiwari", role: "Operations Head" },
-    { name: "Shantanu Shukla", role: "Business Team" }
-  ]
+  people: RIVAYAT_TEAM,
+  team: RIVAYAT_TEAM
 }));
 
 app.post("/telegram/test", async (req, res) => {
@@ -828,6 +841,28 @@ app.delete("/coupons/:id", async (req, res) => {
   res.json({ success: true, message: "Coupon deleted successfully" });
 });
 
+registerLaunchRoutes({
+  app,
+  Product,
+  Order,
+  Review,
+  User,
+  authContext,
+  requireAdmin,
+  publicUser,
+  createToken,
+  normalizeEmail,
+  deliveryChargeByPincode,
+  orderPlainText,
+  orderStatusEmail,
+  sendEmail,
+  sendTelegramMessage,
+  ORDER_STATUSES,
+  GOOGLE_CLIENT_ID,
+  RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET
+});
+
 app.post("/orders", async (req, res) => {
   try {
     const body = req.body || {};
@@ -939,7 +974,10 @@ app.get("/users", async (req, res) => {
   const users = await User.find().sort({ createdAt: -1 });
   res.json({ success: true, users: users.map(publicUser) });
 });
-app.get("/reviews", async (req, res) => res.json({ success: true, reviews: await Review.find().sort({ createdAt: -1 }) }));
+app.get("/reviews", async (req, res) => {
+  const query = authContext(req).role === "admin" ? {} : { status: "Approved" };
+  res.json({ success: true, reviews: await Review.find(query).sort({ createdAt: -1 }) });
+});
 app.post("/reviews", async (req, res) => {
   const body = req.body || {};
   const review = await Review.findOneAndUpdate(
