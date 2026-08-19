@@ -1,8 +1,0 @@
-/* Stable search overlay: keep search fixed above product pages and prevent it from jumping upward. */
-.search-overlay{position:fixed!important;inset:0!important;z-index:9999!important;display:none;align-items:flex-start!important;justify-content:center!important;padding:92px 18px 32px!important;background:rgba(13,14,15,.42)!important;backdrop-filter:blur(10px)!important;overflow:auto!important}
-.search-overlay.open{display:flex!important}
-.search-inner{position:relative!important;top:auto!important;left:auto!important;right:auto!important;transform:none!important;width:min(760px,100%)!important;max-height:calc(100vh - 128px)!important;overflow:auto!important;background:var(--paper,#fff)!important;border:1px solid var(--line,#ddd)!important;border-radius:24px!important;box-shadow:0 24px 80px rgba(0,0,0,.22)!important;padding:22px!important}
-.search-results{display:grid!important;gap:10px!important;margin-top:16px!important}
-.search-card{display:grid!important;grid-template-columns:64px 1fr!important;gap:12px!important;align-items:center!important;text-decoration:none!important;color:inherit!important;padding:10px!important;border:1px solid var(--line,#e3e0d8)!important;border-radius:16px!important;background:var(--paper,#fff)!important}
-.search-card .catalog-image,.search-card .sprite-media{width:64px!important;height:78px!important;border-radius:12px!important;object-fit:cover!important}
-.pincode-note[data-type="error"]{color:#b42318}.pincode-note[data-type="ok"]{color:#176b38}

@@ -4,30 +4,25 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const path = require("path");
-const registerLaunchRoutes = require("./launch-routes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "";
-const APP_SECRET = process.env.APP_SECRET || crypto.randomBytes(32).toString("hex");
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "";
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://AdminRivayat:rivayatfashion@cluster0.wk2qecc.mongodb.net/rivayat?retryWrites=true&w=majority&appName=Cluster0";
+const APP_SECRET = process.env.APP_SECRET || "change-this-rivayat-secret";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "RIVAYAT <orders@rivayat.in>";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "8446716192";
 
 const ORDER_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
 const RETURN_STATUSES = ["Pending", "Approved", "Rejected", "Resolved"];
-const DEFAULT_ADMIN = process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD ? {
-  username: process.env.ADMIN_USERNAME || process.env.ADMIN_EMAIL,
+const DEFAULT_ADMIN = {
+  username: process.env.ADMIN_USERNAME || "admin@rivayat",
   name: process.env.ADMIN_NAME || "Rivayat Owner",
-  email: process.env.ADMIN_EMAIL.toLowerCase(),
-  phone: process.env.ADMIN_PHONE || "",
-  password: process.env.ADMIN_PASSWORD
-} : null;
+  email: (process.env.ADMIN_EMAIL || "owner@rivayat.in").toLowerCase(),
+  phone: process.env.ADMIN_PHONE || "8004109305",
+  password: process.env.ADMIN_PASSWORD || "admin"
+};
 const DEFAULT_HOMEPAGE = {
   heroPill: "Premium Indian D2C Fashion - Launch Collection",
   heroTitle: "Own Your Vibe with RIVAYAT.",
@@ -49,30 +44,18 @@ app.use(express.urlencoded({ extended: true, limit: "8mb" }));
 app.use(express.static(__dirname));
 
 mongoose.set("strictQuery", true);
-if (MONGO_URI) {
-  mongoose.connect(MONGO_URI)
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.log("MongoDB error:", err.message));
-} else {
-  console.error("MONGO_URI is required for database-backed features.");
-}
-if (!process.env.APP_SECRET) {
-  console.warn("APP_SECRET is not set; login sessions will reset when the server restarts.");
-}
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log("MongoDB error:", err.message));
 
 const UserSchema = new mongoose.Schema({
   username: { type: String, unique: true, sparse: true },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
   phone: { type: String, default: "" },
-  password: { type: String, default: "" },
+  password: { type: String, required: true },
   role: { type: String, enum: ["customer", "admin"], default: "customer" },
   addresses: { type: Array, default: [] },
-  emailVerified: { type: Boolean, default: true },
-  authProvider: { type: String, enum: ["password", "google", "hybrid"], default: "password" },
-  googleSub: { type: String, unique: true, sparse: true },
-  avatar: { type: String, default: "" },
-  lastLoginAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 const ProductSchema = new mongoose.Schema({
@@ -133,10 +116,6 @@ const OrderSchema = new mongoose.Schema({
   address: Object,
   items: Array,
   referralCode: { type: String, default: "" },
-  razorpayOrderId: { type: String, default: "", index: true },
-  razorpayPaymentId: { type: String, default: "" },
-  paymentSignature: { type: String, default: "" },
-  statusHistory: { type: Array, default: [] },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -147,11 +126,7 @@ const ReviewSchema = new mongoose.Schema({
   rating: { type: Number, default: 5 },
   text: String,
   photo: { type: String, default: "" },
-  title: { type: String, default: "" },
-  reviewerName: { type: String, default: "" },
-  reviewerEmail: { type: String, default: "", lowercase: true, index: true },
-  verifiedPurchase: { type: Boolean, default: false },
-  status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
+  status: { type: String, default: "Pending" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -193,14 +168,6 @@ const PasswordResetSchema = new mongoose.Schema({
   usedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
-const EmailVerificationSchema = new mongoose.Schema({
-  email: { type: String, required: true, lowercase: true, index: true },
-  codeHash: { type: String, required: true },
-  kind: { type: String, default: "login" },
-  expiresAt: { type: Date, required: true, expires: 0 },
-  usedAt: { type: Date, default: null },
-  createdAt: { type: Date, default: Date.now }
-});
 
 const User = mongoose.model("User", UserSchema);
 const Product = mongoose.model("Product", ProductSchema);
@@ -212,7 +179,6 @@ const SiteSetting = mongoose.model("SiteSetting", SiteSettingSchema);
 const Newsletter = mongoose.model("Newsletter", NewsletterSchema);
 const Referral = mongoose.model("Referral", ReferralSchema);
 const PasswordReset = mongoose.model("PasswordReset", PasswordResetSchema);
-const EmailVerification = mongoose.model("EmailVerification", EmailVerificationSchema);
 
 const normalizeEmail = (email) => String(email || "").toLowerCase().trim();
 const slugify = (value = "") => String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `product-${Date.now()}`;
@@ -223,10 +189,7 @@ const publicUser = (user) => ({
   email: user.email,
   phone: user.phone,
   role: user.role,
-  addresses: user.addresses || [],
-  emailVerified: user.emailVerified !== false,
-  authProvider: user.authProvider || "password",
-  avatar: user.avatar || ""
+  addresses: user.addresses || []
 });
 function base64url(input) {
   return Buffer.from(input).toString("base64url");
@@ -274,121 +237,6 @@ function sameHash(a = "", b = "") {
   const right = Buffer.from(String(b));
   return left.length === right.length && crypto.timingSafeEqual(left, right);
 }
-
-function requestEmail(req) {
-  return normalizeEmail(authContext(req).email || req.body?.email || req.get("x-user-email"));
-}
-function isBcryptHash(value = "") {
-  return /^\$2[aby]\$\d{2}\$/.test(String(value));
-}
-async function safePasswordCompare(plain = "", stored = "") {
-  if (!stored) return false;
-  if (String(plain) === String(stored)) return true;
-  try {
-    return await bcrypt.compare(String(plain), String(stored));
-  } catch {
-    return false;
-  }
-}
-function hashOtpCode(email, code, kind = "login") {
-  return crypto.createHmac("sha256", APP_SECRET).update(`${kind}:${normalizeEmail(email)}:${String(code).trim()}`).digest("hex");
-}
-async function issueFourDigitOtp(email, kind = "login", { throttle = true } = {}) {
-  const cleanEmail = normalizeEmail(email);
-  if (!cleanEmail) {
-    const error = new Error("Email is required.");
-    error.statusCode = 400;
-    throw error;
-  }
-  if (throttle) {
-    const recent = await EmailVerification.findOne({
-      email: cleanEmail,
-      usedAt: null,
-      createdAt: { $gt: new Date(Date.now() - 30 * 1000) }
-    }).sort({ createdAt: -1 });
-    if (recent) {
-      const error = new Error("Please wait 30 seconds before requesting another code.");
-      error.statusCode = 429;
-      throw error;
-    }
-  }
-  const code = String(crypto.randomInt(1000, 10000));
-  await EmailVerification.updateMany({ email: cleanEmail, usedAt: null }, { $set: { usedAt: new Date() } });
-  await EmailVerification.create({
-    email: cleanEmail,
-    codeHash: hashOtpCode(cleanEmail, code, kind),
-    kind,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-  });
-  const emailResult = await sendEmail({
-    to: cleanEmail,
-    subject: kind === "verify" ? "Verify your RIVAYAT email" : "Your RIVAYAT sign-in code",
-    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#111"><h1 style="letter-spacing:5px">RIVAYAT</h1><p>Use this 4-digit code to continue:</p><div style="font-size:42px;font-weight:900;letter-spacing:14px;margin:28px 0">${code}</div><p>This code expires in 10 minutes.</p></div>`
-  });
-  return {
-    delivered: Boolean(emailResult.success),
-    email: emailResult,
-    code: process.env.NODE_ENV !== "production" && !emailResult.success ? code : undefined
-  };
-}
-async function consumeFourDigitOtp(email, code, kind = "login") {
-  const cleanEmail = normalizeEmail(email);
-  const row = await EmailVerification.findOne({
-    email: cleanEmail,
-    kind,
-    usedAt: null,
-    expiresAt: { $gt: new Date() }
-  }).sort({ createdAt: -1 });
-  if (!row || !sameHash(row.codeHash, hashOtpCode(cleanEmail, code, kind))) return null;
-  row.usedAt = new Date();
-  await row.save();
-  return row;
-}
-function orderStatusEmail(order) {
-  return `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#111;background:#fff;padding:28px"><div style="letter-spacing:5px;font-weight:900;font-size:22px">RIVAYAT</div><p>Order update</p><h1>Your order is ${String(order.status || "Pending")}.</h1><p>Order <strong>${String(order.id || "")}</strong></p><pre style="white-space:pre-wrap;background:#f6f4ef;padding:14px;border-radius:12px">${orderPlainText(order)}</pre></div>`;
-}
-async function lookupIndiaPostPincode(pincode = "") {
-  const pin = String(pincode || "").replace(/\D/g, "").slice(0, 6);
-  if (!/^\d{6}$/.test(pin)) {
-    const error = new Error("Enter a valid 6-digit Indian PIN code.");
-    error.statusCode = 400;
-    throw error;
-  }
-  const response = await fetch(`https://api.postalpincode.in/pincode/${pin}`, {
-    headers: { Accept: "application/json", "User-Agent": "RIVAYAT/1.0" }
-  });
-  if (!response.ok) {
-    const error = new Error(`India Post PIN lookup failed (${response.status}).`);
-    error.statusCode = 502;
-    throw error;
-  }
-  const data = await response.json();
-  const result = Array.isArray(data) ? data[0] : data;
-  const offices = Array.isArray(result?.PostOffice) ? result.PostOffice : [];
-  if (!offices.length || String(result?.Status || "").toLowerCase() !== "success") {
-    const error = new Error("No India Post location found for this PIN code.");
-    error.statusCode = 404;
-    throw error;
-  }
-  const deliveryOffice = offices.find((office) => /delivery/i.test(String(office.DeliveryStatus || ""))) || offices[0];
-  return {
-    pincode: pin,
-    city: deliveryOffice.District || deliveryOffice.Region || deliveryOffice.Division || "",
-    district: deliveryOffice.District || "",
-    state: deliveryOffice.State || "",
-    country: deliveryOffice.Country || "India",
-    postOffice: deliveryOffice.Name || "",
-    deliveryStatus: deliveryOffice.DeliveryStatus || "",
-    offices: offices.slice(0, 12).map((office) => ({
-      name: office.Name || "",
-      branchType: office.BranchType || "",
-      deliveryStatus: office.DeliveryStatus || "",
-      district: office.District || "",
-      state: office.State || "",
-      pincode: office.Pincode || pin
-    }))
-  };
-}
 function deliveryChargeByPincode(pincode = "", subtotal = 0) {
   const pin = String(pincode || "").trim();
   const amount = Number(subtotal || 0);
@@ -426,40 +274,27 @@ async function sendEmail({ to, subject, html }) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html })
     });
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      throw new Error(`Email error ${response.status}${detail ? `: ${detail.slice(0, 220)}` : ""}`);
-    }
+    if (!response.ok) throw new Error(`Email error ${response.status}`);
     return { success: true };
   } catch (error) {
     return { success: false, message: error.message };
   }
 }
 async function ensureDefaultData() {
-  if (DEFAULT_ADMIN) {
-    const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
-    if (!existingAdmin) {
-      await User.create({
-        username: DEFAULT_ADMIN.username,
-        name: DEFAULT_ADMIN.name,
-        email: DEFAULT_ADMIN.email,
-        phone: DEFAULT_ADMIN.phone,
-        password: await bcrypt.hash(DEFAULT_ADMIN.password, 10),
-        role: "admin",
-        emailVerified: true,
-        authProvider: "password"
-      });
-    } else {
-      let changed = false;
-      if (existingAdmin.role !== "admin") { existingAdmin.role = "admin"; changed = true; }
-      if (!existingAdmin.username) { existingAdmin.username = DEFAULT_ADMIN.username; changed = true; }
-      if (existingAdmin.emailVerified === false) { existingAdmin.emailVerified = true; changed = true; }
-      if (!(await safePasswordCompare(DEFAULT_ADMIN.password, existingAdmin.password))) {
-        existingAdmin.password = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
-        changed = true;
-      }
-      if (changed) await existingAdmin.save();
-    }
+  const existingAdmin = await User.findOne({ $or: [{ email: DEFAULT_ADMIN.email }, { username: DEFAULT_ADMIN.username }] });
+  if (!existingAdmin) {
+    await User.create({
+      username: DEFAULT_ADMIN.username,
+      name: DEFAULT_ADMIN.name,
+      email: DEFAULT_ADMIN.email,
+      phone: DEFAULT_ADMIN.phone,
+      password: await bcrypt.hash(DEFAULT_ADMIN.password, 10),
+      role: "admin"
+    });
+  } else if (existingAdmin.role !== "admin") {
+    existingAdmin.role = "admin";
+    existingAdmin.username = existingAdmin.username || DEFAULT_ADMIN.username;
+    await existingAdmin.save();
   }
   for (const coupon of DEFAULT_COUPONS) {
     await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true });
@@ -475,36 +310,6 @@ mongoose.connection.once("open", () => ensureDefaultData().catch((err) => consol
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
 app.get("/health", (req, res) => res.json({ success: true }));
-app.get("/favicon.ico", (req, res) => res.status(204).end());
-app.get("/public-config", (req, res) => {
-  const config = {
-    googleClientId: GOOGLE_CLIENT_ID,
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    razorpayKeyId: RAZORPAY_KEY_ID
-  };
-  res.json({ success: true, config, ...config });
-});
-app.get("/launch/diagnostics", (req, res) => res.json({
-  success: true,
-  backend: "connected",
-  database: mongoose.connection.readyState === 1 ? "connected" : "connecting",
-  emailConfigured: Boolean(RESEND_API_KEY && EMAIL_FROM),
-  razorpayConfigured: Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET),
-  apiVersion: "2026.08.18-commerce-repair"
-}));
-const RIVAYAT_TEAM = [
-  { name: "Shashvat Shukla", role: "Founder", email: "houseofrivayat@gmail.com" },
-  { name: "Swastik Shukla", role: "Manager" },
-  { name: "Navneet Tiwari", role: "Operations Head" },
-  { name: "Shantanu Shukla", role: "Business Team" }
-];
-app.get("/launch/about", (req, res) => res.json({
-  success: true,
-  brand: "RIVAYAT",
-  story: "RIVAYAT is an independent Indian streetwear label focused on expressive products, useful details and dependable service.",
-  people: RIVAYAT_TEAM,
-  team: RIVAYAT_TEAM
-}));
 
 app.post("/telegram/test", async (req, res) => {
   if (!requireAdmin(req, res)) return;
@@ -526,60 +331,10 @@ app.post("/signup", async (req, res) => {
     if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email, and password are required." });
     const cleanEmail = normalizeEmail(email);
     if (await User.findOne({ email: cleanEmail })) return res.status(400).json({ success: false, message: "Email already registered. Please login." });
-    const user = await User.create({ name, email: cleanEmail, phone: phone || "", password: await bcrypt.hash(password, 10), role: "customer", emailVerified: true, authProvider: "password" });
+    const user = await User.create({ name, email: cleanEmail, phone: phone || "", password: await bcrypt.hash(password, 10), role: "customer" });
     res.json({ success: true, message: "Account created successfully!", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
-  }
-});
-app.post("/signup-v2", async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body || {};
-    if (!name || !email || !password) return res.status(400).json({ success: false, message: "Name, email and password are required." });
-    if (String(password).length < 4) return res.status(400).json({ success: false, message: "Password must be at least 4 characters." });
-    const cleanEmail = normalizeEmail(email);
-    let user = await User.findOne({ email: cleanEmail });
-    if (user?.emailVerified !== false) return res.status(409).json({ success: false, message: "Email already registered. Please sign in." });
-    if (!user) user = new User({ name: String(name).trim(), email: cleanEmail, phone: String(phone || "").trim(), role: "customer" });
-    user.name = String(name).trim();
-    user.phone = String(phone || "").trim();
-    user.password = await bcrypt.hash(String(password), 10);
-    user.emailVerified = false;
-    user.authProvider = user.googleSub ? "hybrid" : "password";
-    await user.save();
-    const otp = await issueFourDigitOtp(cleanEmail, "verify", { throttle: false });
-    if (!otp.delivered && process.env.NODE_ENV === "production") return res.status(503).json({ success: false, message: otp.email?.message || "Email delivery failed. Check RESEND_API_KEY and EMAIL_FROM." });
-    res.json({ success: true, email: cleanEmail, requiresVerification: true, message: "We sent a 4-digit code to your email.", verificationCode: otp.code });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-app.post("/verify-email-4", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const code = String(req.body.code || "").trim();
-    if (!(await consumeFourDigitOtp(email, code, "verify"))) return res.status(400).json({ success: false, message: "Invalid or expired code." });
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ success: false, message: "Account not found." });
-    user.emailVerified = true;
-    user.lastLoginAt = new Date();
-    await user.save();
-    res.json({ success: true, message: "Email verified.", user: { ...publicUser(user), token: createToken(user) } });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-app.post("/resend-verification-4", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const user = await User.findOne({ email });
-    if (!user) return res.json({ success: true, message: "If this account exists, a code has been sent." });
-    if (user.emailVerified !== false) return res.json({ success: true, verified: true, message: "This email is already verified." });
-    const otp = await issueFourDigitOtp(email, "verify", { throttle: true });
-    if (!otp.delivered && process.env.NODE_ENV === "production") return res.status(503).json({ success: false, message: otp.email?.message || "Email delivery failed." });
-    res.json({ success: true, message: "A new 4-digit code was sent.", verificationCode: otp.code });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 });
 app.post("/login", async (req, res) => {
@@ -589,105 +344,71 @@ app.post("/login", async (req, res) => {
     if (!identifier || !password) return res.status(400).json({ success: false, message: "Email/username and password are required." });
     const user = await User.findOne({ $or: [{ email: normalizeEmail(identifier) }, { username: identifier }] });
     if (!user) return res.status(401).json({ success: false, message: "No account found with this email/username." });
-    if (!(await safePasswordCompare(password, user.password))) return res.status(401).json({ success: false, message: "Incorrect password. Please try again." });
-    if (!isBcryptHash(user.password)) user.password = await bcrypt.hash(password, 10);
-    user.emailVerified = user.emailVerified !== false;
-    user.lastLoginAt = new Date();
-    await user.save();
+    if (!(await bcrypt.compare(password, user.password))) return res.status(401).json({ success: false, message: "Incorrect password. Please try again." });
     res.json({ success: true, message: "Login successful!", user: { ...publicUser(user), token: createToken(user) } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-app.post("/login-v2", async (req, res) => {
-  try {
-    const identifier = String(req.body.identifier || req.body.email || "").trim();
-    const password = String(req.body.password || "");
-    const user = await User.findOne({ $or: [{ email: normalizeEmail(identifier) }, { username: identifier }] });
-    if (!user || !(await safePasswordCompare(password, user.password))) return res.status(401).json({ success: false, message: "Incorrect email/username or password." });
-    if (user.emailVerified === false) {
-      await issueFourDigitOtp(user.email, "verify", { throttle: true }).catch(() => null);
-      return res.status(403).json({ success: false, requiresVerification: true, email: user.email, message: "Verify your email to continue." });
-    }
-    if (!isBcryptHash(user.password)) user.password = await bcrypt.hash(password, 10);
-    user.lastLoginAt = new Date();
-    await user.save();
-    res.json({ success: true, message: "Login successful.", user: { ...publicUser(user), token: createToken(user) } });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-app.post("/auth/email-otp/request", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
-    const otp = await issueFourDigitOtp(email, "login", { throttle: true });
-    if (!otp.delivered && process.env.NODE_ENV === "production") return res.status(503).json({ success: false, message: otp.email?.message || "OTP email could not be sent." });
-    res.json({ success: true, email, message: "A 4-digit RIVAYAT sign-in code has been sent.", verificationCode: otp.code });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-app.post("/auth/email-otp/verify", async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const code = String(req.body.code || "").trim();
-    if (!(await consumeFourDigitOtp(email, code, "login"))) return res.status(400).json({ success: false, message: "Invalid or expired code." });
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = await User.create({
-        name: email.split("@")[0],
-        email,
-        phone: "",
-        password: await bcrypt.hash(crypto.randomBytes(18).toString("hex"), 10),
-        role: "customer",
-        emailVerified: true,
-        authProvider: "password",
-        lastLoginAt: new Date()
-      });
-    } else {
-      user.emailVerified = true;
-      user.lastLoginAt = new Date();
-      await user.save();
-    }
-    res.json({ success: true, message: "Login successful.", user: { ...publicUser(user), token: createToken(user) } });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
+  // ─── UPDATE PROFILE ──────────────────────────────────────────────────────────
 app.put("/profile", async (req, res) => {
   try {
     const email = requestEmail(req);
-    if (!email) return res.status(401).json({ success: false, message: "Please login first." });
+
+    if (!email) {
+      return res.status(401).json({
+        success: false,
+        message: "Please login first."
+      });
+    }
+
+    const { name, phone, addresses } = req.body;
+
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ success: false, message: "User not found." });
-    const { name, phone, addresses, avatar } = req.body || {};
-    if (typeof name === "string") user.name = name.trim();
-    if (typeof phone === "string") user.phone = phone.trim();
-    if (Array.isArray(addresses)) user.addresses = addresses;
-    if (typeof avatar === "string" && avatar.length < 2200000) user.avatar = avatar;
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found."
+      });
+    }
+
+    if (typeof name === "string") {
+      user.name = name.trim();
+    }
+
+    if (typeof phone === "string") {
+      user.phone = phone.trim();
+    }
+
+    if (Array.isArray(addresses)) {
+      user.addresses = addresses;
+    }
+
     await user.save();
-    res.json({ success: true, message: "Profile updated successfully.", user: { ...publicUser(user), token: createToken(user) } });
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully.",
+      user: {
+        id: user._id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        addresses: user.addresses || []
+      }
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server error." });
+    console.error("Profile update error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error."
+    });
   }
 });
-app.put("/launch/profile", async (req, res) => {
-  try {
-    const email = requestEmail(req);
-    if (!email) return res.status(401).json({ success: false, message: "Please login first." });
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ success: false, message: "User not found." });
-    const { name, phone, addresses, avatar } = req.body || {};
-    if (typeof name === "string") user.name = name.trim();
-    if (typeof phone === "string") user.phone = phone.trim();
-    if (Array.isArray(addresses)) user.addresses = addresses;
-    if (typeof avatar === "string" && avatar.length < 2200000) user.avatar = avatar;
-    await user.save();
-    res.json({ success: true, message: "Profile updated successfully.", user: { ...publicUser(user), token: createToken(user) } });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message || "Server error." });
-  }
 });
 app.post("/forgot-password", async (req, res) => {
   try {
@@ -758,30 +479,6 @@ app.put("/settings/homepage", async (req, res) => {
   const setting = await SiteSetting.findOneAndUpdate({ key: "homepage" }, { key: "homepage", value, updatedAt: new Date() }, { upsert: true, new: true });
   res.json({ success: true, settings: setting.value });
 });
-app.get("/launch/legal-settings", async (req, res) => {
-  const setting = await SiteSetting.findOne({ key: "legal" });
-  res.json({ success: true, settings: setting?.value || {
-    operator: "RIVAYAT",
-    privacyEmail: "houseofrivayat@gmail.com",
-    grievanceEmail: "houseofrivayat@gmail.com",
-    returnDays: 7
-  } });
-});
-app.put("/launch/legal-settings", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  const value = {
-    operator: String(req.body.operator || "RIVAYAT").slice(0, 160),
-    businessAddress: String(req.body.businessAddress || "").slice(0, 500),
-    privacyEmail: String(req.body.privacyEmail || req.body.email || "houseofrivayat@gmail.com").slice(0, 160),
-    supportPhone: String(req.body.supportPhone || "").slice(0, 40),
-    grievanceOfficer: String(req.body.grievanceOfficer || "").slice(0, 160),
-    grievanceEmail: String(req.body.grievanceEmail || req.body.privacyEmail || "houseofrivayat@gmail.com").slice(0, 160),
-    gstin: String(req.body.gstin || "").slice(0, 40),
-    returnDays: Math.max(1, Math.min(30, Number(req.body.returnDays || 7)))
-  };
-  const setting = await SiteSetting.findOneAndUpdate({ key: "legal" }, { key: "legal", value, updatedAt: new Date() }, { upsert: true, new: true });
-  res.json({ success: true, settings: setting.value });
-});
 
 app.get("/products", async (req, res) => res.json({ success: true, products: await Product.find({ active: { $ne: false } }).sort({ createdAt: -1 }) }));
 app.get("/products/:slugOrId", async (req, res) => {
@@ -790,22 +487,14 @@ app.get("/products/:slugOrId", async (req, res) => {
   if (!product) return res.status(404).json({ success: false, message: "Product not found" });
   res.json({ success: true, product });
 });
-async function saveProductFromBody(body = {}) {
-  const id = body.id || slugify(body.name);
-  return Product.findOneAndUpdate(
-    { id },
-    { ...body, id, slug: body.slug || slugify(body.name), updatedAt: new Date() },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
-}
 app.post("/products", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const product = await saveProductFromBody(req.body || {});
-  res.json({ success: true, product });
-});
-app.post("/launch/products", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  const product = await saveProductFromBody(req.body || {});
+  const body = req.body || {};
+  const product = await Product.findOneAndUpdate(
+    { id: body.id || `product-${Date.now()}` },
+    { ...body, id: body.id || `product-${Date.now()}`, slug: body.slug || slugify(body.name), updatedAt: new Date() },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
   res.json({ success: true, product });
 });
 app.delete("/products/:id", async (req, res) => {
@@ -841,28 +530,6 @@ app.delete("/coupons/:id", async (req, res) => {
   res.json({ success: true, message: "Coupon deleted successfully" });
 });
 
-registerLaunchRoutes({
-  app,
-  Product,
-  Order,
-  Review,
-  User,
-  authContext,
-  requireAdmin,
-  publicUser,
-  createToken,
-  normalizeEmail,
-  deliveryChargeByPincode,
-  orderPlainText,
-  orderStatusEmail,
-  sendEmail,
-  sendTelegramMessage,
-  ORDER_STATUSES,
-  GOOGLE_CLIENT_ID,
-  RAZORPAY_KEY_ID,
-  RAZORPAY_KEY_SECRET
-});
-
 app.post("/orders", async (req, res) => {
   try {
     const body = req.body || {};
@@ -893,7 +560,9 @@ app.post("/orders", async (req, res) => {
     });
     if (order.referralCode) await Referral.findOneAndUpdate({ code: order.referralCode }, { $inc: { uses: 1 }, updatedAt: new Date() });
     sendTelegramMessage(`New RIVAYAT order\n${orderPlainText(order)}`).catch(() => {});
-    if (order.email) sendEmail({ to: order.email, subject: `RIVAYAT order confirmed: ${order.id}`, html: `<pre>${orderPlainText(order)}</pre>` }).catch(() => {});
+    if (order.email) {
+      sendEmail({ to: order.email, subject: `RIVAYAT order confirmed: ${order.id}`, html: `<pre>${orderPlainText(order)}</pre>` }).catch(() => {});
+    }
     res.json({ success: true, message: "Order saved successfully!", order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -920,19 +589,6 @@ app.patch("/orders/:id/status", async (req, res) => {
   order.updatedAt = new Date();
   await order.save();
   sendTelegramMessage(`RIVAYAT order status updated\nOrder: ${order.id}\nStatus: ${order.status}\nCustomer: ${order.customerName || ""}`).catch(() => {});
-  if (order.email) sendEmail({ to: order.email, subject: `RIVAYAT order ${order.id}: ${order.status}`, html: orderStatusEmail(order) }).catch(() => {});
-  res.json({ success: true, message: "Order status updated successfully", order });
-});
-app.patch("/launch/orders/:id/status", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  const status = req.body.status;
-  if (!ORDER_STATUSES.includes(status)) return res.status(400).json({ success: false, message: "Invalid order status" });
-  const order = await Order.findOne({ id: req.params.id });
-  if (!order) return res.status(404).json({ success: false, message: "Order not found" });
-  order.status = status;
-  order.updatedAt = new Date();
-  await order.save();
-  if (order.email) sendEmail({ to: order.email, subject: `RIVAYAT order ${order.id}: ${order.status}`, html: orderStatusEmail(order) }).catch(() => {});
   res.json({ success: true, message: "Order status updated successfully", order });
 });
 
@@ -957,15 +613,6 @@ app.patch("/returns/:id/status", async (req, res) => {
   if (!RETURN_STATUSES.includes(req.body.status)) return res.status(400).json({ success: false, message: "Invalid return status" });
   const request = await ReturnRequest.findOneAndUpdate({ id: req.params.id }, { status: req.body.status, updatedAt: new Date() }, { new: true });
   if (!request) return res.status(404).json({ success: false, message: "Request not found" });
-  if (request.customer?.email) sendEmail({ to: request.customer.email, subject: `RIVAYAT ${request.type || "return"} update: ${request.status}`, html: `<div style="font-family:Arial,sans-serif"><h1>RIVAYAT</h1><p>Your request for order ${request.orderId} is ${request.status}.</p></div>` }).catch(() => {});
-  res.json({ success: true, request });
-});
-app.patch("/launch/returns/:id/status", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  if (!RETURN_STATUSES.includes(req.body.status)) return res.status(400).json({ success: false, message: "Invalid return status" });
-  const request = await ReturnRequest.findOneAndUpdate({ id: req.params.id }, { status: req.body.status, updatedAt: new Date() }, { new: true });
-  if (!request) return res.status(404).json({ success: false, message: "Request not found" });
-  if (request.customer?.email) sendEmail({ to: request.customer.email, subject: `RIVAYAT ${request.type || "return"} update: ${request.status}`, html: `<div style="font-family:Arial,sans-serif"><h1>RIVAYAT</h1><p>Your request for order ${request.orderId} is ${request.status}.</p></div>` }).catch(() => {});
   res.json({ success: true, request });
 });
 
@@ -974,10 +621,7 @@ app.get("/users", async (req, res) => {
   const users = await User.find().sort({ createdAt: -1 });
   res.json({ success: true, users: users.map(publicUser) });
 });
-app.get("/reviews", async (req, res) => {
-  const query = authContext(req).role === "admin" ? {} : { status: "Approved" };
-  res.json({ success: true, reviews: await Review.find(query).sort({ createdAt: -1 }) });
-});
+app.get("/reviews", async (req, res) => res.json({ success: true, reviews: await Review.find().sort({ createdAt: -1 }) }));
 app.post("/reviews", async (req, res) => {
   const body = req.body || {};
   const review = await Review.findOneAndUpdate(
@@ -1056,34 +700,7 @@ app.get("/admin/stats", async (req, res) => {
     }
   });
 });
-app.delete("/launch/account", async (req, res) => {
-  try {
-    const auth = authContext(req);
-    if (!auth.email) return res.status(401).json({ success: false, message: "Please login first." });
-    if (String(req.body?.confirmation || "") !== "DELETE") return res.status(400).json({ success: false, message: "Type DELETE to confirm account deletion." });
-    const user = await User.findOne({ email: normalizeEmail(auth.email) });
-    if (!user) return res.json({ success: true });
-    if (user.role === "admin") return res.status(403).json({ success: false, message: "Admin accounts cannot be deleted from the storefront." });
-    await Promise.all([User.deleteOne({ _id: user._id }), EmailVerification.deleteMany({ email: user.email }), PasswordReset.deleteMany({ email: user.email })]);
-    res.json({ success: true, message: "Your account has been deleted." });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-app.get("/api/pincode/:pincode", async (req, res) => {
-  try {
-    const location = await lookupIndiaPostPincode(req.params.pincode);
-    res.json({ success: true, location });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({ success: false, message: error.message });
-  }
-});
-app.post("/delivery/quote", async (req, res) => {
-  const charge = deliveryChargeByPincode(req.body.pincode, req.body.subtotal);
-  let location = null;
-  try { location = await lookupIndiaPostPincode(req.body.pincode); } catch {}
-  res.json({ success: true, charge, freeAbove: 999, location });
-});
+app.post("/delivery/quote", (req, res) => res.json({ success: true, charge: deliveryChargeByPincode(req.body.pincode, req.body.subtotal), freeAbove: 999 }));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
