@@ -1,14 +1,20 @@
 {
   "name": "rivayat_backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "RIVAYAT storefront and secure commerce API",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "check": "node --check server.js && node scripts/check-frontend.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
