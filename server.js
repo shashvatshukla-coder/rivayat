@@ -470,6 +470,12 @@ async function ensureDefaultData() {
 }
 mongoose.connection.once("open", () => ensureDefaultData().catch((err) => console.log("Seed skipped:", err.message)));
 
+app.use("/assets", express.static(path.join(__dirname, "assets"), {
+  dotfiles: "deny",
+  immutable: true,
+  index: false,
+  maxAge: "1y"
+}));
 app.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/styles.css", (req, res) => res.sendFile(path.join(__dirname, "styles.css")));
 app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(__dirname, "sitemap.xml")));
@@ -754,6 +760,7 @@ app.post("/reset-password", async (req, res) => {
 
 app.get("/settings/homepage", async (req, res) => {
   const setting = await SiteSetting.findOne({ key: "homepage" });
+  res.set("Cache-Control", "public, max-age=30, s-maxage=60, stale-while-revalidate=300");
   res.json({ success: true, settings: { ...DEFAULT_HOMEPAGE, ...(setting?.value || {}) } });
 });
 app.put("/settings/homepage", async (req, res) => {
@@ -776,7 +783,10 @@ app.put("/settings/homepage", async (req, res) => {
   res.json({ success: true, settings: setting.value });
 });
 
-app.get("/products", async (req, res) => res.json({ success: true, products: await Product.find({ active: { $ne: false } }).sort({ createdAt: -1 }) }));
+app.get("/products", async (req, res) => {
+  res.set("Cache-Control", "public, max-age=30, s-maxage=60, stale-while-revalidate=300");
+  res.json({ success: true, products: await Product.find({ active: { $ne: false } }).sort({ createdAt: -1 }) });
+});
 app.get("/products/:slugOrId", async (req, res) => {
   const value = req.params.slugOrId;
   const auth = authContext(req);

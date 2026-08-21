@@ -44,7 +44,14 @@ const requiredFrontendMarkers = [
   "data-theme",
   "token: auth.user?.token",
   "updateRouteSEO",
-  "server-side payment verification"
+  "server-side payment verification",
+  "AbortController",
+  "BACKGROUND_READ_TIMEOUT_MS",
+  "DEFAULT_API_BASE_URL",
+  "/assets/",
+  "scheduleStorefrontRefresh",
+  "startup-shell",
+  "renderSequence"
 ];
 
 for (const marker of requiredFrontendMarkers) {

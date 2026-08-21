@@ -1,6 +1,8 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const { after, before, test } = require("node:test");
 
 process.env.NODE_ENV = "test";
@@ -97,6 +99,12 @@ test("storefront files are served without exposing backend source", async () => 
   const robots = await request("/robots.txt");
   assert.equal(robots.status, 200);
   assert.match(await robots.text(), /sitemap\.xml/);
+
+  const assetName = fs.readdirSync(path.resolve(__dirname, "../assets")).find((name) => name.endsWith(".webp"));
+  assert.ok(assetName, "at least one optimized storefront image must exist");
+  const asset = await request(`/assets/${assetName}`);
+  assert.equal(asset.status, 200);
+  assert.match(asset.headers.get("cache-control"), /immutable/);
 });
 
 test("CORS accepts configured origins and rejects others", async () => {
