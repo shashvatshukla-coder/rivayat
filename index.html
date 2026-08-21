@@ -3614,7 +3614,7 @@
 
     const INITIAL_USERS = [];
 
-    const APP_VERSION = 'rivayat-v7-pinterest-viral-hoodies-cargos-drop';
+    const APP_VERSION = 'rivayat-v8-premium-black-coat-pant-combo-launch';
    const DEFAULT_API_BASE_URL = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname)
      ? 'http://localhost:3000'
      : location.hostname.endsWith('onrender.com') ? '' : '/backend';
@@ -3637,7 +3637,8 @@
       get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
       set(key, value) { localStorage.setItem(key, JSON.stringify(value)); },
       init() {
-        if (localStorage.getItem('rivayat_app_version') !== APP_VERSION) {
+        const storedVersion = localStorage.getItem('rivayat_app_version');
+        if (storedVersion !== APP_VERSION) {
           this.set('rivayat_products', INITIAL_PRODUCTS);
           this.set('rivayat_coupons', INITIAL_COUPONS);
           this.set('rivayat_orders', INITIAL_ORDERS);
@@ -3647,20 +3648,28 @@
           this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
           this.set('rivayat_newsletter_leads', []);
           this.set('rivayat_referrals', []);
-          localStorage.removeItem('rivayat_auth');
-          localStorage.removeItem('rivayat_cart');
-          localStorage.removeItem('rivayat_wishlist');
-          localStorage.removeItem('rivayat_recent');
           localStorage.setItem('rivayat_app_version', APP_VERSION);
           return;
         }
-        if (!localStorage.getItem('rivayat_products')) this.set('rivayat_products', INITIAL_PRODUCTS);
+        // Guarantee all INITIAL_PRODUCTS exist in the local product store
+        const currentProducts = this.get('rivayat_products', []);
+        if (!currentProducts || !currentProducts.length) {
+          this.set('rivayat_products', INITIAL_PRODUCTS);
+        } else {
+          const existingIds = new Set(currentProducts.map(p => p.id));
+          const missing = INITIAL_PRODUCTS.filter(p => !existingIds.has(p.id));
+          if (missing.length > 0) {
+            this.set('rivayat_products', [...missing, ...currentProducts]);
+          }
+        }
+        if (!localStorage.getItem('rivayat_homepage_settings')) {
+          this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
+        }
         if (!localStorage.getItem('rivayat_coupons')) this.set('rivayat_coupons', INITIAL_COUPONS);
         if (!localStorage.getItem('rivayat_orders')) this.set('rivayat_orders', INITIAL_ORDERS);
         if (!localStorage.getItem('rivayat_users')) this.set('rivayat_users', INITIAL_USERS);
         if (!localStorage.getItem('rivayat_reviews')) this.set('rivayat_reviews', INITIAL_REVIEWS);
         if (!localStorage.getItem('rivayat_returns')) this.set('rivayat_returns', []);
-        if (!localStorage.getItem('rivayat_homepage_settings')) this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
         if (!localStorage.getItem('rivayat_newsletter_leads')) this.set('rivayat_newsletter_leads', []);
         if (!localStorage.getItem('rivayat_referrals')) this.set('rivayat_referrals', []);
       }
@@ -4460,11 +4469,11 @@
               <div class="hero-actions"><a class="btn" href="#/shop">${escapeHtml(home.primaryButtonText)}</a><a class="btn secondary" href="https://wa.me/${BRAND.whatsappDigits}?text=${encodeURIComponent('Hi RIVAYAT, I want to shop your collection.') }" target="_blank">${escapeHtml(home.secondaryButtonText)}</a></div>
               <div class="grid grid-3" style="margin-top:28px"><div class="pill">COD Available</div><div class="pill">Secure Checkout</div><div class="pill">Premium Packaging</div></div>
             </div>
-            <div class="hero-card"><div class="hero-inner"><img class="hero-product-photo" src="${escapeHtml(safeImageUrl(home.heroImage) || '/assets/products/rivayat-black-coat-pant-combo.png')}" alt="Rivayat Premium Black Coat Pant Combo" fetchpriority="high" decoding="async"><div class="hero-copy"><span class="pill" style="background:rgba(0,0,0,.75);color:#f5ebda;border-color:rgba(255,255,255,.24);margin-bottom:10px;display:inline-block">★ Launch Drop • Hero Product</span><h2 class="serif" style="font-size:clamp(26px, 3.6vw, 38px);margin:0 0 6px">Premium Black Coat Pant Combo</h2><p style="color:rgba(255,255,255,.9);font-size:14px;margin:0 0 14px;line-height:1.5">${escapeHtml(home.heroOffer)}</p><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn gold small" href="#/product/rivayat-premium-black-coat-pant-combo">Shop Hero Drop · ₹2,999</a><a class="btn small" href="#/checkout" onclick="event.preventDefault(); CartService.add('rivayat-premium-black-coat-pant-combo','L'); location.hash='#/checkout';">Quick Checkout</a></div></div></div></div>
+            <div class="hero-card"><div class="hero-inner"><img class="hero-product-photo" src="${escapeHtml(safeImageUrl(home.heroImage) || '/assets/products/rivayat-black-coat-pant-combo.png')}" alt="Rivayat Premium Black Coat Pant Combo" fetchpriority="high" decoding="async"><div class="hero-copy"><span class="pill" style="background:rgba(0,0,0,.75);color:#f5ebda;border-color:rgba(255,255,255,.24);margin-bottom:10px;display:inline-block">★ Launch Drop • Hero Product</span><h2 class="serif" style="font-size:clamp(26px, 3.6vw, 38px);margin:0 0 6px">Premium Black Coat Pant Combo</h2><p style="color:rgba(255,255,255,.9);font-size:14px;margin:0 0 14px;line-height:1.5">${escapeHtml(home.heroOffer)}</p><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn gold small" href="#/product/rivayat-premium-black-coat-pant-combo">Shop Hero Drop · ₹2,999</a><a class="btn small" href="#/checkout" onclick="event.preventDefault(); quickAddToCart('rivayat-premium-black-coat-pant-combo').then(()=>{ location.hash='#/checkout'; });">Quick Checkout</a></div></div></div></div>
           </div>
         </section>
         <section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">Featured Products</h2><p>Clean silhouettes, premium neutral palette, and comfort-focused pricing for everyday Indian style.</p></div><a class="btn secondary" href="#/shop">View all</a></div><div class="grid grid-3">${products.map(productCard).join('')}</div></div></section>
-        <section class="section tight"><div class="container grid grid-2"><div class="card pad" style="background:#111;color:#fff"><span class="pill" style="background:rgba(255,255,255,.1);border-color:var(--line-dark);color:#e9dcc5">New Arrivals</span><h2 class="serif" style="font-size:48px;margin:18px 0 8px">Minimal essentials for this season.</h2><p style="color:rgba(255,255,255,.68);line-height:1.7">Black, white, and neutral pieces made for easy styling.</p><a class="btn gold" href="#/shop" style="margin-top:16px">Explore New Drop</a></div><div class="card pad"><span class="pill">Best Sellers</span><h2 class="serif" style="font-size:48px;margin:18px 0 8px">Half Pant Black</h2><p class="muted" style="line-height:1.7">The first RIVAYAT hero product: everyday comfort with a premium black finish.</p><a class="btn" href="#/product/rivayat-half-pant-black" style="margin-top:16px">Shop Best Seller</a></div></div></section>
+        <section class="section tight"><div class="container grid grid-2"><div class="card pad" style="background:#111;color:#fff"><span class="pill" style="background:rgba(255,255,255,.1);border-color:var(--line-dark);color:#e9dcc5">★ Launch Drop</span><h2 class="serif" style="font-size:clamp(32px, 4vw, 48px);margin:18px 0 8px">Premium Black Coat Pant Combo</h2><p style="color:rgba(255,255,255,.75);line-height:1.7">Bespoke 380 GSM Italian-blend wool gabardine tailored 2-piece suit combo. Structured peak lapels and slim-straight trousers for ₹2,999.</p><a class="btn gold" href="#/product/rivayat-premium-black-coat-pant-combo" style="margin-top:16px">Shop Hero Drop · ₹2,999</a></div><div class="card pad"><span class="pill">Best Sellers</span><h2 class="serif" style="font-size:48px;margin:18px 0 8px">Half Pant Black</h2><p class="muted" style="line-height:1.7">The first RIVAYAT hero product: everyday comfort with a premium black finish.</p><a class="btn" href="#/product/rivayat-half-pant-black" style="margin-top:16px">Shop Best Seller</a></div></div></section>
         <section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">Why Choose Rivayat</h2><p>Built with real ecommerce features: invoices, tracking, returns, reviews, coupons, and admin controls.</p></div></div><div class="grid grid-4">${['PDF Invoices','Live Tracking','Returns & Exchange','Admin Managed Store'].map((t,i)=>`<div class="card feature-card"><div><div class="feature-icon">${['▣','↗','↺','⚙'][i]}</div><strong>${t}</strong></div><p>${['Clean invoice layout with customer, address, items, and total details.','Order statuses with a visible timeline from placed to delivered.','Customers can request returns or exchanges after delivery.','Products, images, coupons, reviews, stock, orders, and hero banner can be managed from admin.'][i]}</p></div>`).join('')}</div></div></section>
         <section class="section tight"><div class="container"><div class="section-head"><div><h2 class="serif">Customer Testimonials</h2><p>Real-style feedback from customers who love clean, comfortable everyday fits.</p></div></div><div class="grid grid-3">${['Fit is comfortable and looks premium for the price.','Black half pant is perfect for gym and casual wear.','Clean design, fast checkout, and good WhatsApp support.'].map((t,i)=>`<div class="card testimonial"><div class="stars">★★★★★</div><p>“${t}”</p><strong>${['Aman','Ritik','Harsh'][i]}</strong><br><span class="muted">Verified Buyer</span></div>`).join('')}</div></div></section>
         ${renderFoundersSection()}
