@@ -545,6 +545,47 @@
 
     const INITIAL_PRODUCTS = [
   {
+  "id": "rivayat-premium-black-coat-pant-combo",
+  "slug": "rivayat-premium-black-coat-pant-combo",
+  "name": "Rivayat Premium Black Coat Pant Combo",
+  "category": "Co-ord Sets",
+  "color": "Jet Black",
+  "mrp": 5999,
+  "price": 2999,
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL"
+  ],
+  "inventory": {
+    "S": 35,
+    "M": 60,
+    "L": 55,
+    "XL": 40,
+    "XXL": 20
+  },
+  "rating": 5,
+  "reviews": 284,
+  "badge": "Rivayat Hero",
+  "description": "The definitive RIVAYAT Hero Launch Drop: A bespoke luxury 2-piece Black Coat and Pant suit combo engineered for red carpets, formal galas, weddings, high-stakes business meetings, and elevated evening streetwear. Tailored from an ultra-refined 380 GSM Italian-blend tropical wool gabardine with structured peak lapels, interior silk-satin lining, matte horn buttons, and matching slim-straight creased trousers. Available for instant nationwide delivery and checkout at rivayat.shop.",
+  "details": [
+    "Bespoke 2-Piece Suit Combo: Tailored Single-Breasted Blazer + Slim-Straight Trousers",
+    "Ultra-luxurious 380 GSM Italian-blend wool touch gabardine",
+    "Structured shoulder silhouette with soft breathable silk-satin full lining",
+    "Tailored trousers featuring waistband interior grip, coin pocket, and deep seam utility",
+    "Hand-finished pick stitching with custom engraved matte horn buttons"
+  ],
+  "image": "/assets/products/rivayat-black-coat-pant-combo.png",
+  "gallery": [
+    "/assets/products/rivayat-black-coat-pant-combo.png",
+    "/assets/products/rivayat-black-coat-pant-front.png",
+    "/assets/products/rivayat-black-coat-pant-details.png",
+    "/assets/products/rivayat-black-coat-pant-model.png"
+  ]
+},
+  {
     "id": "rivayat-half-pant-black",
     "slug": "rivayat-half-pant-black",
     "name": "Rivayat Half Pant - Black",
@@ -3583,12 +3624,12 @@
 };
 
     const DEFAULT_HOMEPAGE = {
-      heroPill: 'Premium Indian D2C Fashion • Launch Collection',
+      heroPill: 'Rivayat Signature Drop • Premium Menswear',
       heroTitle: 'Own Your Vibe with RIVAYAT.',
-      heroSubtitle: 'A luxury-minimal menswear experience for clean fits, comfortable movement, and elevated daily style. Built mobile-first for smooth shopping on every device.',
-      heroImage: ASSETS.blackModel,
-      heroOffer: 'Half Pants from ₹349 • Full Pant from ₹359',
-      primaryButtonText: 'Shop Collection',
+      heroSubtitle: 'Luxury craftsmanship meets modern silhouettes. Introducing the all-new Rivayat Premium Black Coat Pant Combo alongside our iconic streetwear and comfort essentials. Built mobile-first for smooth shopping on every device.',
+      heroImage: '/assets/products/rivayat-black-coat-pant-combo.png',
+      heroOffer: 'Hero Launch Drop: Tailored Black Coat Pant Combo at ₹2,999 (MRP ₹5,999)',
+      primaryButtonText: 'Shop Hero Drop',
       secondaryButtonText: 'Buy on WhatsApp'
     };
     const db = {
@@ -4418,7 +4459,7 @@
               <div class="hero-actions"><a class="btn" href="#/shop">${escapeHtml(home.primaryButtonText)}</a><a class="btn secondary" href="https://wa.me/${BRAND.whatsappDigits}?text=${encodeURIComponent('Hi RIVAYAT, I want to shop your collection.') }" target="_blank">${escapeHtml(home.secondaryButtonText)}</a></div>
               <div class="grid grid-3" style="margin-top:28px"><div class="pill">COD Available</div><div class="pill">Secure Checkout</div><div class="pill">Premium Packaging</div></div>
             </div>
-            <div class="hero-card"><div class="hero-inner"><img class="hero-product-photo" src="${escapeHtml(safeImageUrl(home.heroImage) || ASSETS.blackModel)}" alt="RIVAYAT hero product" fetchpriority="high" decoding="async"><div class="hero-copy"><h2 class="serif">Launch Drop</h2><p>${escapeHtml(home.heroOffer)}</p></div></div></div>
+            <div class="hero-card"><div class="hero-inner"><img class="hero-product-photo" src="${escapeHtml(safeImageUrl(home.heroImage) || '/assets/products/rivayat-black-coat-pant-combo.png')}" alt="Rivayat Premium Black Coat Pant Combo" fetchpriority="high" decoding="async"><div class="hero-copy"><span class="pill" style="background:rgba(0,0,0,.75);color:#f5ebda;border-color:rgba(255,255,255,.24);margin-bottom:10px;display:inline-block">★ Launch Drop • Hero Product</span><h2 class="serif" style="font-size:clamp(26px, 3.6vw, 38px);margin:0 0 6px">Premium Black Coat Pant Combo</h2><p style="color:rgba(255,255,255,.9);font-size:14px;margin:0 0 14px;line-height:1.5">${escapeHtml(home.heroOffer)}</p><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn gold small" href="#/product/rivayat-premium-black-coat-pant-combo">Shop Hero Drop · ₹2,999</a><a class="btn small" href="#/checkout" onclick="event.preventDefault(); CartService.add('rivayat-premium-black-coat-pant-combo','L'); location.hash='#/checkout';">Quick Checkout</a></div></div></div></div>
           </div>
         </section>
         <section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">Featured Products</h2><p>Clean silhouettes, premium neutral palette, and comfort-focused pricing for everyday Indian style.</p></div><a class="btn secondary" href="#/shop">View all</a></div><div class="grid grid-3">${products.map(productCard).join('')}</div></div></section>
@@ -4430,12 +4471,7 @@
         <section class="section"><div class="container grid grid-2"><div class="card pad"><h2 class="serif" style="font-size:44px;margin-top:0">Join the Rivayat circle.</h2><p class="muted">Get launch offers, new drops, and styling tips.</p><form onsubmit="subscribeNewsletter(event)"><div class="coupon-row"><input class="input" name="email" type="email" required placeholder="Your email"><button class="btn">Subscribe</button></div></form></div><div class="card pad"><h2 class="serif" style="font-size:44px;margin-top:0">Contact</h2><p class="muted">Email ${BRAND.email}<br>Instagram ${BRAND.instagram}<br>Facebook ${BRAND.facebook}<br>WhatsApp ${BRAND.whatsapp}</p><a class="btn" href="#/contact">Contact Us</a></div></div></section>
       </div>`;
     }
-    function renderFoundersSection() {
-      const people = [
-        ['Shashvat Shukla','Founder','@shasvat_shukla__','SS'], ['Swastik Shukla','Manager','@swastik_shukla__','SS'], ['Navneet Tiwari','Operations Head','@_navneet006','NT'], ['Shantanu Shukla','Business Team','—','ST']
-      ];
-      return `<section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">People Behind RIVAYAT</h2><p>Elegant founder and team cards for brand trust and premium storytelling.</p></div></div><div class="grid grid-4">${people.map(p=>`<div class="card founder-card"><div class="avatar">${p[3]}</div><div><h3 style="margin:0">${p[0]}</h3><p class="muted" style="margin:5px 0 8px">${p[1]}</p><span class="pill">${p[2]}</span></div></div>`).join('')}</div></div></section>`;
-    }
+    
 
     function renderFoundersSection() {
       const people = [

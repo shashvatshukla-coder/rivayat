@@ -34,12 +34,12 @@ const DEFAULT_ADMIN = {
   password: process.env.ADMIN_PASSWORD || ""
 };
 const DEFAULT_HOMEPAGE = {
-  heroPill: "Premium Indian D2C Fashion - Launch Collection",
+  heroPill: "Rivayat Signature Drop • Premium Menswear",
   heroTitle: "Own Your Vibe with RIVAYAT.",
-  heroSubtitle: "A luxury-minimal menswear experience for clean fits, comfortable movement, and elevated daily style.",
-  heroImage: "",
-  heroOffer: "Half Pants from Rs 349 - Full Pant from Rs 359",
-  primaryButtonText: "Shop Collection",
+  heroSubtitle: "Luxury craftsmanship meets modern silhouettes. Introducing the all-new Rivayat Premium Black Coat Pant Combo alongside our iconic streetwear and comfort essentials.",
+  heroImage: "/assets/products/rivayat-black-coat-pant-combo.png",
+  heroOffer: "Hero Launch Drop: Tailored Black Coat Pant Combo at Rs 2,999 (MRP Rs 5,999)",
+  primaryButtonText: "Shop Hero Drop",
   secondaryButtonText: "Buy on WhatsApp"
 };
 const DEFAULT_COUPONS = [
