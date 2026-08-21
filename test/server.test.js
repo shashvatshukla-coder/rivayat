@@ -94,11 +94,18 @@ test("storefront files are served without exposing backend source", async () => 
   assert.match(html, /id="themeToggle"/);
   assert.match(html, /Send 4-digit OTP/);
   assert.match(html, /Profile photo/);
+  assert.equal((await request("/shop")).status, 200);
+  assert.equal((await request("/product/rivayat-half-pant-black")).status, 200);
   assert.equal((await request("/server.js")).status, 404);
   assert.equal((await request("/package.json")).status, 404);
   const robots = await request("/robots.txt");
   assert.equal(robots.status, 200);
   assert.match(await robots.text(), /sitemap\.xml/);
+  const sitemap = await request("/sitemap.xml");
+  assert.equal(sitemap.status, 200);
+  const sitemapXml = await sitemap.text();
+  assert.match(sitemapXml, /product\/rivayat-half-pant-black/);
+  assert.doesNotMatch(sitemapXml, /electric-branch-hoodie/);
 
   const assetName = fs.readdirSync(path.resolve(__dirname, "../assets")).find((name) => name.endsWith(".webp"));
   assert.ok(assetName, "at least one optimized storefront image must exist");

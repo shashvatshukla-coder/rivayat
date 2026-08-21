@@ -8,10 +8,17 @@ const vm = require("node:vm");
 const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const server = fs.readFileSync(path.join(root, "server.js"), "utf8");
+const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 
 const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+  .filter((match) => !/type=["']application\/ld\+json["']/i.test(match[0]))
   .map((match) => match[1])
   .filter((source) => source.trim());
+
+const structuredDataMatch = html.match(/<script id="seoStructuredData" type="application\/ld\+json">([\s\S]*?)<\/script>/i);
+assert.ok(structuredDataMatch, "Base structured data must exist");
+const structuredData = JSON.parse(structuredDataMatch[1]);
+assert.ok(structuredData["@graph"].some((item) => item["@type"] === "Organization"), "Organization structured data must be valid");
 
 assert.ok(inlineScripts.length, "index.html must include application JavaScript");
 inlineScripts.forEach((source, index) => {
@@ -51,7 +58,10 @@ const requiredFrontendMarkers = [
   "/assets/",
   "scheduleStorefrontRefresh",
   "startup-shell",
-  "renderSequence"
+  "renderSequence",
+  "seoStructuredData",
+  "BreadcrumbList",
+  "priceCurrency:'INR'"
 ];
 
 for (const marker of requiredFrontendMarkers) {
@@ -67,11 +77,17 @@ const requiredBackendRoutes = [
   "/reviews",
   "/orders",
   "/returns",
-  "/admin/stats"
+  "/admin/stats",
+  "/product/:slug"
 ];
 
 for (const route of requiredBackendRoutes) {
   assert.ok(server.includes(route), `Missing backend route: ${route}`);
 }
+
+assert.doesNotMatch(html, /href="#\/product\//, "Product links must use crawlable path URLs");
+assert.match(html, /href="\/shop"/, "Shop must be internally linked with a crawlable path URL");
+assert.match(sitemap, /product\/rivayat-half-pant-black/, "Sitemap must include current products");
+assert.doesNotMatch(sitemap, /electric-branch-hoodie/, "Sitemap must not advertise removed products");
 
 console.log(`Frontend syntax and ${requiredFrontendMarkers.length + requiredBackendRoutes.length} capability checks passed.`);

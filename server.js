@@ -476,7 +476,11 @@ app.use("/assets", express.static(path.join(__dirname, "assets"), {
   index: false,
   maxAge: "1y"
 }));
-app.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+const PUBLIC_STOREFRONT_ROUTES = [
+  "/", "/index.html", "/shop", "/about", "/contact", "/privacy", "/terms",
+  "/returns-policy", "/refund", "/shipping", "/cookies", "/product/:slug"
+];
+app.get(PUBLIC_STOREFRONT_ROUTES, (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/styles.css", (req, res) => res.sendFile(path.join(__dirname, "styles.css")));
 app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(__dirname, "sitemap.xml")));
 app.get("/robots.txt", (req, res) => {
