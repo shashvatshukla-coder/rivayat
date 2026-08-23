@@ -65,6 +65,8 @@ test("configuration and core helpers are deterministic", () => {
   assert.ok(helpers.validImageDataUrl("data:image/png;base64,aGVsbG8="));
   assert.equal(helpers.safeImageSource("javascript:alert(1)"), null);
   assert.equal(helpers.safeImageSource("https://cdn.example.com/product.webp"), "https://cdn.example.com/product.webp");
+  assert.equal(helpers.safeImageSource("/assets/products/final/example.png"), "/assets/products/final/example.png");
+  assert.equal(helpers.safeImageSource("/assets/../server.js"), null);
   assert.equal(helpers.safeCssBackground("red;position:fixed"), "");
 });
 
@@ -105,6 +107,29 @@ test("storefront files are served without exposing backend source", async () => 
   const asset = await request(`/assets/${assetName}`);
   assert.equal(asset.status, 200);
   assert.match(asset.headers.get("cache-control"), /immutable/);
+
+  for (const [route, contentType] of [
+    ["/service-worker.js", /javascript/],
+    ["/site.webmanifest", /manifest\+json/],
+    ["/favicon.svg", /image\/svg\+xml/],
+    ["/offline.html", /text\/html/],
+    ["/sitemap.xml", /xml/]
+  ]) {
+    const response = await request(route);
+    assert.equal(response.status, 200, route);
+    assert.match(response.headers.get("content-type") || "", contentType, route);
+  }
+  for (const route of ["/shop", "/about", "/returns-policy", "/product/india-blue-cricket-jersey"]) {
+    const response = await request(route);
+    assert.equal(response.status, 200, route);
+    const page = await response.text();
+    assert.match(page, /RIVAYAT/);
+    if (route.startsWith("/product/")) {
+      assert.match(page, /India Blue Cricket Jersey \| RIVAYAT/);
+      assert.match(page, /serverProductStructuredData/);
+      assert.match(page, /india_blue_cricket_jersey\.png/);
+    }
+  }
 });
 
 test("CORS accepts configured origins and rejects others", async () => {
@@ -202,6 +227,48 @@ test("profile route is registered independently and requires a signed token", as
   assert.equal(response.status, 401);
 });
 
+test("forgot-password issues and accepts a four-digit reset code", async () => {
+  const originals = {
+    userFindOne: models.User.findOne,
+    resetFindOne: models.PasswordReset.findOne,
+    resetUpdateMany: models.PasswordReset.updateMany,
+    resetCreate: models.PasswordReset.create
+  };
+  const user = { name: "Reset Customer", email: "reset@example.com", password: "old-hash", save: async () => user };
+  let createdReset;
+  let latestReset = null;
+  models.User.findOne = async () => user;
+  models.PasswordReset.findOne = () => ({ sort: async () => latestReset });
+  models.PasswordReset.updateMany = async () => ({ modifiedCount: 0 });
+  models.PasswordReset.create = async (data) => {
+    createdReset = data;
+    return data;
+  };
+  try {
+    const requested = await request("/forgot-password", jsonOptions("POST", { email: user.email }));
+    assert.equal(requested.status, 200);
+    const requestedBody = await requested.json();
+    assert.match(requestedBody.resetCode, /^\d{4}$/);
+    assert.ok(createdReset.codeHash);
+
+    latestReset = { ...createdReset, attempts: 0, usedAt: null, save: async () => latestReset };
+    const reset = await request("/reset-password", jsonOptions("POST", {
+      email: user.email,
+      code: requestedBody.resetCode,
+      password: "new-strong-password"
+    }));
+    assert.equal(reset.status, 200);
+    assert.equal((await reset.json()).success, true);
+    assert.notEqual(user.password, "old-hash");
+    assert.ok(latestReset.usedAt instanceof Date);
+  } finally {
+    models.User.findOne = originals.userFindOne;
+    models.PasswordReset.findOne = originals.resetFindOne;
+    models.PasswordReset.updateMany = originals.resetUpdateMany;
+    models.PasswordReset.create = originals.resetCreate;
+  }
+});
+
 test("protected mutation validation runs for real signed roles", async () => {
   const adminToken = tokenFor({ role: "admin", email: "admin@example.com" });
   const customerToken = tokenFor();
@@ -212,6 +279,39 @@ test("protected mutation validation runs for real signed roles", async () => {
   assert.equal((await request("/reviews/example", jsonOptions("PATCH", { status: "Published" }, adminToken))).status, 400);
   assert.equal((await request("/orders/example/status", jsonOptions("PATCH", { status: "Unknown" }, customerToken))).status, 400);
   assert.equal((await request("/returns/example/status", jsonOptions("PATCH", { status: "Unknown" }, adminToken))).status, 400);
+  assert.equal((await request("/team/founder", jsonOptions("PUT", {}, adminToken))).status, 400);
+  assert.equal((await request("/bugs/example", jsonOptions("PATCH", { status: "Unknown" }, adminToken))).status, 400);
+  assert.equal((await request("/admin/search/reindex", jsonOptions("POST", {}, adminToken))).status, 400);
+  assert.equal((await request("/orders/example/invoice.pdf")).status, 401);
+});
+
+test("invoice endpoint returns a protected PDF for the order owner", async () => {
+  const originalFindOne = models.Order.findOne;
+  models.Order.findOne = async () => ({
+    id: "order-invoice-1",
+    email: "customer@example.com",
+    customerName: "Test Customer",
+    phone: "9876543210",
+    status: "Delivered",
+    paymentMethod: "COD",
+    subtotal: 999,
+    discount: 0,
+    delivery: 0,
+    price: 999,
+    items: [{ name: "India Blue Cricket Jersey", size: "M", qty: 1, price: 999 }],
+    address: { line1: "1 Test Road", city: "Lucknow", state: "Uttar Pradesh", pincode: "226001" },
+    createdAt: new Date().toISOString()
+  });
+  try {
+    const response = await request("/orders/order-invoice-1/invoice.pdf", { headers: { Authorization: `Bearer ${tokenFor()}` } });
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type") || "", /application\/pdf/);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert.equal(bytes.subarray(0, 5).toString(), "%PDF-");
+    assert.ok(bytes.length > 500);
+  } finally {
+    models.Order.findOne = originalFindOne;
+  }
 });
 
 test("public input validation rejects malformed commerce requests", async () => {

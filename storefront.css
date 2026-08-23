@@ -397,7 +397,9 @@ img { display: block; max-width: 100%; }
 
 @media (max-width:560px) {
   .wordmark { font-size: 19px; }
-  .theme-toggle { display: none; }
+  .theme-track { height: 25px; width: 44px; }
+  .theme-thumb { height: 19px; width: 19px; }
+  :root[data-theme="dark"] .theme-thumb { transform: translateX(19px); }
   .hero { min-height: 690px; }
   .hero h1 { font-size: 72px; }
   .hero-tag { font-size: 9px; }
@@ -550,6 +552,12 @@ a { color: inherit; text-decoration: none; }
 .star-picker { display: flex; gap: 2px; margin-top: 5px; }
 .star-picker button { background: transparent; border: 0; color: color-mix(in srgb,var(--muted) 35%,transparent); font-size: 25px; padding: 0 3px; }
 .star-picker button.active { color: var(--yellow); }
+.rating-field { border:0; margin:0; padding:0; }
+.rating-field legend { font-size:inherit; margin-bottom:4px; }
+.product-legal-list { display:grid; gap:0; margin:12px 0 0; }
+.product-legal-list>div { border-top:1px solid var(--line); display:grid; gap:12px; grid-template-columns:minmax(120px,.7fr) 1.3fr; padding:11px 0; }
+.product-legal-list dt { color:var(--muted); font-size:9px; text-transform:uppercase; }
+.product-legal-list dd { font-size:10px; margin:0; }
 .review-photo-row { align-items: center; display: flex; gap: 12px; }
 .review-photo-row>img { aspect-ratio: 1; object-fit: cover; width: 70px; }
 .review-photo-button { border: 1px dashed var(--teal); color: var(--teal); cursor: pointer; font-family: var(--font-accent); font-size: 8px; font-weight: 700; padding: 10px 12px; text-transform: uppercase; }
@@ -783,4 +791,83 @@ a { color: inherit; text-decoration: none; }
   .storefront-home .product-title { font-size: 13px; }
   .storefront-home .product-bottom { align-items: flex-end; }
   .storefront-home .product-price span { display: none; }
+}
+
+/* Account, resilience and production-admin additions. */
+.network-banner { align-items:center; background:var(--yellow); color:#17373a; display:flex; font-family:var(--font-accent); font-size:11px; font-weight:800; gap:16px; justify-content:center; letter-spacing:.04em; padding:10px 16px; position:sticky; top:69px; z-index:68; }
+.network-banner[hidden] { display:none; }
+.network-banner button { background:transparent; border:0; border-bottom:1px solid currentColor; color:inherit; font-weight:800; padding:2px 0; }
+.account-page { min-height:70vh; padding-bottom:90px; }
+.account-hero { background:linear-gradient(135deg,var(--deep),#082f34); color:white; padding:52px 0 48px; }
+.account-hero h1 { font-family:var(--font-display); font-size:clamp(44px,7vw,78px); letter-spacing:-.055em; line-height:.95; margin:8px 0; }
+.account-hero p:last-child { color:rgba(255,255,255,.72); margin:0; }
+.account-page .dashboard-layout { margin-top:28px; }
+.account-panel { min-width:0; }
+.account-stats { display:grid; gap:12px; grid-template-columns:repeat(3,minmax(0,1fr)); margin-bottom:18px; }
+.account-stats a { background:var(--surface); border:1px solid var(--line); border-radius:20px; display:grid; gap:3px; padding:18px; }
+.account-stats strong { font-family:var(--font-display); font-size:27px; letter-spacing:-.04em; }
+.account-stats span { color:var(--muted); font-family:var(--font-accent); font-size:9px; text-transform:uppercase; }
+.profile-heading { align-items:center; display:flex; gap:18px; }
+.profile-heading img,.profile-initial { border:3px solid var(--yellow); border-radius:50%; height:94px; object-fit:cover; width:94px; }
+.profile-initial { align-items:center; background:var(--deep); color:white; display:flex; font-family:var(--font-display); font-size:34px; font-weight:800; justify-content:center; }
+.address-grid { display:grid; gap:12px; }
+.address-card { align-items:flex-start; display:flex; gap:16px; justify-content:space-between; }
+.address-card p { line-height:1.6; margin-bottom:0; }
+.wallet-grid { display:grid; gap:16px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.wallet-card { border-radius:28px; color:white; display:grid; min-height:220px; padding:26px; }
+.wallet-card.credit { background:linear-gradient(135deg,#0e6973,#102f33); }
+.wallet-card.points { background:linear-gradient(135deg,#8c6507,#f2bb16); color:#183236; }
+.wallet-card p { font-family:var(--font-accent); font-size:10px; letter-spacing:.09em; margin:0; text-transform:uppercase; }
+.wallet-card strong { align-self:center; font-family:var(--font-display); font-size:58px; letter-spacing:-.06em; }
+.wallet-card span { align-self:end; line-height:1.55; opacity:.78; }
+.ledger-list { display:grid; }
+.ledger-list>div { align-items:center; border-top:1px solid var(--line); display:flex; gap:18px; justify-content:space-between; padding:15px 0; }
+.ledger-list span { display:grid; gap:4px; }
+.ledger-list small { color:var(--muted); }
+.ledger-list b.credit { color:var(--success); }
+.ledger-list b.debit { color:var(--danger); }
+.error-screen { align-items:center; display:grid; min-height:60vh; padding:54px 20px; text-align:center; }
+.error-screen>div { margin:auto; max-width:650px; }
+.error-screen .error-code { color:var(--teal); font-family:var(--font-accent); font-size:11px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+.error-screen h1 { font-family:var(--font-display); font-size:clamp(48px,8vw,82px); letter-spacing:-.06em; line-height:.92; margin:14px 0; }
+.error-actions { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:24px; }
+.team-admin-grid { display:grid; gap:16px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.admin-form-section { border-top:1px solid var(--line); grid-column:1/-1; margin-top:8px; padding-top:18px; }
+.admin-form-section h3,.admin-form-section p { margin:0 0 6px; }
+.team-admin-photo { align-items:center; background:var(--soft-teal); border-radius:22px; display:flex; height:180px; justify-content:center; overflow:hidden; }
+.team-admin-photo img { height:100%; object-fit:cover; width:100%; }
+.team-section { padding-top:70px; }
+.team-section .section-head h2 { font-size:clamp(42px,6vw,76px); margin:0; }
+.team-section .founder-card { align-content:start; min-width:0; }
+.team-public-photo { aspect-ratio:1; border-radius:22px; height:auto; object-fit:cover; width:100%; }
+.team-bio { color:var(--muted); font-size:11px; line-height:1.65; }
+.team-links { display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+.bug-summary { display:grid; gap:12px; grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:18px; }
+.bug-summary div { background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:16px; }
+.bug-summary strong { display:block; font-size:28px; }
+.severity-critical,.severity-high { color:var(--danger); font-weight:800; }
+.severity-medium { color:var(--ochre); font-weight:800; }
+.severity-low { color:var(--teal); font-weight:800; }
+
+@media (max-width: 700px) {
+  .network-banner { top:62px; }
+  .account-hero { padding:38px 0 34px; }
+  .account-page .dashboard-layout { gap:14px; margin-top:14px; }
+  .account-page .side-nav { display:flex; gap:8px; overflow-x:auto; padding:9px; scrollbar-width:none; }
+  .account-page .side-nav::-webkit-scrollbar { display:none; }
+  .account-page .side-nav a,.account-page .side-nav button { flex:0 0 auto; padding:11px 13px; white-space:nowrap; }
+  .account-stats { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+  .account-stats a { padding:13px 10px; }
+  .account-stats strong { font-size:20px; }
+  .wallet-grid,.team-admin-grid { grid-template-columns:1fr; }
+  .team-section .grid-4 { grid-template-columns:1fr; }
+  .wallet-card { min-height:190px; }
+  .profile-heading { align-items:flex-start; }
+  .profile-heading img,.profile-initial { height:74px; min-width:74px; width:74px; }
+  .address-card { align-items:stretch; flex-direction:column; }
+  .bug-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .admin-shell .admin-aside { display:flex; gap:7px; overflow-x:auto; padding:9px; scrollbar-width:none; }
+  .admin-shell .admin-aside h2 { display:none; }
+  .admin-shell .admin-aside a { flex:0 0 auto; padding:11px 13px; white-space:nowrap; width:auto; }
+  .admin-shell section h1 { font-size:clamp(38px,12vw,52px) !important; }
 }

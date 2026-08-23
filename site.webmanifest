@@ -1,0 +1,20 @@
+{
+  "name": "RIVAYAT Fashion",
+  "short_name": "RIVAYAT",
+  "description": "Young Indian streetwear, fan jerseys, womenswear and seasonal clothing.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f4ee",
+  "theme_color": "#0e6973",
+  "categories": ["shopping", "fashion", "lifestyle"],
+  "icons": [
+    {
+      "src": "/assets/logo.f22568db0c.webp",
+      "sizes": "1100x1100",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,24 +1,31 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const DEFAULT_PRODUCTS = require("./catalogue.js");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "";
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || "";
 const APP_SECRET = process.env.APP_SECRET || "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "RIVAYAT <orders@rivayat.in>";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID || "";
+const ALGOLIA_SEARCH_API_KEY = process.env.ALGOLIA_SEARCH_API_KEY || "";
+const ALGOLIA_ADMIN_API_KEY = process.env.ALGOLIA_ADMIN_API_KEY || "";
+const ALGOLIA_INDEX_NAME = process.env.ALGOLIA_INDEX_NAME || "rivayat_products";
 const IS_TEST = process.env.NODE_ENV === "test";
+const CATALOGUE_VERSION = "rivayat-v11-production-final";
 const configuredReturnWindow = Number(process.env.RETURN_WINDOW_DAYS || 7);
 const RETURN_WINDOW_DAYS = Number.isFinite(configuredReturnWindow) ? Math.max(1, Math.min(30, configuredReturnWindow)) : 7;
 const ALLOWED_ORIGINS = new Set(
-  String(process.env.ALLOWED_ORIGINS || "http://localhost:3000,https://rivayat.shop,https://www.rivayat.shop")
+  String(process.env.ALLOWED_ORIGINS || "http://localhost:3000,https://rivayat.onrender.com,https://rivayat.shop,https://www.rivayat.shop")
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean)
@@ -34,18 +41,40 @@ const DEFAULT_ADMIN = {
   password: process.env.ADMIN_PASSWORD || ""
 };
 const DEFAULT_HOMEPAGE = {
-  heroPill: "Rivayat Signature Drop • Premium Menswear",
-  heroTitle: "Own Your Vibe with RIVAYAT.",
-  heroSubtitle: "Luxury craftsmanship meets modern silhouettes. Introducing the all-new Rivayat Premium Black Coat Pant Combo alongside our iconic streetwear and comfort essentials.",
-  heroImage: "/assets/products/rivayat-black-coat-pant-combo.png",
-  heroOffer: "Hero Launch Drop: Tailored Black Coat Pant Combo at Rs 2,999 (MRP Rs 5,999)",
-  primaryButtonText: "Shop Hero Drop",
+  heroPill: "Rivayat Final Drop • 32 New Styles",
+  heroTitle: "Young India, wear your story.",
+  heroSubtitle: "Fresh cricket and football fan jerseys, easy layers, everyday tees, shorts and womenswear—built for the season you are in.",
+  heroImage: "/assets/products/final/jerseys/india_blue_cricket_jersey.png",
+  heroOffer: "New catalogue live • Free delivery above Rs 999",
+  primaryButtonText: "Shop New Drop",
   secondaryButtonText: "Buy on WhatsApp"
+};
+const DEFAULT_LEGAL = {
+  businessName: "RIVAYAT Fashion",
+  legalName: "",
+  registeredAddress: "",
+  supportEmail: "houseofrivayat@gmail.com",
+  supportPhone: "+91 80041 09305",
+  grievanceOfficer: "",
+  grievanceEmail: "",
+  grievancePhone: "",
+  gstin: "",
+  countryOfOrigin: "",
+  returnWindowDays: RETURN_WINDOW_DAYS,
+  dispatchEstimate: "2-4 business days",
+  deliveryEstimate: "4-10 business days",
+  manufacturerDisclosure: "Manufacturer, packer, importer and country-of-origin details must be completed on every product page before public sale."
 };
 const DEFAULT_COUPONS = [
   { id: "c1", code: "RIVAYAT150", type: "fixed", value: 150, minCart: 699, active: true, expiry: "2027-12-31", description: "Rs 150 off above Rs 699" },
   { id: "c2", code: "VIBE10", type: "percent", value: 10, minCart: 0, active: true, expiry: "2027-12-31", description: "10% off on all orders" },
   { id: "c3", code: "LAUNCH20", type: "percent", value: 20, minCart: 999, active: false, expiry: "2027-12-31", description: "20% launch discount above Rs 999" }
+];
+const DEFAULT_TEAM = [
+  { id: "founder", name: "Shashvat Shukla", role: "Founder & Creative Head", bio: "Shapes the Rivayat brand, collection direction and long-term creative point of view.", photo: "", socials: { website: "https://my-portfolio-blond-delta-39.vercel.app", github: "https://github.com/shashvatshukla-coder", linkedin: "https://www.linkedin.com/in/shashvat-shukla-03225b397" }, order: 1 },
+  { id: "manager", name: "Swastik Shukla", role: "Manager & Technology Lead", bio: "Leads store operations, technology delivery and the customer shopping experience.", photo: "", socials: { website: "https://swastikshukla.netlify.app/", github: "https://github.com/SwastikShukla006", linkedin: "https://www.linkedin.com/in/swastikshukla009" }, order: 2 },
+  { id: "business-head", name: "Navneet Tiwari", role: "Business & Operations Head", bio: "Coordinates business operations, fulfilment readiness and partner relationships.", photo: "", socials: {}, order: 3 },
+  { id: "marketing-head", name: "Shantanu Shukla", role: "Marketing Head", bio: "Develops campaigns, community stories and the voice of each Rivayat drop.", photo: "", socials: {}, order: 4 }
 ];
 
 app.disable("x-powered-by");
@@ -64,7 +93,7 @@ app.use((req, res, next) => {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
-    "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://accounts.google.com; connect-src 'self' https://rivayat.onrender.com https://accounts.google.com; frame-src https://accounts.google.com"
+    "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://accounts.google.com; connect-src 'self' https://rivayat.onrender.com https://accounts.google.com https://*.algolia.net https://*.algolianet.com; frame-src https://accounts.google.com"
   });
   if (req.secure || req.get("x-forwarded-proto") === "https") {
     res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -104,7 +133,7 @@ app.use(
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 20 })
 );
 app.use(
-  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate"],
+  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate", "/bugs", "/search"],
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 120 })
 );
 
@@ -121,6 +150,9 @@ const UserSchema = new mongoose.Schema({
   avatar: { type: String, default: "" },
   role: { type: String, enum: ["customer", "admin"], default: "customer" },
   addresses: { type: Array, default: [] },
+  storeCredit: { type: Number, default: 0, min: 0 },
+  loyaltyPoints: { type: Number, default: 0, min: 0 },
+  creditLedger: { type: Array, default: [] },
   createdAt: { type: Date, default: Date.now }
 });
 const ProductSchema = new mongoose.Schema({
@@ -128,13 +160,14 @@ const ProductSchema = new mongoose.Schema({
   slug: { type: String, required: true, index: true },
   name: { type: String, required: true },
   category: { type: String, default: "Half Pants" },
+  audience: { type: String, enum: ["Men", "Women", "Unisex"], default: "Unisex" },
   color: { type: String, default: "Black" },
   badge: { type: String, default: "New Arrival" },
   mrp: { type: Number, default: 0 },
   price: { type: Number, default: 0 },
   sizes: { type: [String], default: ["S", "M", "L", "XL", "XXL"] },
   inventory: { type: Object, default: () => ({ S: 10, M: 10, L: 10, XL: 10, XXL: 10 }) },
-  rating: { type: Number, default: 4.7 },
+  rating: { type: Number, default: 0 },
   reviews: { type: Number, default: 0 },
   description: { type: String, default: "Official RIVAYAT product" },
   details: { type: [String], default: ["Official RIVAYAT product"] },
@@ -147,6 +180,21 @@ const ProductSchema = new mongoose.Schema({
   type: { type: String, default: "short" },
   active: { type: Boolean, default: true },
   variants: { type: Array, default: [] },
+  legal: {
+    type: Object,
+    default: () => ({
+      material: "",
+      care: "",
+      manufacturer: "",
+      manufacturerAddress: "",
+      packer: "",
+      packerAddress: "",
+      importer: "",
+      countryOfOrigin: "",
+      netQuantity: "",
+      marketedBy: ""
+    })
+  },
   soldCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -182,6 +230,11 @@ const OrderSchema = new mongoose.Schema({
   items: Array,
   referralCode: { type: String, default: "" },
   inventoryRestocked: { type: Boolean, default: false },
+  creditUsed: { type: Number, default: 0 },
+  creditRefunded: { type: Boolean, default: false },
+  loyaltyAwarded: { type: Boolean, default: false },
+  loyaltyPointsEarned: { type: Number, default: 0 },
+  storeCreditEarned: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -250,6 +303,33 @@ const SignupVerificationSchema = new mongoose.Schema({
   requestedAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true, expires: 0 }
 });
+const BugReportSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  fingerprint: { type: String, index: true },
+  title: { type: String, default: "Storefront issue" },
+  message: { type: String, required: true },
+  stack: { type: String, default: "" },
+  route: { type: String, default: "" },
+  userAgent: { type: String, default: "" },
+  userEmail: { type: String, default: "", lowercase: true },
+  severity: { type: String, enum: ["low", "medium", "high", "critical"], default: "medium" },
+  status: { type: String, enum: ["Open", "Investigating", "Resolved", "Ignored"], default: "Open" },
+  occurrences: { type: Number, default: 0 },
+  firstSeenAt: { type: Date, default: Date.now },
+  lastSeenAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+const TeamMemberSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  role: { type: String, required: true },
+  bio: { type: String, default: "" },
+  photo: { type: String, default: "" },
+  socials: { type: Object, default: () => ({}) },
+  order: { type: Number, default: 0 },
+  updatedAt: { type: Date, default: Date.now }
+});
 
 const User = mongoose.model("User", UserSchema);
 const Product = mongoose.model("Product", ProductSchema);
@@ -262,6 +342,8 @@ const Newsletter = mongoose.model("Newsletter", NewsletterSchema);
 const Referral = mongoose.model("Referral", ReferralSchema);
 const PasswordReset = mongoose.model("PasswordReset", PasswordResetSchema);
 const SignupVerification = mongoose.model("SignupVerification", SignupVerificationSchema);
+const BugReport = mongoose.model("BugReport", BugReportSchema);
+const TeamMember = mongoose.model("TeamMember", TeamMemberSchema);
 
 const normalizeEmail = (email) => String(email || "").toLowerCase().trim();
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -278,7 +360,11 @@ const publicUser = (user) => ({
   role: user.role,
   avatar: user.avatar || "",
   emailVerified: Boolean(user.emailVerified || user.googleSub),
-  addresses: user.addresses || []
+  addresses: user.addresses || [],
+  storeCredit: Math.max(0, Number(user.storeCredit || 0)),
+  loyaltyPoints: Math.max(0, Number(user.loyaltyPoints || 0)),
+  loyaltyTier: Number(user.loyaltyPoints || 0) >= 5000 ? "Gold" : Number(user.loyaltyPoints || 0) >= 1500 ? "Silver" : "Member",
+  creditLedger: Array.isArray(user.creditLedger) ? user.creditLedger.slice(-25).reverse() : []
 });
 function base64url(input) {
   return Buffer.from(input).toString("base64url");
@@ -347,6 +433,7 @@ function safeImageSource(value, maxBytes = 12 * 1024 * 1024) {
   const source = String(value || "").trim();
   if (!source) return "";
   if (source.startsWith("data:")) return validImageDataUrl(source, maxBytes);
+  if (/^\/assets\/[a-zA-Z0-9/_\-.]+$/.test(source) && !source.includes("..")) return source;
   if (source.length > 2048) return null;
   try {
     const url = new URL(source);
@@ -369,6 +456,17 @@ function sameHash(a = "", b = "") {
 }
 function sendServerError(res, error, operation) {
   console.error(`${operation} error:`, error);
+  const message = cleanText(error?.message || "Unknown server error", 1200);
+  const fingerprint = crypto.createHash("sha256").update(`${operation}:${message}`).digest("hex").slice(0, 24);
+  BugReport.findOneAndUpdate(
+    { fingerprint },
+    {
+      $set: { title: `${operation} failure`, message, severity: "high", status: "Open", lastSeenAt: new Date(), updatedAt: new Date() },
+      $setOnInsert: { id: `bug-${crypto.randomUUID()}`, route: "server", firstSeenAt: new Date(), createdAt: new Date() },
+      $inc: { occurrences: 1 }
+    },
+    { upsert: true }
+  ).catch((loggingError) => console.error("Bug logging error:", loggingError.message));
   return res.status(500).json({ success: false, message: "Rivayat could not complete this request. Please try again." });
 }
 function deliveryChargeByPincode(pincode = "", subtotal = 0) {
@@ -434,6 +532,139 @@ async function sendEmail({ to, subject, html }) {
     return { success: false, message: error.message };
   }
 }
+function algoliaConfigured(mode = "search") {
+  return Boolean(
+    ALGOLIA_APP_ID &&
+    ALGOLIA_INDEX_NAME &&
+    (mode === "admin" ? ALGOLIA_ADMIN_API_KEY : ALGOLIA_SEARCH_API_KEY)
+  );
+}
+async function algoliaRequest(endpoint, { apiKey, method = "POST", body } = {}) {
+  if (!ALGOLIA_APP_ID || !apiKey) throw new Error("Algolia is not configured.");
+  const response = await fetch(`https://${ALGOLIA_APP_ID}.algolia.net${endpoint}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Algolia-Application-Id": ALGOLIA_APP_ID,
+      "X-Algolia-API-Key": apiKey
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(cleanText(payload?.message || `Algolia request failed with ${response.status}.`, 240));
+  return payload;
+}
+function algoliaRecord(product) {
+  return {
+    objectID: String(product.id),
+    id: String(product.id),
+    slug: String(product.slug || product.id),
+    name: String(product.name || ""),
+    category: String(product.category || ""),
+    audience: String(product.audience || "Unisex"),
+    color: String(product.color || ""),
+    badge: String(product.badge || ""),
+    description: String(product.description || ""),
+    price: Number(product.price || 0),
+    mrp: Number(product.mrp || 0),
+    image: String(product.image || ""),
+    rating: Number(product.rating || 0),
+    reviews: Number(product.reviews || 0),
+    active: product.active !== false
+  };
+}
+async function syncAlgoliaProducts(products) {
+  if (!algoliaConfigured("admin")) {
+    return { skipped: true, reason: "Add ALGOLIA_APP_ID and ALGOLIA_ADMIN_API_KEY to enable indexing." };
+  }
+  const index = encodeURIComponent(ALGOLIA_INDEX_NAME);
+  await algoliaRequest(`/1/indexes/${index}/clear`, { apiKey: ALGOLIA_ADMIN_API_KEY });
+  const requests = (products || []).filter((product) => product.active !== false).map((product) => ({
+    action: "addObject",
+    body: algoliaRecord(product)
+  }));
+  if (!requests.length) return { success: true, indexed: 0 };
+  await algoliaRequest(`/1/indexes/${index}/batch`, { apiKey: ALGOLIA_ADMIN_API_KEY, body: { requests } });
+  return { success: true, indexed: requests.length };
+}
+function asciiPdfText(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[^\x20-\x7E]/g, " ")
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function wrapPdfLine(value, width = 78) {
+  const words = asciiPdfText(value).split(" ").filter(Boolean);
+  const lines = [];
+  let current = "";
+  for (const word of words) {
+    if (!current) current = word;
+    else if (`${current} ${word}`.length <= width) current += ` ${word}`;
+    else { lines.push(current); current = word; }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [""];
+}
+function buildInvoicePdf(order) {
+  const createdAt = new Date(order.createdAt || Date.now()).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  const address = order.address || {};
+  const lines = [
+    { text: "RIVAYAT", size: 24, gap: 34 },
+    { text: "TAX / ORDER INVOICE", size: 13, gap: 26 },
+    { text: `Invoice / Order: ${order.id || "-"}` },
+    { text: `Issued: ${createdAt}` },
+    { text: `Status: ${order.status || "Pending"} | Payment: ${order.paymentMethod || "COD"}` },
+    { text: "" },
+    { text: `Bill to: ${order.customerName || "Customer"}` },
+    { text: `Email: ${order.email || "-"} | Phone: ${order.phone || "-"}` },
+    ...wrapPdfLine(`Ship to: ${address.line1 || ""}, ${address.city || ""}, ${address.district || ""}, ${address.state || ""} - ${address.pincode || ""}`).map((text) => ({ text })),
+    { text: "" },
+    { text: "ITEMS", size: 12, gap: 22 },
+    ...(order.items || []).flatMap((item, index) => wrapPdfLine(
+      `${index + 1}. ${item.name || "Product"} | Size ${item.size || "-"} | Qty ${item.qty || item.quantity || 1} | Rs ${Number(item.price || 0).toFixed(2)}`
+    ).map((text) => ({ text }))),
+    { text: "" },
+    { text: `Subtotal: Rs ${Number(order.subtotal || 0).toFixed(2)}` },
+    { text: `Discount: - Rs ${Number(order.discount || 0).toFixed(2)}` },
+    { text: `Rivayat credit used: - Rs ${Number(order.creditUsed || 0).toFixed(2)}` },
+    { text: `Delivery: Rs ${Number(order.delivery || 0).toFixed(2)}` },
+    { text: `TOTAL: Rs ${Number(order.price || 0).toFixed(2)}`, size: 14, gap: 28 },
+    { text: "" },
+    { text: "Thank you for shopping with RIVAYAT. Keep this invoice for returns, exchanges and support." },
+    { text: "Customer support: hello@rivayat.shop | https://rivayat.shop" }
+  ].slice(0, 52);
+  let y = 792;
+  const commands = ["BT", "/F1 10 Tf"];
+  for (const line of lines) {
+    const size = Number(line.size || 10);
+    commands.push(`/F1 ${size} Tf`, `1 0 0 1 48 ${Math.max(50, y)} Tm`, `(${asciiPdfText(line.text)}) Tj`);
+    y -= Number(line.gap || 17);
+  }
+  commands.push("ET");
+  const stream = `${commands.join("\n")}\n`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}endstream`
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(Buffer.byteLength(pdf));
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = Buffer.byteLength(pdf);
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index <= objects.length; index += 1) pdf += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return Buffer.from(pdf, "binary");
+}
 async function ensureDefaultData() {
   if (DEFAULT_ADMIN.email && DEFAULT_ADMIN.password) {
     const existingAdmin = await User.findOne({
@@ -462,13 +693,155 @@ async function ensureDefaultData() {
   for (const coupon of DEFAULT_COUPONS) {
     await Coupon.findOneAndUpdate({ code: coupon.code }, { $setOnInsert: coupon }, { upsert: true });
   }
+  const catalogueState = await SiteSetting.findOne({ key: "catalogueVersion" });
+  const currentCatalogueVersion = typeof catalogueState?.value === "string"
+    ? catalogueState.value
+    : catalogueState?.value?.version;
+  if (currentCatalogueVersion !== CATALOGUE_VERSION) {
+    const catalogueIds = DEFAULT_PRODUCTS.map((product) => product.id);
+    await Product.bulkWrite(DEFAULT_PRODUCTS.map((product) => ({
+      updateOne: {
+        filter: { id: product.id },
+        update: { $set: { ...product, updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
+        upsert: true
+      }
+    })), { ordered: true });
+    await Product.deleteMany({ id: { $nin: catalogueIds } });
+    await SiteSetting.findOneAndUpdate(
+      { key: "catalogueVersion" },
+      { key: "catalogueVersion", value: { version: CATALOGUE_VERSION }, updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
+    syncAlgoliaProducts(DEFAULT_PRODUCTS).catch((error) => console.error("Algolia catalogue sync error:", error.message));
+  }
+  for (const member of DEFAULT_TEAM) {
+    await TeamMember.findOneAndUpdate({ id: member.id }, { $setOnInsert: member }, { upsert: true });
+  }
   await SiteSetting.findOneAndUpdate(
     { key: "homepage" },
     { $setOnInsert: { key: "homepage", value: DEFAULT_HOMEPAGE } },
     { upsert: true }
   );
+  await SiteSetting.findOneAndUpdate(
+    { key: "legal" },
+    { $setOnInsert: { key: "legal", value: DEFAULT_LEGAL } },
+    { upsert: true }
+  );
 }
 mongoose.connection.once("open", () => ensureDefaultData().catch((err) => console.log("Seed skipped:", err.message)));
+
+const INDEX_HTML_PATH = path.join(__dirname, "index.html");
+const STATIC_PAGE_META = {
+  shop: ["Shop Men, Women & Fan Jerseys", "Shop the current RIVAYAT collection for men and women, including cricket fan jerseys, football fan jerseys, hoodies, tees and shorts."],
+  about: ["About RIVAYAT", "Meet the people behind Rivayat, an independent Indian label shaped by sport, street culture and everyday tradition."],
+  contact: ["Contact RIVAYAT", "Contact Rivayat customer support, grievance support and the official business team."],
+  privacy: ["Privacy Policy", "How Rivayat collects, uses, protects and responds to requests about customer information."],
+  terms: ["Terms & Conditions", "Clear account, catalogue, payment and consumer terms for shopping with Rivayat."],
+  "returns-policy": ["Returns, Refunds & Cancellation", "Read Rivayat cancellation, return, exchange and refund information."],
+  refund: ["Returns, Refunds & Cancellation", "Read Rivayat cancellation, return, exchange and refund information."],
+  shipping: ["Shipping Policy", "Read Rivayat delivery charges, India Post PIN-code serviceability and shipping estimates."],
+  cookies: ["Cookie & Local Storage Notice", "Learn how essential browser storage supports the Rivayat shopping experience."]
+};
+
+function htmlAttribute(value) {
+  return String(value || "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  })[character]);
+}
+function publicImageUrl(value) {
+  const source = String(value || "").trim();
+  if (/^https?:\/\//i.test(source)) return source;
+  if (/^\/assets\/[a-zA-Z0-9/_\-.]+$/.test(source) && !source.includes("..")) return `https://rivayat.shop${source}`;
+  return "https://rivayat.shop/assets/logo.f22568db0c.webp";
+}
+function injectPageMetadata(html, { title, description, canonical, image, product } = {}) {
+  const fullTitle = `${title || "Premium Indian Fashion"} | RIVAYAT`;
+  const safeTitle = htmlAttribute(fullTitle);
+  const safeDescription = htmlAttribute(description || "Young Indian fashion by RIVAYAT.");
+  const safeCanonical = htmlAttribute(canonical || "https://rivayat.shop/");
+  const safeImage = htmlAttribute(image || "https://rivayat.shop/assets/logo.f22568db0c.webp");
+  const safeImageType = /\.png(?:$|\?)/i.test(String(image || "")) ? "image/png" : /\.jpe?g(?:$|\?)/i.test(String(image || "")) ? "image/jpeg" : "image/webp";
+  let result = html
+    .replace(/<title>[^<]*<\/title>/i, `<title>${safeTitle}</title>`)
+    .replace(/<meta name="description" content="[^"]*"\s*\/>/i, `<meta name="description" content="${safeDescription}" />`)
+    .replace(/<meta property="og:title" content="[^"]*"\s*\/>/i, `<meta property="og:title" content="${safeTitle}" />`)
+    .replace(/<meta property="og:description" content="[^"]*"\s*\/>/i, `<meta property="og:description" content="${safeDescription}" />`)
+    .replace(/<meta property="og:url" content="[^"]*"\s*\/>/i, `<meta property="og:url" content="${safeCanonical}" />`)
+    .replace(/<meta property="og:image" content="[^"]*"\s*\/>/i, `<meta property="og:image" content="${safeImage}" />`)
+    .replace(/<meta property="og:image:secure_url" content="[^"]*"\s*\/>/i, `<meta property="og:image:secure_url" content="${safeImage}" />`)
+    .replace(/<meta property="og:image:type" content="[^"]*"\s*\/>/i, `<meta property="og:image:type" content="${safeImageType}" />`)
+    .replace(/<meta name="twitter:title" content="[^"]*"\s*\/>/i, `<meta name="twitter:title" content="${safeTitle}" />`)
+    .replace(/<meta name="twitter:description" content="[^"]*"\s*\/>/i, `<meta name="twitter:description" content="${safeDescription}" />`)
+    .replace(/<meta name="twitter:image" content="[^"]*"\s*\/>/i, `<meta name="twitter:image" content="${safeImage}" />`)
+    .replace(/<link rel="canonical" href="[^"]*"\s*\/>/i, `<link rel="canonical" href="${safeCanonical}" />`);
+  if (product) {
+    const inventory = product.inventory && typeof product.inventory === "object" ? product.inventory : {};
+    const stock = Object.values(inventory).reduce((sum, amount) => sum + Number(amount || 0), 0);
+    const structured = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: String(product.name || "RIVAYAT product"),
+      description: String(product.description || "Official RIVAYAT product"),
+      image: (product.gallery?.length ? product.gallery : [product.image]).filter(Boolean).map(publicImageUrl),
+      sku: String(product.id || product.slug || ""),
+      category: String(product.category || "Clothing"),
+      brand: { "@type": "Brand", name: "RIVAYAT" },
+      offers: {
+        "@type": "Offer",
+        url: canonical,
+        priceCurrency: "INR",
+        price: Number(product.price || 0).toFixed(2),
+        availability: stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        itemCondition: "https://schema.org/NewCondition"
+      }
+    };
+    if (product.legal?.material) structured.material = String(product.legal.material);
+    if (Number(product.reviews || 0) > 0 && Number(product.rating || 0) > 0) {
+      structured.aggregateRating = { "@type": "AggregateRating", ratingValue: Number(product.rating).toFixed(1), reviewCount: Number(product.reviews) };
+    }
+    const json = JSON.stringify(structured).replace(/</g, "\\u003c");
+    result = result.replace("</head>", `  <script type="application/ld+json" id="serverProductStructuredData">${json}</script>\n</head>`);
+  }
+  return result;
+}
+async function sendFrontendPage(req, res, next) {
+  try {
+    const rawRoute = String(req.path || "/").replace(/^\/+|\/+$/g, "");
+    const route = rawRoute === "index.html" ? "" : rawRoute;
+    const [title, description] = STATIC_PAGE_META[route] || ["Premium Indian Fashion", "Young Indian streetwear, fan jerseys, womenswear and seasonal clothing by RIVAYAT."];
+    const canonicalRoute = route === "refund" ? "returns-policy" : route;
+    const html = await fs.promises.readFile(INDEX_HTML_PATH, "utf8");
+    return res.type("html").send(injectPageMetadata(html, {
+      title,
+      description,
+      canonical: `https://rivayat.shop/${canonicalRoute}`,
+      image: "https://rivayat.shop/assets/logo.f22568db0c.webp"
+    }));
+  } catch (error) { return next(error); }
+}
+async function sendProductPage(req, res, next) {
+  try {
+    const slug = cleanText(req.params.slug, 160);
+    let product = DEFAULT_PRODUCTS.find((item) => item.slug === slug || item.id === slug);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        product = await Product.findOne({ $or: [{ slug }, { id: slug }], active: { $ne: false } }).lean() || product;
+      } catch (error) {
+        console.warn("Product metadata database fallback:", error.message);
+      }
+    }
+    if (!product) return sendFrontendPage(req, res, next);
+    const canonical = `https://rivayat.shop/product/${encodeURIComponent(product.slug || product.id)}`;
+    const html = await fs.promises.readFile(INDEX_HTML_PATH, "utf8");
+    return res.type("html").send(injectPageMetadata(html, {
+      title: product.name,
+      description: product.description,
+      canonical,
+      image: publicImageUrl(product.image || product.gallery?.[0]),
+      product
+    }));
+  } catch (error) { return next(error); }
+}
 
 app.use("/assets", express.static(path.join(__dirname, "assets"), {
   dotfiles: "deny",
@@ -476,7 +849,11 @@ app.use("/assets", express.static(path.join(__dirname, "assets"), {
   index: false,
   maxAge: "1y"
 }));
-app.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get(["/", "/index.html"], sendFrontendPage);
+app.get("/catalogue.js", (req, res) => {
+  res.set("Cache-Control", "public, max-age=3600, must-revalidate");
+  res.type("application/javascript").sendFile(path.join(__dirname, "catalogue.js"));
+});
 app.get("/styles.css", (req, res) => res.sendFile(path.join(__dirname, "styles.css")));
 app.get("/storefront.css", (req, res) => {
   res.set("Cache-Control", "public, max-age=3600");
@@ -493,11 +870,26 @@ app.use(
   })
 );
 app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(__dirname, "sitemap.xml")));
+app.get("/service-worker.js", (req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.type("application/javascript").sendFile(path.join(__dirname, "service-worker.js"));
+});
+app.get("/site.webmanifest", (req, res) => res.type("application/manifest+json").sendFile(path.join(__dirname, "site.webmanifest")));
+app.get("/favicon.svg", (req, res) => res.type("image/svg+xml").sendFile(path.join(__dirname, "favicon.svg")));
+app.get("/offline.html", (req, res) => res.sendFile(path.join(__dirname, "offline.html")));
 app.get("/robots.txt", (req, res) => {
   res.type("text/plain").send("User-agent: *\nAllow: /\nSitemap: https://rivayat.shop/sitemap.xml\n");
 });
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
-app.get("/health", (req, res) => res.json({ success: true }));
+app.get("/health", (req, res) => res.json({
+  success: true,
+  database: mongoose.connection.readyState === 1 ? "connected" : IS_TEST ? "test" : "connecting"
+}));
+app.get(
+  ["/shop", "/about", "/contact", "/privacy", "/terms", "/returns-policy", "/refund", "/shipping", "/cookies"],
+  sendFrontendPage
+);
+app.get("/product/:slug", sendProductPage);
 
 app.post("/telegram/test", async (req, res) => {
   if (!requireAdmin(req, res)) return;
@@ -508,10 +900,7 @@ app.post("/telegram/test", async (req, res) => {
 });
 app.get("/telegram/test", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const result = await sendTelegramMessage("RIVAYAT Telegram browser test successful.");
-  if (result.skipped) return res.status(400).send(result.reason);
-  if (!result.success) return res.status(500).send(result.message);
-  res.send("Telegram test message sent.");
+  return res.status(405).json({ success: false, message: "Use POST to send a Telegram test." });
 });
 
 async function requestSignupOtp(req, res) {
@@ -708,6 +1097,13 @@ app.put("/profile", async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error." });
   }
 });
+app.get("/me", async (req, res) => {
+  const auth = requireUser(req, res);
+  if (!auth) return;
+  const user = await User.findById(auth.id);
+  if (!user) return res.status(404).json({ success: false, message: "User not found." });
+  return res.json({ success: true, user: publicUser(user) });
+});
 app.post("/forgot-password", async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email || req.body.identifier);
@@ -797,9 +1193,185 @@ app.put("/settings/homepage", async (req, res) => {
   res.json({ success: true, settings: setting.value });
 });
 
+app.get("/settings/legal", async (req, res) => {
+  const setting = await SiteSetting.findOne({ key: "legal" });
+  res.set("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=900");
+  return res.json({ success: true, settings: { ...DEFAULT_LEGAL, ...(setting?.value || {}) } });
+});
+app.put("/settings/legal", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const body = req.body || {};
+  const returnWindowDays = Number(body.returnWindowDays || RETURN_WINDOW_DAYS);
+  const value = {
+    businessName: cleanText(body.businessName, 140) || DEFAULT_LEGAL.businessName,
+    legalName: cleanText(body.legalName, 180),
+    registeredAddress: cleanText(body.registeredAddress, 500),
+    supportEmail: EMAIL_PATTERN.test(normalizeEmail(body.supportEmail)) ? normalizeEmail(body.supportEmail) : DEFAULT_LEGAL.supportEmail,
+    supportPhone: cleanText(body.supportPhone, 30) || DEFAULT_LEGAL.supportPhone,
+    grievanceOfficer: cleanText(body.grievanceOfficer, 140),
+    grievanceEmail: EMAIL_PATTERN.test(normalizeEmail(body.grievanceEmail)) ? normalizeEmail(body.grievanceEmail) : "",
+    grievancePhone: cleanText(body.grievancePhone, 30),
+    gstin: cleanText(body.gstin, 30).toUpperCase(),
+    countryOfOrigin: cleanText(body.countryOfOrigin, 80) || DEFAULT_LEGAL.countryOfOrigin,
+    returnWindowDays: Number.isFinite(returnWindowDays) ? Math.max(1, Math.min(30, Math.round(returnWindowDays))) : RETURN_WINDOW_DAYS,
+    dispatchEstimate: cleanText(body.dispatchEstimate, 120) || DEFAULT_LEGAL.dispatchEstimate,
+    deliveryEstimate: cleanText(body.deliveryEstimate, 120) || DEFAULT_LEGAL.deliveryEstimate,
+    manufacturerDisclosure: cleanText(body.manufacturerDisclosure, 700) || DEFAULT_LEGAL.manufacturerDisclosure
+  };
+  const setting = await SiteSetting.findOneAndUpdate(
+    { key: "legal" },
+    { key: "legal", value, updatedAt: new Date() },
+    { upsert: true, new: true }
+  );
+  return res.json({ success: true, settings: setting.value });
+});
+
+app.get("/team", async (req, res) => {
+  const members = await TeamMember.find().sort({ order: 1, name: 1 });
+  res.set("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=900");
+  return res.json({ success: true, members });
+});
+app.put("/team/:id", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const body = req.body || {};
+  const id = cleanText(req.params.id, 80).replace(/[^a-zA-Z0-9_-]/g, "");
+  const name = cleanText(body.name, 100);
+  const role = cleanText(body.role, 100);
+  const photo = safeImageSource(body.photo, 8 * 1024 * 1024);
+  if (!id || name.length < 2 || role.length < 2) {
+    return res.status(400).json({ success: false, message: "Team member name and role are required." });
+  }
+  if (photo === null) {
+    return res.status(400).json({ success: false, message: "Team photo must be a valid HTTP(S) image or PNG, JPG, WEBP or AVIF upload under 8 MB." });
+  }
+  const socialFields = ["instagram", "facebook", "youtube", "linkedin", "github", "website"];
+  const socials = {};
+  for (const field of socialFields) {
+    const candidate = cleanText(body.socials?.[field], 500);
+    if (!candidate) continue;
+    try {
+      const url = new URL(candidate);
+      if (new Set(["https:", "http:"]).has(url.protocol)) socials[field] = candidate;
+    } catch { /* Ignore invalid social URLs instead of storing unsafe schemes. */ }
+  }
+  const member = await TeamMember.findOneAndUpdate(
+    { id },
+    {
+      id,
+      name,
+      role,
+      bio: cleanText(body.bio, 800),
+      photo,
+      socials,
+      order: Math.max(0, Math.min(1000, Math.round(Number(body.order || 0)))),
+      updatedAt: new Date()
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+  return res.json({ success: true, member });
+});
+
+app.post("/bugs", async (req, res) => {
+  const body = req.body || {};
+  const message = cleanText(body.message, 1800);
+  const title = cleanText(body.title, 140) || "Storefront issue";
+  const route = cleanText(body.route || req.get("referer"), 500);
+  if (message.length < 3) return res.status(400).json({ success: false, message: "Describe what went wrong." });
+  const auth = authContext(req);
+  const fingerprint = crypto.createHash("sha256")
+    .update(`${title.toLowerCase()}:${message.toLowerCase().slice(0, 600)}:${route}`)
+    .digest("hex")
+    .slice(0, 24);
+  const now = new Date();
+  const report = await BugReport.findOneAndUpdate(
+    { fingerprint },
+    {
+      $set: {
+        title,
+        message,
+        route,
+        userAgent: cleanText(body.userAgent || req.get("user-agent"), 500),
+        userEmail: normalizeEmail(auth.email),
+        severity: new Set(["low", "medium", "high", "critical"]).has(body.severity) ? body.severity : "medium",
+        lastSeenAt: now,
+        updatedAt: now
+      },
+      $setOnInsert: { id: `bug-${crypto.randomUUID()}`, status: "Open", firstSeenAt: now, createdAt: now },
+      $inc: { occurrences: 1 }
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+  return res.status(201).json({ success: true, message: "Thanks—this issue is now visible in the admin bug desk.", id: report.id });
+});
+app.get("/bugs", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const reports = await BugReport.find().sort({ status: 1, severity: 1, lastSeenAt: -1 }).limit(1000);
+  return res.json({ success: true, reports });
+});
+app.patch("/bugs/:id", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const status = cleanText(req.body?.status, 30);
+  const severity = cleanText(req.body?.severity, 20);
+  if (!new Set(["Open", "Investigating", "Resolved", "Ignored"]).has(status)) {
+    return res.status(400).json({ success: false, message: "Choose a valid bug status." });
+  }
+  if (severity && !new Set(["low", "medium", "high", "critical"]).has(severity)) {
+    return res.status(400).json({ success: false, message: "Choose a valid bug severity." });
+  }
+  const report = await BugReport.findOneAndUpdate(
+    { id: req.params.id },
+    { status, ...(severity ? { severity } : {}), updatedAt: new Date() },
+    { new: true }
+  );
+  if (!report) return res.status(404).json({ success: false, message: "Bug report not found." });
+  return res.json({ success: true, report });
+});
+
 app.get("/products", async (req, res) => {
   res.set("Cache-Control", "public, max-age=30, s-maxage=60, stale-while-revalidate=300");
   res.json({ success: true, products: await Product.find({ active: { $ne: false } }).sort({ createdAt: -1 }) });
+});
+app.get("/search", async (req, res) => {
+  const query = cleanText(req.query.q, 120);
+  const limit = Math.max(1, Math.min(40, Number(req.query.limit || 20)));
+  if (!query) return res.json({ success: true, products: [], provider: algoliaConfigured() ? "Algolia" : "Rivayat" });
+  if (algoliaConfigured()) {
+    try {
+      const index = encodeURIComponent(ALGOLIA_INDEX_NAME);
+      const payload = await algoliaRequest(`/1/indexes/${index}/query`, {
+        apiKey: ALGOLIA_SEARCH_API_KEY,
+        body: { query, hitsPerPage: limit, filters: "active:true", attributesToHighlight: [] }
+      });
+      return res.json({ success: true, products: (payload.hits || []).map(({ objectID, ...hit }) => hit), provider: "Algolia" });
+    } catch (error) {
+      console.error("Algolia search fallback:", error.message);
+    }
+  }
+  const expression = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const products = await Product.find({
+    active: { $ne: false },
+    $or: [
+      { name: { $regex: expression, $options: "i" } },
+      { category: { $regex: expression, $options: "i" } },
+      { audience: { $regex: expression, $options: "i" } },
+      { description: { $regex: expression, $options: "i" } },
+      { color: { $regex: expression, $options: "i" } }
+    ]
+  }).limit(limit);
+  return res.json({ success: true, products, provider: "Rivayat" });
+});
+app.post("/admin/search/reindex", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (!algoliaConfigured("admin")) {
+    return res.status(400).json({ success: false, message: "Algolia admin indexing is not configured on the server." });
+  }
+  try {
+    const products = await Product.find({ active: { $ne: false } });
+    const result = await syncAlgoliaProducts(products);
+    return res.json({ success: true, message: `${result.indexed || 0} products sent to Algolia.`, result });
+  } catch (error) {
+    return sendServerError(res, error, "Algolia reindex");
+  }
 });
 app.get("/products/:slugOrId", async (req, res) => {
   const value = req.params.slugOrId;
@@ -851,11 +1423,27 @@ app.post("/products", async (req, res) => {
     price: Number.isFinite(Number(variant?.price)) ? Math.max(0, Math.round(Number(variant.price))) : undefined,
     image: safeImageSource(variant?.image, 8 * 1024 * 1024) || ""
   })).filter((variant) => variant.color || variant.size) : [];
+  const legalInput = body.legal && typeof body.legal === "object" ? body.legal : {};
+  const legal = {
+    material: cleanText(legalInput.material, 240),
+    care: cleanText(legalInput.care, 500),
+    manufacturer: cleanText(legalInput.manufacturer, 240),
+    manufacturerAddress: cleanText(legalInput.manufacturerAddress, 500),
+    packer: cleanText(legalInput.packer, 240),
+    packerAddress: cleanText(legalInput.packerAddress, 500),
+    importer: cleanText(legalInput.importer, 240),
+    countryOfOrigin: cleanText(legalInput.countryOfOrigin, 100),
+    netQuantity: cleanText(legalInput.netQuantity, 100),
+    marketedBy: cleanText(legalInput.marketedBy, 240)
+  };
   const productData = {
     id,
     slug: slugify(body.slug || name),
     name,
     category: cleanText(body.category, 80) || "Clothing",
+    audience: new Set(["Men", "Women", "Unisex"]).has(body.audience)
+      ? body.audience
+      : cleanText(body.category, 80) === "Women" ? "Women" : "Men",
     color: cleanText(body.color, 80) || "Black",
     badge: cleanText(body.badge, 60) || "New Arrival",
     mrp: Math.round(mrp),
@@ -873,6 +1461,7 @@ app.post("/products", async (req, res) => {
     type: body.type === "full" ? "full" : "short",
     active: body.active !== false,
     variants,
+    legal,
     updatedAt: new Date()
   };
   const product = await Product.findOneAndUpdate(
@@ -880,12 +1469,18 @@ app.post("/products", async (req, res) => {
     productData,
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
+  if (algoliaConfigured("admin")) {
+    Product.find({ active: { $ne: false } }).then(syncAlgoliaProducts).catch((error) => console.error("Algolia product sync error:", error.message));
+  }
   res.json({ success: true, product });
 });
 app.delete("/products/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const product = await Product.findOneAndDelete({ id: req.params.id });
   if (!product) return res.status(404).json({ success: false, message: "Product not found." });
+  if (algoliaConfigured("admin")) {
+    Product.find({ active: { $ne: false } }).then(syncAlgoliaProducts).catch((error) => console.error("Algolia product sync error:", error.message));
+  }
   res.json({ success: true, message: "Product deleted successfully" });
 });
 
@@ -992,9 +1587,26 @@ app.post("/orders", async (req, res) => {
       discount = Number(referral.rewardValue || 50);
     }
     discount = Math.min(Math.max(0, Math.round(discount)), subtotal);
+    let creditUsed = 0;
+    let creditUser = null;
+    const requestedCredit = Math.max(0, Math.round(Number(body.creditToUse || 0)));
+    if (requestedCredit > 0) {
+      if (!auth.id || !auth.email) return res.status(401).json({ success: false, message: "Sign in to use Rivayat credit." });
+      creditUser = await User.findById(auth.id);
+      if (!creditUser || normalizeEmail(creditUser.email) !== email) {
+        return res.status(403).json({ success: false, message: "Rivayat credit belongs to the signed-in account." });
+      }
+      const eligibleSubtotal = Math.max(0, subtotal - discount);
+      const creditLimit = Math.floor(eligibleSubtotal * 0.2);
+      creditUsed = Math.min(requestedCredit, Math.floor(Number(creditUser.storeCredit || 0)), creditLimit);
+      if (creditUsed <= 0) {
+        return res.status(400).json({ success: false, message: "No Rivayat credit is available for this order. Credit can cover up to 20% of merchandise value." });
+      }
+    }
     const delivery = deliveryChargeByPincode(address.pincode, subtotal);
-    const price = subtotal - discount + delivery;
+    const price = subtotal - discount - creditUsed + delivery;
     const reservedItems = [];
+    let creditReserved = false;
     let order;
     try {
       for (const item of items) {
@@ -1009,6 +1621,26 @@ app.post("/orders", async (req, res) => {
         }
         reservedItems.push(item);
       }
+      if (creditUsed > 0) {
+        const creditResult = await User.updateOne(
+          { _id: creditUser._id, storeCredit: { $gte: creditUsed } },
+          {
+            $inc: { storeCredit: -creditUsed },
+            $push: {
+              creditLedger: {
+                $each: [{ id: `credit-${crypto.randomUUID()}`, type: "Debit", amount: creditUsed, reason: `Used on order ${orderId}`, orderId, createdAt: new Date() }],
+                $slice: -100
+              }
+            }
+          }
+        );
+        if (Number(creditResult.modifiedCount || 0) !== 1) {
+          const creditError = new Error("Your Rivayat credit changed during checkout. Refresh and try again.");
+          creditError.code = "CREDIT_CHANGED";
+          throw creditError;
+        }
+        creditReserved = true;
+      }
       order = await Order.create({
         id: orderId,
         customerName: cleanText(body.customerName, 100),
@@ -1021,6 +1653,7 @@ app.post("/orders", async (req, res) => {
         discount,
         delivery,
         price,
+        creditUsed,
         paymentMethod: "COD",
         paymentStatus: "Pending",
         status: "Pending",
@@ -1030,7 +1663,17 @@ app.post("/orders", async (req, res) => {
       });
     } catch (error) {
       if (reservedItems.length) await restockOrderInventory({ items: reservedItems });
+      if (creditReserved && creditUser) {
+        await User.updateOne(
+          { _id: creditUser._id },
+          {
+            $inc: { storeCredit: creditUsed },
+            $push: { creditLedger: { $each: [{ id: `credit-${crypto.randomUUID()}`, type: "Credit", amount: creditUsed, reason: `Checkout rollback for ${orderId}`, orderId, createdAt: new Date() }], $slice: -100 } }
+          }
+        );
+      }
       if (error.code === "INSUFFICIENT_STOCK") return res.status(409).json({ success: false, message: error.message });
+      if (error.code === "CREDIT_CHANGED") return res.status(409).json({ success: false, message: error.message });
       throw error;
     }
     if (order.referralCode) await Referral.findOneAndUpdate({ code: order.referralCode, active: true }, { $inc: { uses: 1 }, updatedAt: new Date() });
@@ -1048,6 +1691,24 @@ app.get("/orders", async (req, res) => {
   const query = auth.role === "admin" ? {} : { email: normalizeEmail(auth.email) };
   if (auth.role !== "admin" && !query.email) return res.json({ success: true, orders: [] });
   res.json({ success: true, orders: await Order.find(query).sort({ createdAt: -1 }) });
+});
+app.get("/orders/:id/invoice.pdf", async (req, res) => {
+  const auth = requireUser(req, res);
+  if (!auth) return;
+  const order = await Order.findOne({ id: req.params.id });
+  if (!order) return res.status(404).json({ success: false, message: "Order not found." });
+  if (auth.role !== "admin" && normalizeEmail(order.email) !== normalizeEmail(auth.email)) {
+    return res.status(403).json({ success: false, message: "You can only download your own invoice." });
+  }
+  const filename = `RIVAYAT-${String(order.id).replace(/[^a-zA-Z0-9_-]/g, "-")}.pdf`;
+  const pdf = buildInvoicePdf(order);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="${filename}"`,
+    "Content-Length": String(pdf.length),
+    "Cache-Control": "private, no-store"
+  });
+  return res.send(pdf);
 });
 app.patch("/orders/:id/status", async (req, res) => {
   const status = req.body.status;
@@ -1067,6 +1728,43 @@ app.patch("/orders/:id/status", async (req, res) => {
   if (status === "Cancelled" && order.status !== "Cancelled" && !order.inventoryRestocked) {
     await restockOrderInventory(order);
     order.inventoryRestocked = true;
+  }
+  if (status === "Cancelled" && order.status !== "Cancelled" && Number(order.creditUsed || 0) > 0 && !order.creditRefunded) {
+    const amount = Math.max(0, Number(order.creditUsed || 0));
+    await User.updateOne(
+      { email: normalizeEmail(order.email) },
+      {
+        $inc: { storeCredit: amount },
+        $push: {
+          creditLedger: {
+            $each: [{ id: `credit-${crypto.randomUUID()}`, type: "Credit", amount, reason: `Refund for cancelled order ${order.id}`, orderId: order.id, createdAt: new Date() }],
+            $slice: -100
+          }
+        }
+      }
+    );
+    order.creditRefunded = true;
+  }
+  if (status === "Delivered" && order.status !== "Delivered" && !order.loyaltyAwarded) {
+    const loyaltyPointsEarned = Math.max(0, Math.floor(Number(order.price || 0) / 10));
+    const storeCreditEarned = Math.max(0, Math.floor(Number(order.price || 0) * 0.02));
+    if (loyaltyPointsEarned || storeCreditEarned) {
+      await User.updateOne(
+        { email: normalizeEmail(order.email) },
+        {
+          $inc: { loyaltyPoints: loyaltyPointsEarned, storeCredit: storeCreditEarned },
+          $push: {
+            creditLedger: {
+              $each: [{ id: `credit-${crypto.randomUUID()}`, type: "Credit", amount: storeCreditEarned, points: loyaltyPointsEarned, reason: `Loyalty reward for ${order.id}`, orderId: order.id, createdAt: new Date() }],
+              $slice: -100
+            }
+          }
+        }
+      );
+    }
+    order.loyaltyAwarded = true;
+    order.loyaltyPointsEarned = loyaltyPointsEarned;
+    order.storeCreditEarned = storeCreditEarned;
   }
   order.status = status;
   order.updatedAt = new Date();
@@ -1308,7 +2006,9 @@ app.get("/pincode/:pincode", async (req, res) => {
         district: office.District || "",
         state: office.State || ""
       },
-      postOffices: (result.PostOffice || []).slice(0, 12).map((item) => item.Name).filter(Boolean)
+      postOffices: (result.PostOffice || []).slice(0, 12).map((item) => item.Name).filter(Boolean),
+      source: "India Post PIN directory",
+      sourceUpdatedAt: new Date().toISOString()
     });
   } catch (error) {
     console.error("PIN code lookup error:", error);
@@ -1333,6 +2033,8 @@ function validateConfiguration() {
   if (DEFAULT_ADMIN.email && !EMAIL_PATTERN.test(DEFAULT_ADMIN.email)) errors.push("ADMIN_EMAIL must be valid");
   if (DEFAULT_ADMIN.email && DEFAULT_ADMIN.password.length < 12) errors.push("ADMIN_PASSWORD must contain at least 12 characters when administrator seeding is enabled");
   if (DEFAULT_ADMIN.password && !DEFAULT_ADMIN.email) errors.push("ADMIN_EMAIL is required when ADMIN_PASSWORD is set");
+  if ((ALGOLIA_SEARCH_API_KEY || ALGOLIA_ADMIN_API_KEY) && !ALGOLIA_APP_ID) errors.push("ALGOLIA_APP_ID is required when Algolia API keys are set");
+  if (ALGOLIA_APP_ID && !ALGOLIA_INDEX_NAME) errors.push("ALGOLIA_INDEX_NAME is required when Algolia is enabled");
   if (errors.length) throw new Error(`Invalid Rivayat configuration: ${errors.join("; ")}`);
 }
 
@@ -1340,7 +2042,7 @@ async function startServer(port = PORT) {
   validateConfiguration();
   await mongoose.connect(MONGO_URI);
   console.log("MongoDB connected");
-  return app.listen(port, () => console.log(`Server running on port ${port}`));
+  return app.listen(port, "0.0.0.0", () => console.log(`Server running on port ${port}`));
 }
 
 if (require.main === module) {
@@ -1356,6 +2058,7 @@ module.exports = {
   validateConfiguration,
   helpers: {
     authContext,
+    buildInvoicePdf,
     createToken,
     deliveryChargeByPincode,
     hashResetCode,
@@ -1380,6 +2083,8 @@ module.exports = {
     Review,
     SignupVerification,
     SiteSetting,
+    BugReport,
+    TeamMember,
     User
   }
 };
