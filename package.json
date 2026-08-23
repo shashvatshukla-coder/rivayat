@@ -1,25 +1,23 @@
 {
-  "name": "rivayat_backend",
+  "name": "rivayat-final-storefront",
   "version": "1.0.0",
-  "description": "RIVAYAT storefront and secure commerce API",
+  "private": true,
+  "description": "RIVAYAT production storefront and administration server",
   "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20 <25"
+  },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node scripts/check-frontend.js",
-    "test": "node --test --test-concurrency=1 test/*.test.js"
+    "test": "npm run check",
+    "check": "node --check server.js && node tests/catalog.test.js && node tests/static-files.test.js && node tests/http-smoke.test.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "UNLICENSED",
-  "private": true,
-  "engines": {
-    "node": ">=20"
-  },
-  "type": "commonjs",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "mongoose": "^9.7.0"
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.1",
+    "pdfkit": "^0.17.2"
   }
 }

@@ -1,60 +1,35 @@
-# Rivayat
+# RIVAYAT final storefront
 
-Rivayat is a mobile-first Node.js, Express and MongoDB fashion storefront. The frontend is served from `index.html`, while `server.js` provides authentication, catalogue, order, return, review, loyalty, referral, search, bug-desk and administration APIs. The authoritative catalogue contains 32 supplied, lossless PNG product images; deployment runs a one-time versioned migration that removes retired database products.
+This package combines the supplied storefront, the corrected working server baseline, 32 unique supplied product images, mobile-first UI, account tools, operations screens, SEO files and deployment configuration.
 
-## Local setup
+## First deployment
 
-1. Install Node.js 20 or newer.
-2. Run `npm ci`.
-3. Copy `.env.example` to `.env` and replace every placeholder.
-4. Export the values from `.env` through your process manager or hosting provider.
-5. Run `npm start`.
+1. Copy every value from `.env.example` into the Render service Environment page and replace placeholders.
+2. Use Node 20 or 22. Build with `npm ci`; start with `npm start`; health check path is `/health`.
+3. Keep `CATALOG_SYNC_MODE=replace` and `CATALOG_VERSION=2026-08-24-supplied-assets-v1` for the first deploy. The server creates a recoverable MongoDB backup batch before replacing old products.
+4. After the first successful catalog load, change `CATALOG_SYNC_MODE` to `seed-empty` to prevent a future version string typo from replacing admin edits.
+5. Sign in as the seeded administrator, verify all draft prices, stock, sizes and team profiles, and then remove `ADMIN_PASSWORD` from Render.
+6. Trigger **Search → Reindex Algolia** after Algolia keys are configured, or call `POST /admin/search/reindex` with an administrator token.
+7. Verify password reset and signup OTP delivery using the verified `EMAIL_FROM` domain before announcing launch.
 
-The server deliberately refuses to start without `MONGO_URI` and an `APP_SECRET` of at least 32 characters. Administrator seeding is disabled unless both `ADMIN_EMAIL` and `ADMIN_PASSWORD` are configured. Use an administrator password of at least 12 characters.
+## Final information still required from the owner
 
-Generate an application secret with:
+- Confirmed selling price, MRP, available sizes and opening stock for each of the 32 products. Current values are launch-ready drafts only.
+- Legal business name, complete invoice/return address, and GSTIN if registered.
+- Confirmation that RIVAYAT may use every supplied image and any club/team/name marks visible in fanwear photographs.
+- Final names/roles for Founder, Manager, Business Head and Marketing Head, plus their original-resolution profile photos and approved bios/social links.
+- Verified Resend sender/domain, Google OAuth client ID, Algolia credentials/index name, Search Console verification token and final Render origin.
+
+## Important security action
+
+The older uploaded server copy contains embedded database/admin secrets. Rotate that MongoDB credential and any reused administrator password or API key before deploying. This package reads secrets only from environment variables.
+
+## Local verification
 
 ```bash
-node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
-```
-
-## Validation
-
-```bash
+npm install
 npm run check
-npm test
+npm start
 ```
 
-CI installs the lockfile, audits production dependencies for high-severity findings, and runs these checks for pushes and pull requests targeting `main`. This application is not an npm package and the workflow does not publish it.
-
-## Deployment
-
-For a Render Web Service use:
-
-- Build command: `npm ci`
-- Start command: `npm start`
-- Health check: `/health`
-- Runtime: Node.js 20 or newer
-
-Configure secrets in Render, never in Git. The minimum production variables are:
-
-| Variable | Purpose |
-| --- | --- |
-| `MONGO_URI` | MongoDB Atlas **driver connection URI** (`mongodb+srv://...`); an Atlas API key is not a connection URI. |
-| `APP_SECRET` | Random application signing secret with at least 32 characters. |
-| `ALLOWED_ORIGINS` | Comma-separated exact frontend origins, including the Render/custom domains in use. |
-| `RESEND_API_KEY` | Sends signup and forgot-password four-digit OTP emails. |
-| `EMAIL_FROM` | A sender verified in Resend. |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Seeds the initial admin; use a unique password of at least 12 characters. |
-
-Optional variables are `GOOGLE_CLIENT_ID`, `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_API_KEY`, `ALGOLIA_ADMIN_API_KEY`, `ALGOLIA_INDEX_NAME`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and `RETURN_WINDOW_DAYS`. Keep the Algolia admin key server-only. `GOOGLE_MAPS_API_KEY` and Razorpay variables are reserved and are not required for the current India Post/COD flow.
-
-Online payment is intentionally disabled until a server-side payment order and signature-verification flow is connected. Cash on Delivery remains available; do not expose a Razorpay secret or mark a browser-reported payment as paid.
-
-The default return/exchange window is seven days after delivery and can be changed with `RETURN_WINDOW_DAYS` from 1 to 30. Review the policy text, business identity, grievance contact, manufacturer/packer details, tax disclosures and return rules with qualified Indian counsel before launch.
-
-Before making the store public, complete **Admin → Brand & Legal** and every product's manufacturer, packer, material and country-of-origin fields. Then verify `https://rivayat.shop` in Google Search Console and submit `https://rivayat.shop/sitemap.xml`. `favicon.svg`, the web manifest, canonical metadata, product JSON-LD, Open Graph/Twitter image metadata, `robots.txt`, the current sitemap and offline service worker are included.
-
-## Credential rotation required
-
-Earlier repository history contained database and administrator credentials. Removing values from the current files does not remove them from Git history. Rotate the MongoDB database user password, administrator password and application signing secret before deploying this version. Review active database users and sessions as well; changing `APP_SECRET` invalidates all existing session tokens.
+Open `http://localhost:3000`. A local MongoDB-compatible `MONGO_URI` and a 32+ character `APP_SECRET` are required to start the server.

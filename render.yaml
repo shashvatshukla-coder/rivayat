@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: rivayat
+    runtime: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BASE_URL
+        value: https://www.rivayat.shop
+      - key: CATALOG_SYNC_MODE
+        value: replace
+      - key: CATALOG_VERSION
+        value: 2026-08-24-supplied-assets-v1
+      - key: MONGO_URI
+        sync: false
+      - key: APP_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: ALGOLIA_APP_ID
+        sync: false
+      - key: ALGOLIA_SEARCH_API_KEY
+        sync: false
+      - key: ALGOLIA_ADMIN_API_KEY
+        sync: false
+      - key: GOOGLE_SITE_VERIFICATION
+        sync: false

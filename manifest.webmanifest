@@ -1,0 +1,33 @@
+{
+  "name": "RIVAYAT Fashion",
+  "short_name": "RIVAYAT",
+  "description": "Fan jerseys, expressive layers and everyday fashion for young India.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fffaf1",
+  "theme_color": "#070707",
+  "lang": "en-IN",
+  "categories": ["shopping", "fashion", "lifestyle"],
+  "icons": [
+    {
+      "src": "/assets/branding/rivayat-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/branding/rivayat-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Shop Collection", "short_name": "Shop", "url": "/shop" },
+    { "name": "My Orders", "short_name": "Orders", "url": "/#/orders" },
+    { "name": "My Account", "short_name": "Account", "url": "/#/dashboard" }
+  ]
+}
