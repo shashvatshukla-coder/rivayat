@@ -478,6 +478,20 @@ app.use("/assets", express.static(path.join(__dirname, "assets"), {
 }));
 app.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/styles.css", (req, res) => res.sendFile(path.join(__dirname, "styles.css")));
+app.get("/storefront.css", (req, res) => {
+  res.set("Cache-Control", "public, max-age=3600");
+  res.sendFile(path.join(__dirname, "storefront.css"));
+});
+app.use(
+  "/assets/storefront",
+  express.static(path.join(__dirname, "assets", "storefront"), {
+    dotfiles: "deny",
+    fallthrough: false,
+    immutable: true,
+    index: false,
+    maxAge: "30d"
+  })
+);
 app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(__dirname, "sitemap.xml")));
 app.get("/robots.txt", (req, res) => {
   res.type("text/plain").send("User-agent: *\nAllow: /\nSitemap: https://rivayat.shop/sitemap.xml\n");
