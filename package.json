@@ -10,8 +10,9 @@
   },
   "scripts": {
     "start": "node server.js",
+    "export:algolia": "node scripts/export-algolia-records.js",
     "test": "npm run check",
-    "check": "node --check server.js && node tests/catalog.test.js && node tests/static-files.test.js && node tests/http-smoke.test.js"
+    "check": "node --check server.js && node --check scripts/export-algolia-records.js && npm run export:algolia && node tests/catalog.test.js && node tests/static-files.test.js && node tests/http-smoke.test.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
