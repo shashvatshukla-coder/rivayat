@@ -4,21 +4,17 @@ const path = require("node:path");
 const products = require("../catalog");
 const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-
-for (const file of ["storefront.css", "manifest.webmanifest", "service-worker.js", "sitemap.xml", "robots.txt", "llms.txt"]) {
-  assert.ok(fs.existsSync(path.join(root, file)), `${file} is required.`);
-}
+for (const file of ["storefront.css", "manifest.webmanifest", "service-worker.js", "sitemap.xml", "robots.txt", "llms.txt", "algolia-records.json"]) assert.ok(fs.existsSync(path.join(root, file)), `${file} is required.`);
 assert.match(html, /<meta property="og:image" content="https:\/\/www\.rivayat\.shop\/assets\/branding\/rivayat-logo\.png"/);
 assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
 assert.match(html, /GOOGLE_SITE_VERIFICATION/);
 assert.doesNotMatch(html, /INITIAL_REVIEWS\s*=\s*\[[^\]]+\]/s, "Production must not contain seeded customer reviews.");
-assert.equal((fs.readFileSync(path.join(root, "sitemap.xml"), "utf8").match(/<url>/g) || []).length, products.length + 9, "Sitemap URL count must match public pages plus products.");
-
+assert.equal((fs.readFileSync(path.join(root, "sitemap.xml"), "utf8").match(/<url>/g) || []).length, products.length + 10, "Sitemap URL count must match public pages plus products.");
+const algoliaRecords = JSON.parse(fs.readFileSync(path.join(root, "algolia-records.json"), "utf8"));
+assert.equal(algoliaRecords.length, products.length, "Algolia export count must match active catalogue.");
+assert.ok(algoliaRecords.every((record) => record.objectID && record.url && record.imageUrl), "Every Algolia record needs objectID, URL, and image URL.");
 const assetReferences = new Set([...html.matchAll(/["'](\/assets\/[a-z0-9/_().-]+)["']/gi)].map((match) => match[1]));
-for (const reference of assetReferences) {
-  assert.ok(fs.existsSync(path.join(root, reference.replace(/^\//, ""))), `HTML references a missing asset: ${reference}`);
-}
-
+for (const reference of assetReferences) assert.ok(fs.existsSync(path.join(root, reference.replace(/^\//, ""))), `HTML references a missing asset: ${reference}`);
 const executableScripts = [...html.matchAll(/<script(?![^>]*type="application\/ld\+json")(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
 assert.ok(executableScripts.length, "Storefront script was not found.");
 for (const source of executableScripts) new Function(source);
