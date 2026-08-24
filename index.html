@@ -648,7 +648,7 @@
     const INITIAL_USERS = [];
 
     const APP_VERSION = 'rivayat-2026-08-24-supplied-catalog-v1';
-   const DEFAULT_API_BASE_URL = location.protocol === 'file:' ? 'http://localhost:3000' : location.origin;
+   const DEFAULT_API_BASE_URL = 'https://rivayat.onrender.com';
    const API_BASE_URL = localStorage.getItem('rivayat_api_base_url') || DEFAULT_API_BASE_URL;
    const CONFIG = {
   apiBaseUrl: API_BASE_URL,
