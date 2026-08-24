@@ -18,6 +18,9 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_SITE_VERIFICATION = process.env.GOOGLE_SITE_VERIFICATION || "";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+const SWASTIK_SECRET = process.env.SWASTIK_SECRET || "";
 const BASE_URL = String(process.env.BASE_URL || "https://www.rivayat.shop").replace(/\/+$/, "");
 const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID || "";
 const ALGOLIA_SEARCH_API_KEY = process.env.ALGOLIA_SEARCH_API_KEY || "";
@@ -65,7 +68,7 @@ const DEFAULT_HOMEPAGE = {
 };
 const DEFAULT_TEAM = [
   { id: "founder", name: "Shashvat Shukla", role: "Founder", bio: "Guides the Rivayat brand, product direction and long-term vision.", photo: "", links: [{ label: "GitHub", url: "https://github.com/shashvatshukla-coder" }, { label: "LinkedIn", url: "https://www.linkedin.com/in/shashvat-shukla-03225b397" }] },
-  { id: "manager", name: "Swastik Shukla", role: "Manager", bio: "Coordinates product, technology and the day-to-day Rivayat experience.", photo: "", links: [{ label: "GitHub", url: "https://github.com/SwastikShukla006" }, { label: "LinkedIn", url: "https://www.linkedin.com/in/swastikshukla009" }] },
+  { id: "manager", name: "Swastik Shukla", role: "Manager", bio: "An important part of the Rivayat team, Swastik connects product, technology and the day-to-day customer experience while keeping the label practical, welcoming and easy to use.", photo: "", links: [{ label: "GitHub", url: "https://github.com/SwastikShukla006" }, { label: "LinkedIn", url: "https://www.linkedin.com/in/swastikshukla009" }] },
   { id: "business-head", name: "Shantanu Shukla", role: "Business Head", bio: "Supports commercial planning, partnerships and sustainable growth.", photo: "", links: [] },
   { id: "marketing-head", name: "Navneet Tiwari", role: "Marketing Head", bio: "Shapes campaigns, community storytelling and launch communication.", photo: "", links: [] }
 ];
@@ -131,7 +134,7 @@ app.use(
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 20 })
 );
 app.use(
-  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate", "/bugs", "/search"],
+  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate", "/bugs", "/search", "/notifications", "/admin/notifications", "/legal/secret"],
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 120 })
 );
 
@@ -325,6 +328,19 @@ const ProductBackupSchema = new mongoose.Schema({
   product: { type: Object, required: true },
   createdAt: { type: Date, default: Date.now }
 });
+const NotificationSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  userId: { type: String, default: "", index: true },
+  email: { type: String, default: "", lowercase: true, index: true },
+  title: { type: String, required: true },
+  body: { type: String, required: true },
+  kind: { type: String, default: "system" },
+  url: { type: String, default: "#/dashboard/notifications" },
+  source: { type: String, default: "system" },
+  readAt: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, default: null }
+});
 
 const User = mongoose.model("User", UserSchema);
 const Product = mongoose.model("Product", ProductSchema);
@@ -340,6 +356,7 @@ const SignupVerification = mongoose.model("SignupVerification", SignupVerificati
 const BugReport = mongoose.model("BugReport", BugReportSchema);
 const CreditTransaction = mongoose.model("CreditTransaction", CreditTransactionSchema);
 const ProductBackup = mongoose.model("ProductBackup", ProductBackupSchema);
+const Notification = mongoose.model("Notification", NotificationSchema);
 
 const normalizeEmail = (email) => String(email || "").toLowerCase().trim();
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -513,6 +530,42 @@ async function sendEmail({ to, subject, html }) {
   } catch (error) {
     return { success: false, message: error.message };
   }
+}
+async function generateGeminiNotification(prompt, fallback) {
+  const safeFallback = cleanText(fallback, 180);
+  if (!GEMINI_API_KEY) return safeFallback;
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: `${prompt}\nReturn one friendly notification under 150 characters. Do not use emojis, markdown, claims about discounts, or personal data.` }] }] })
+    });
+    const payload = await response.json().catch(() => ({}));
+    const text = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join(" ").trim();
+    return text ? cleanText(text.replace(/[\r\n]+/g, " "), 180) : safeFallback;
+  } catch (error) {
+    console.warn("Gemini notification fallback:", error.message);
+    return safeFallback;
+  }
+}
+function safeNotificationUrl(value) {
+  const url = cleanText(value, 240);
+  return /^#\/[a-z0-9/_?=&%.-]*$/i.test(url) || /^\/[a-z0-9/_?=&%.-]*$/i.test(url) ? url : "#/dashboard/notifications";
+}
+async function createUserNotification({ userId = "", email = "", title, body, kind = "system", url = "#/dashboard/notifications", source = "system" }) {
+  const normalizedEmail = normalizeEmail(email);
+  const id = `notification-${crypto.randomUUID()}`;
+  if (!userId && !normalizedEmail) return null;
+  return Notification.create({
+    id,
+    userId: cleanText(userId, 120),
+    email: normalizedEmail,
+    title: cleanText(title, 120) || "RIVAYAT update",
+    body: cleanText(body, 500) || "There is a new update in your RIVAYAT account.",
+    kind: cleanText(kind, 40) || "system",
+    url: safeNotificationUrl(url),
+    source: cleanText(source, 40) || "system"
+  });
 }
 function catalogDocument(entry) {
   return {
@@ -786,7 +839,7 @@ async function serveIndex(req, res) {
     return sendServerError(res, error, "Storefront rendering");
   }
 }
-app.get(["/", "/index.html", "/shop", "/about", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies"], serveIndex);
+app.get(["/", "/index.html", "/shop", "/about", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal"], serveIndex);
 app.get("/product/:slug", serveIndex);
 app.get("/catalog.js", (req, res) => {
   res.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
@@ -821,6 +874,86 @@ app.get("/service-worker.js", (req, res) => {
 app.get("/llms.txt", (req, res) => res.type("text/plain").sendFile(path.join(__dirname, "llms.txt")));
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
 app.get("/health", (req, res) => res.json({ success: true }));
+
+// The legal page can unlock a private, server-gated arcade without exposing the
+// configured secret in the public HTML or in the downloadable project guide.
+app.post("/legal/secret", (req, res) => {
+  const submitted = String(req.body?.code || "").trim();
+  const configured = String(SWASTIK_SECRET || "");
+  const matches = Boolean(configured && submitted && Buffer.byteLength(submitted) === Buffer.byteLength(configured) && crypto.timingSafeEqual(Buffer.from(submitted), Buffer.from(configured)));
+  if (!matches) return res.status(403).json({ success: false, message: "That code did not unlock this page." });
+  return res.json({ success: true, unlocked: true, expiresOn: "2026-10-15", games: ["Cricket Tap", "Vibe Catch", "Memory Flip"] });
+});
+
+app.get("/notifications", async (req, res) => {
+  const auth = requireUser(req, res);
+  if (!auth) return;
+  const ownerQuery = { $or: [{ userId: String(auth.id) }, { email: normalizeEmail(auth.email) }] };
+  const [notifications, unread] = await Promise.all([
+    Notification.find(ownerQuery).sort({ createdAt: -1 }).limit(100),
+    Notification.countDocuments({ ...ownerQuery, readAt: null })
+  ]);
+  return res.json({ success: true, notifications, unread });
+});
+app.patch("/notifications/:id/read", async (req, res) => {
+  const auth = requireUser(req, res);
+  if (!auth) return;
+  const notification = await Notification.findOneAndUpdate(
+    { id: req.params.id, $or: [{ userId: String(auth.id) }, { email: normalizeEmail(auth.email) }] },
+    { readAt: new Date() },
+    { new: true }
+  );
+  if (!notification) return res.status(404).json({ success: false, message: "Notification not found." });
+  return res.json({ success: true, notification });
+});
+app.post("/notifications/read-all", async (req, res) => {
+  const auth = requireUser(req, res);
+  if (!auth) return;
+  const ownerQuery = { $or: [{ userId: String(auth.id) }, { email: normalizeEmail(auth.email) }], readAt: null };
+  const result = await Notification.updateMany(ownerQuery, { $set: { readAt: new Date() } });
+  return res.json({ success: true, updated: Number(result.modifiedCount || 0) });
+});
+app.post("/notifications/daily", async (req, res) => {
+  const auth = requireUser(req, res);
+  if (!auth) return;
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const ownerQuery = { $or: [{ userId: String(auth.id) }, { email: normalizeEmail(auth.email) }], source: "daily", createdAt: { $gte: dayStart } };
+  const existing = await Notification.findOne(ownerQuery).sort({ createdAt: -1 });
+  if (existing) return res.json({ success: true, notification: existing, alreadySent: true });
+  const body = await generateGeminiNotification(
+    "Write a warm once-a-day RIVAYAT fashion message for a returning customer.",
+    "A new day, a new fit: your saved RIVAYAT picks are waiting."
+  );
+  const notification = await createUserNotification({
+    userId: String(auth.id), email: auth.email, title: "Daily RIVAYAT note", body,
+    kind: "daily", url: "#/shop", source: "daily"
+  });
+  return res.json({ success: true, notification, alreadySent: false });
+});
+app.get("/admin/notifications", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const notifications = await Notification.find().sort({ createdAt: -1 }).limit(300);
+  return res.json({ success: true, notifications });
+});
+app.post("/admin/notifications", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const body = req.body || {};
+  const title = cleanText(body.title, 120);
+  const message = cleanText(body.body || body.message, 500);
+  const targetEmail = normalizeEmail(body.email || body.targetEmail);
+  if (!title || !message) return res.status(400).json({ success: false, message: "Notification title and message are required." });
+  if (targetEmail && !EMAIL_PATTERN.test(targetEmail)) return res.status(400).json({ success: false, message: "Enter a valid customer email." });
+  const query = targetEmail ? { email: targetEmail } : { role: "customer" };
+  const recipients = await User.find(query).select("_id email").limit(5000);
+  if (!recipients.length) return res.status(404).json({ success: false, message: targetEmail ? "Customer not found." : "No customer accounts are available yet." });
+  const documents = recipients.map((user) => ({
+    id: `notification-${crypto.randomUUID()}`,
+    userId: String(user._id), email: normalizeEmail(user.email), title, body: message,
+    kind: cleanText(body.kind, 40) || "admin", url: safeNotificationUrl(body.url), source: "admin"
+  }));
+  const created = await Notification.insertMany(documents, { ordered: false });
+  return res.status(201).json({ success: true, sent: created.length, notifications: created });
+});
 
 app.post("/telegram/test", async (req, res) => {
   if (!requireAdmin(req, res)) return;
@@ -1463,6 +1596,16 @@ app.post("/orders", async (req, res) => {
     if (order.email) {
       sendEmail({ to: order.email, subject: `RIVAYAT order confirmed: ${order.id}`, html: `<pre>${orderPlainText(order)}</pre>` }).catch(() => {});
     }
+    try {
+      const recipient = auth.id ? await User.findById(auth.id).select("_id email") : await User.findOne({ email }).select("_id email");
+      await createUserNotification({
+        userId: String(recipient?._id || auth.id || ""), email: recipient?.email || email,
+        title: "Order confirmed", body: `Your RIVAYAT order ${order.id} is confirmed. We will keep you posted as it moves.`,
+        kind: "order", url: "#/dashboard/orders", source: "order"
+      });
+    } catch (notificationError) {
+      console.warn("Order notification skipped:", notificationError.message);
+    }
     const currentUser = auth.id ? await User.findById(auth.id).select("credits") : null;
     res.json({ success: true, message: "Order saved successfully!", order, creditsBalance: Number(currentUser?.credits || 0) });
   } catch (error) {
@@ -1632,6 +1775,16 @@ app.patch("/orders/:id/status", async (req, res) => {
   order.updatedAt = new Date();
   await order.save();
   sendTelegramMessage(`RIVAYAT order status updated\nOrder: ${order.id}\nStatus: ${order.status}\nCustomer: ${order.customerName || ""}`).catch(() => {});
+  try {
+    const recipient = await User.findOne({ email: normalizeEmail(order.email) }).select("_id email");
+    await createUserNotification({
+      userId: String(recipient?._id || ""), email: recipient?.email || order.email,
+      title: `Order ${order.status}`, body: `Your RIVAYAT order ${order.id} is now ${order.status}.`,
+      kind: "order", url: "#/dashboard/orders", source: "order"
+    });
+  } catch (notificationError) {
+    console.warn("Status notification skipped:", notificationError.message);
+  }
   res.json({ success: true, message: "Order status updated successfully", order });
 });
 
@@ -1819,7 +1972,27 @@ app.post("/bugs", async (req, res) => {
       fingerprint,
       lastSeenAt: new Date()
     });
-    res.status(201).json({ success: true, report });
+    let creditAwarded = 0;
+    if (auth.id && auth.role !== "admin" && !/browser|runtime|automatic|server/i.test(source)) {
+      const recentReward = await CreditTransaction.exists({
+        userId: String(auth.id), type: "Earned", description: /bug report credit/i,
+        createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+      });
+      if (!recentReward) {
+        creditAwarded = 25;
+        await User.updateOne({ _id: auth.id }, { $inc: { credits: creditAwarded } });
+        await CreditTransaction.create({
+          id: `credit-${crypto.randomUUID()}`, userId: String(auth.id), email: userEmail,
+          type: "Earned", amount: creditAwarded, description: "Bug report credit reward"
+        });
+        await createUserNotification({
+          userId: String(auth.id), email: userEmail, title: "Thanks for the report",
+          body: `You earned ${creditAwarded} RIVAYAT Credits for helping us improve the store.`,
+          kind: "credit", url: "#/dashboard/credits", source: "bug-reward"
+        }).catch(() => {});
+      }
+    }
+    res.status(201).json({ success: true, report, creditAwarded });
   } catch (error) {
     return sendServerError(res, error, "Bug report");
   }
@@ -2035,6 +2208,7 @@ module.exports = {
     Coupon,
     CreditTransaction,
     Newsletter,
+    Notification,
     Order,
     PasswordReset,
     Product,

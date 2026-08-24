@@ -9,5 +9,7 @@ Shipping: https://www.rivayat.shop/shipping
 Returns: https://www.rivayat.shop/returns-policy
 Privacy: https://www.rivayat.shop/privacy
 Contact: https://www.rivayat.shop/contact
+Legal centre: https://www.rivayat.shop/legal
 
 Product prices, stock, approved customer ratings and availability should be taken from each canonical product page. RIVAYAT does not represent independent fanwear as official club or team merchandise.
+

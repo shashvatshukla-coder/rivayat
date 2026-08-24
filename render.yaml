@@ -12,6 +12,8 @@ services:
         value: production
       - key: BASE_URL
         value: https://www.rivayat.shop
+      - key: ALLOWED_ORIGINS
+        value: https://rivayat.shop,https://www.rivayat.shop
       - key: CATALOG_SYNC_MODE
         value: replace
       - key: CATALOG_VERSION
@@ -29,6 +31,12 @@ services:
       - key: EMAIL_FROM
         sync: false
       - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: SWASTIK_SECRET
         sync: false
       - key: ALGOLIA_APP_ID
         sync: false

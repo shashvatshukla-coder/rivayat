@@ -1,11 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /api
 Disallow: /admin
-Disallow: /dashboard
-Disallow: /checkout
-Disallow: /orders
-Disallow: /login
-Disallow: /signup
-Disallow: /forgot-password
-
+Disallow: /#/admin
+Disallow: /#/dashboard
+Disallow: /#/checkout
 Sitemap: https://www.rivayat.shop/sitemap.xml
+

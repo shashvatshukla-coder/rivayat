@@ -36,6 +36,7 @@
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/branding/rivayat-favicon-96.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/branding/rivayat-apple-touch.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="preload" as="image" href="/assets/storefront/categories/men.png" fetchpriority="high" />
   <script type="application/ld+json" id="siteStructuredData">
     {
       "@context": "https://schema.org",
@@ -557,8 +558,10 @@
       <div class="nav-actions">
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch colour theme"><span class="theme-track"><span class="theme-thumb">☀</span></span></button>
         <button class="text-action wish-action" onclick="go('#/wishlist')" aria-label="Wishlist">Wishlist <span id="wishCount" class="badge hide">0</span></button>
+        <button class="icon-btn notification-button" onclick="go(auth.user ? '#/dashboard/notifications' : '#/login')" aria-label="Notifications" title="Notifications"><span aria-hidden="true">♢</span><span id="notificationCount" class="badge hide">0</span></button>
         <button class="text-action account-button" onclick="go(auth.user ? '#/dashboard' : '#/login')"><span class="label" id="accountLabel">Account</span></button>
-        <button class="bag-button" onclick="go('#/cart')" aria-label="Cart">Bag <span id="cartCount">0</span></button>
+        <button class="bag-button" onclick="go('#/cart')" aria-label="Cart"><span class="cart-logo" aria-hidden="true">🛒</span><span class="label">Bag</span> <span id="cartCount">0</span></button>
+        <button class="icon-btn install-app-button" id="installAppButton" onclick="installApp()" aria-label="Install RIVAYAT app" title="Install app" hidden>＋</button>
         <button class="icon-btn menu-btn" onclick="toggleDrawer(true)" aria-label="Menu">☰</button>
       </div>
     </div>
@@ -571,6 +574,7 @@
       <button class="icon-btn" onclick="toggleDrawer(false)">×</button>
     </div>
     <div class="drawer-links" id="mobileNav"></div>
+    <a class="drawer-notification-link" href="#/dashboard/notifications" onclick="toggleDrawer(false)">♢ Notifications <span id="drawerNotificationCount" class="badge hide">0</span></a>
     <div class="notice">Official RIVAYAT shopping website: explore products, place orders, track purchases, and manage your account.</div>
   </aside>
 
@@ -597,12 +601,11 @@
   </section>
 
   <footer class="site-footer">
-    <div class="footer-main"><div><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('men')">Men</button><button onclick="homeScroll('women')">Women</button><a href="#/wishlist">Wishlist</a></div><div><p>Help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a></div><div><p>Inside Rivayat</p><a href="#/about">About us</a><a href="https://instagram.com/houseofrivayat" target="_blank">Social media</a><a href="#/privacy">Legal & privacy</a><a href="#/contact">Contact</a></div></div></div>
+    <div class="footer-main"><div><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('men')">Men</button><button onclick="homeScroll('women')">Women</button><a href="#/wishlist">Wishlist</a></div><div><p>Help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a></div><div><p>Inside Rivayat</p><a href="#/about">About us</a><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Social media</a><a href="#/legal">Legal centre</a><a href="#/contact">Contact</a></div></div></div>
     <div class="newsletter"><div><p class="eyebrow">No spam. Just good clothes.</p><h3>Get first dibs on every drop.</h3></div><form onsubmit="subscribeNewsletter(event)"><input name="email" type="email" required placeholder="Email address" aria-label="Email address"><button>Join ↗</button></form></div>
     <div class="footer-bottom"><span>© <span id="year"></span> Rivayat</span><span>Made in India · worn everywhere</span><span><a href="#/privacy">Privacy</a> · <a href="#/terms">Terms</a> · <button onclick="openBugReporter()">Report a problem</button></span></div>
   </footer>
 
-  <script src="/catalog.js"></script>
   <script src="/catalog.js"></script>
   <script>
     /*************************************************************
@@ -638,7 +641,7 @@
 
     const DEFAULT_TEAM = [
       { id: 'founder', name: 'Shashvat Shukla', role: 'Founder', bio: 'Guides the Rivayat brand, product direction and long-term vision.', photo: '', links: [{ label: 'GitHub', url: 'https://github.com/shashvatshukla-coder' }, { label: 'LinkedIn', url: 'https://www.linkedin.com/in/shashvat-shukla-03225b397' }] },
-      { id: 'manager', name: 'Swastik Shukla', role: 'Manager', bio: 'Coordinates product, technology and the day-to-day Rivayat experience.', photo: '', links: [{ label: 'GitHub', url: 'https://github.com/SwastikShukla006' }, { label: 'LinkedIn', url: 'https://www.linkedin.com/in/swastikshukla009' }] },
+      { id: 'manager', name: 'Swastik Shukla', role: 'Manager', bio: 'An important part of the Rivayat team, Swastik connects product, technology and the day-to-day customer experience while keeping the label practical, welcoming and easy to use.', photo: '', links: [{ label: 'GitHub', url: 'https://github.com/SwastikShukla006' }, { label: 'LinkedIn', url: 'https://www.linkedin.com/in/swastikshukla009' }] },
       { id: 'business-head', name: 'Shantanu Shukla', role: 'Business Head', bio: 'Supports commercial planning, partnerships and sustainable growth.', photo: '', links: [] },
       { id: 'marketing-head', name: 'Navneet Tiwari', role: 'Marketing Head', bio: 'Shapes campaigns, community storytelling and launch communication.', photo: '', links: [] }
     ];
@@ -679,6 +682,7 @@
           this.set('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
           this.set('rivayat_newsletter_leads', []);
           this.set('rivayat_referrals', []);
+          this.set('rivayat_notifications', []);
           this.set('rivayat_team', DEFAULT_TEAM);
           localStorage.setItem('rivayat_app_version', APP_VERSION);
           return;
@@ -702,6 +706,7 @@
         if (!localStorage.getItem('rivayat_users')) this.set('rivayat_users', INITIAL_USERS);
         if (!localStorage.getItem('rivayat_reviews')) this.set('rivayat_reviews', INITIAL_REVIEWS);
         if (!localStorage.getItem('rivayat_returns')) this.set('rivayat_returns', []);
+        if (!localStorage.getItem('rivayat_notifications')) this.set('rivayat_notifications', []);
         if (!localStorage.getItem('rivayat_newsletter_leads')) this.set('rivayat_newsletter_leads', []);
         if (!localStorage.getItem('rivayat_referrals')) this.set('rivayat_referrals', []);
         if (!localStorage.getItem('rivayat_team')) this.set('rivayat_team', DEFAULT_TEAM);
@@ -1075,6 +1080,49 @@
       }
     };
 
+    const NotificationService = {
+      cached() {
+        const email = String(auth.user?.email || '').toLowerCase();
+        return db.get('rivayat_notifications', []).filter(item => !email || String(item.email || '').toLowerCase() === email || item.userId === auth.user?.id);
+      },
+      async list() {
+        if (!auth.user) return { notifications: [], unread: 0 };
+        if (CONFIG.apiBaseUrl) {
+          try {
+            const data = await apiFetch('/notifications', { timeoutMs: 8000 });
+            const current = db.get('rivayat_notifications', []);
+            const merged = mergeById(current, data.notifications || []).slice(0, 100);
+            db.set('rivayat_notifications', merged);
+            return { notifications: data.notifications || [], unread: Number(data.unread || 0) };
+          } catch (error) { console.warn('Notification API failed, using saved notifications:', error.message); }
+        }
+        const notifications = this.cached().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        return { notifications, unread: notifications.filter(item => !item.readAt).length };
+      },
+      async read(id) {
+        if (CONFIG.apiBaseUrl) await apiFetch(`/notifications/${encodeURIComponent(id)}/read`, { method: 'PATCH' });
+        const items = db.get('rivayat_notifications', []); const item = items.find(item => item.id === id); if (item) item.readAt = new Date().toISOString(); db.set('rivayat_notifications', items); return item;
+      },
+      async readAll() {
+        if (CONFIG.apiBaseUrl) await apiFetch('/notifications/read-all', { method: 'POST', body: JSON.stringify({}) });
+        const email = String(auth.user?.email || '').toLowerCase(); const items = db.get('rivayat_notifications', []).map(item => ((item.email || '').toLowerCase() === email || item.userId === auth.user?.id) ? { ...item, readAt: item.readAt || new Date().toISOString() } : item); db.set('rivayat_notifications', items); return true;
+      },
+      async daily() {
+        if (!auth.user || !CONFIG.apiBaseUrl) return null;
+        try {
+          const data = await apiFetch('/notifications/daily', { method: 'POST', body: JSON.stringify({}), timeoutMs: 9000 });
+          if (data.notification) { const items = db.get('rivayat_notifications', []); db.set('rivayat_notifications', mergeById(items, [data.notification]).slice(0, 100)); }
+          return data.notification;
+        } catch (error) { console.warn('Daily notification skipped:', error.message); return null; }
+      },
+      async adminList() {
+        const data = await apiFetch('/admin/notifications'); return data.notifications || [];
+      },
+      async send(payload) {
+        const data = await apiFetch('/admin/notifications', { method: 'POST', body: JSON.stringify(payload) }); return data;
+      }
+    };
+
     const CreditService = {
       async get() {
         const data = await apiFetch('/credits');
@@ -1152,6 +1200,7 @@
         const data = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ email: identifier, identifier, password }) });
         auth.user = data.user;
         save();
+        maybeDailyNotification();
         return data.user;
       },
       async requestSignupOtp(payload) {
@@ -1161,6 +1210,7 @@
         const data = await apiFetch('/signup/verify', { method: 'POST', body: JSON.stringify({ email, code }) });
         auth.user = data.user;
         save();
+        maybeDailyNotification();
         return data.user;
       },
       async googleConfig() {
@@ -1170,6 +1220,7 @@
         const data = await apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) });
         auth.user = data.user;
         save();
+        maybeDailyNotification();
         return data.user;
       },
       async forgotPassword(email) {
@@ -1296,6 +1347,7 @@
         orders.unshift(orderToSave);
         db.set('rivayat_orders', orders);
         sessionStorage.setItem('rivayat_last_order_id', order.id);
+        showBrowserNotification('Order confirmed', `Your RIVAYAT order ${order.id} is confirmed.`, '#/dashboard/orders');
         return orderToSave;
       },
       async updateStatus(id, status) {
@@ -1305,6 +1357,7 @@
           const orders = db.get('rivayat_orders', []).map(normalizeOrder);
           const order = orders.find(o => o.id === id);
           if (order) { order.status = status; db.set('rivayat_orders', orders); }
+          showBrowserNotification(`Order ${status}`, `Your RIVAYAT order ${id} is now ${status}.`, '#/dashboard/orders');
           return normalizeOrder(data.order);
         }
         const orders = db.get('rivayat_orders', []).map(normalizeOrder);
@@ -1547,6 +1600,15 @@
     window.addEventListener('offline', () => { sessionStorage.removeItem('rivayat_offline_dismissed'); syncNetworkState(true); });
     window.addEventListener('online', () => { syncNetworkState(); toast('You are back online'); render({ revalidate: true, preserveScroll: true }); });
     syncNetworkState();
+    function showBrowserNotification(title, body, url='#/dashboard/notifications') {
+      if (!auth.user || !('Notification' in window) || Notification.permission !== 'granted') return;
+      navigator.serviceWorker?.ready.then(registration => registration.showNotification(title, { body, icon: ASSETS.logo, badge: ASSETS.logo, tag: `rivayat-${title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, data: { url } })).catch(() => {});
+    }
+    async function maybeDailyNotification() {
+      if (!auth.user) return;
+      const notification = await NotificationService.daily();
+      if (notification) { updateBadges(); showBrowserNotification(notification.title, notification.body, notification.url); }
+    }
     function setSEO(title, description) {
       const text = description || 'Premium fashion by RIVAYAT.';
       document.title = `${title} | RIVAYAT`;
@@ -1601,7 +1663,7 @@
       setRouteStructuredData(structured);
     }
     function updateRouteSEO(route, parts) {
-      const publicRoutes = new Set(['home','shop','product','about','contact','privacy','terms','refund','returns-policy','shipping','cookies']);
+      const publicRoutes = new Set(['home','shop','product','about','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal']);
       const routePath = route === 'home' ? '' : route === 'refund' ? 'returns-policy' : route === 'product' ? `product/${encodeURIComponent(parts[1] || '')}` : route;
       const canonical = `https://www.rivayat.shop/${routePath}`;
       document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical);
@@ -1621,6 +1683,9 @@
       const cartCount = cart.items.reduce((s,i)=>s+i.qty,0); const wishCount = wishlist.ids.length;
       document.getElementById('cartCount').textContent = cartCount; document.getElementById('cartCount').classList.toggle('hide', !cartCount);
       document.getElementById('wishCount').textContent = wishCount; document.getElementById('wishCount').classList.toggle('hide', !wishCount);
+      const email = String(auth.user?.email || '').toLowerCase();
+      const unreadNotifications = auth.user ? db.get('rivayat_notifications', []).filter(item => !item.readAt && ((item.email || '').toLowerCase() === email || item.userId === auth.user.id)).length : 0;
+      ['notificationCount','drawerNotificationCount'].forEach(id => { const node = document.getElementById(id); if (node) { node.textContent = unreadNotifications; node.classList.toggle('hide', !unreadNotifications); } });
       document.getElementById('accountLabel').textContent = auth.user ? auth.user.name.split(' ')[0] : 'Account';
       document.querySelectorAll('.nav-link').forEach(a => a.classList.toggle('active', a.getAttribute('href') === (location.hash || '#/')));
     }
@@ -1824,7 +1889,7 @@
       const u = auth.user || {};
       return `<div class="page section"><div class="container"><div class="section-head"><div><h1 class="serif" style="font-size:62px;margin:0">Checkout</h1><p>Complete your shipping details, apply coupons, and place your RIVAYAT order securely.</p></div></div><div class="checkout-layout"><form class="card pad" id="checkoutForm" onsubmit="placeOrder(event)">
         <h2>Contact Details</h2><div class="form-grid"><label>Name<input class="input" name="name" required value="${escapeHtml(u.name || '')}"></label><label>Phone<input class="input" name="phone" required pattern="[0-9]{10}" placeholder="10 digit mobile" value="${escapeHtml(u.phone || '')}"></label><label style="grid-column:1/-1">Email<input class="input" name="email" required type="email" value="${escapeHtml(u.email || '')}"></label></div>
-        <div class="divider"></div><h2>Shipping Address</h2><div class="form-grid"><label style="grid-column:1/-1">Address line<input class="input" name="line1" required placeholder="House no, street, area"></label><label>City<input class="input" name="city" required></label><label>District<input class="input" name="district"></label><label>State<input class="input" name="state" required></label><label>Pincode<input class="input" name="pincode" required inputmode="numeric" maxlength="6" pattern="[0-9]{6}" value="${db.get('rivayat_checkout_pincode','')}" oninput="updateCheckoutDelivery(this.value);schedulePincodeLookup(this.form,this.value)"></label><p class="muted" data-pincode-message style="grid-column:1/-1;margin:0">Enter a 6-digit PIN code to auto-fill city, district and state.</p></div>
+        <div class="divider"></div><h2>Shipping Address</h2><div class="form-grid"><label style="grid-column:1/-1">Address line<input class="input" name="line1" required placeholder="House no, street, area"></label><label>Pincode<input class="input" name="pincode" required inputmode="numeric" maxlength="6" pattern="[0-9]{6}" value="${db.get('rivayat_checkout_pincode','')}" oninput="updateCheckoutDelivery(this.value);schedulePincodeLookup(this.form,this.value)"></label><label>City<input class="input" name="city" required></label><label>District<input class="input" name="district"></label><label>State<input class="input" name="state" required></label><p class="muted" data-pincode-message style="grid-column:1/-1;margin:0">Enter a 6-digit PIN code first; India Post will auto-fill city, district and state.</p></div>
         ${auth.user ? `<div class="divider"></div><h2>RIVAYAT Credits</h2><label>Credits to redeem<input class="input" id="checkoutCredits" name="creditsToUse" type="number" min="0" max="${Math.min(Number(u.credits || 0), Math.floor(Math.max(0, cart.subtotal() - cart.discount()) * .2))}" step="1" value="0" oninput="updateCreditPreview(this.value)"><small class="muted">Balance: ${Number(u.credits || 0)} credits. One credit equals ₹1; redemption is capped at 20% after product discounts.</small></label>` : ''}
         <div class="divider"></div><h2>Payment Method</h2><div class="grid grid-2"><label class="card pad"><span><input type="radio" name="payment" value="COD" checked> Cash On Delivery</span><small class="muted">Pay when your order arrives.</small></label><label class="card pad" aria-disabled="true"><span><input type="radio" name="payment" value="Online Payment" disabled> Online Payment</span><small class="muted">Coming after server-side payment verification is configured.</small></label></div>
         <button class="btn full" style="margin-top:22px" type="submit">Place Order</button><div id="checkoutMsg" style="margin-top:12px"></div>
@@ -2008,18 +2073,29 @@
       if (!auth.user) return renderAuth('login');
       const orders = (await OrderService.list()).filter(o => !auth.user.email || o.customer.email === auth.user.email || auth.user.role === 'admin');
       const creditSummary = tab === 'credits' ? await CreditService.get().catch(() => ({ balance: Number(auth.user.credits || 0), transactions: [], rules: {} })) : null;
-      const tabs = [['profile','Profile'],['addresses','Saved Addresses'],['orders','My Orders'],['wishlist','Wishlist'],['credits','RIVAYAT Credits'],['referral','Referral'],['settings','Account Settings']];
-      return `<div class="page section"><div class="container dashboard-layout"><aside class="card side-nav">${tabs.map(t=>`<a class="${tab===t[0]?'active':''}" href="#/dashboard/${t[0]}">${t[1]}</a>`).join('')}<button onclick="logoutUser()">Logout</button></aside><section>${dashboardPanel(tab, orders, creditSummary)}</section></div></div>`;
+      const notificationSummary = tab === 'notifications' ? await NotificationService.list().catch(() => ({ notifications: [], unread: 0 })) : null;
+      const tabs = [['profile','Profile'],['addresses','Saved Addresses'],['orders','My Orders'],['wishlist','Wishlist'],['credits','RIVAYAT Credits'],['notifications','Notifications'],['referral','Referral'],['settings','Account Settings']];
+      return `<div class="page section"><div class="container dashboard-layout"><aside class="card side-nav">${tabs.map(t=>`<a class="${tab===t[0]?'active':''}" href="#/dashboard/${t[0]}">${t[1]}${t[0]==='notifications' && notificationSummary?.unread ? ` <span class="badge">${notificationSummary.unread}</span>` : ''}</a>`).join('')}<button onclick="logoutUser()">Logout</button></aside><section>${dashboardPanel(tab, orders, creditSummary, notificationSummary)}</section></div></div>`;
     }
-    function dashboardPanel(tab, orders, creditSummary=null) {
+    function dashboardPanel(tab, orders, creditSummary=null, notificationSummary=null) {
       const u = auth.user;
-      if (tab==='addresses') return `<div class="card pad"><h1 class="serif">Saved Addresses</h1>${(u.addresses||[]).map(a=>`<div class="card pad" style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:16px;align-items:start"><div><strong>${escapeHtml(a.label)}</strong><p class="muted">${escapeHtml(a.line1)}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} - ${escapeHtml(a.pincode)}</p></div><button class="btn ghost small" onclick="removeAddress('${escapeHtml(a.id)}')">Remove</button></div></div>`).join('') || '<p class="muted">No saved addresses.</p>'}<div class="divider"></div><h3>Add Address</h3><form class="form-grid" onsubmit="addAddress(event)"><label>Label<input class="input" name="label" required value="Home"></label><label>Address<input class="input" name="line1" required></label><label>City<input class="input" name="city" required></label><label>District<input class="input" name="district"></label><label>State<input class="input" name="state" required></label><label>Pincode<input class="input" name="pincode" required inputmode="numeric" maxlength="6" pattern="[0-9]{6}" oninput="schedulePincodeLookup(this.form,this.value)"></label><p class="muted" data-pincode-message style="grid-column:1/-1;margin:0">City, district and state auto-fill from India Post.</p><button class="btn">Save Address</button></form></div>`;
+      if (tab==='addresses') return `<div class="card pad"><h1 class="serif">Saved Addresses</h1>${(u.addresses||[]).map(a=>`<div class="card pad" style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:16px;align-items:start"><div><strong>${escapeHtml(a.label)}</strong><p class="muted">${escapeHtml(a.line1)}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} - ${escapeHtml(a.pincode)}</p></div><button class="btn ghost small" onclick="removeAddress('${escapeHtml(a.id)}')">Remove</button></div></div>`).join('') || '<p class="muted">No saved addresses.</p>'}<div class="divider"></div><h3>Add Address</h3><form class="form-grid" onsubmit="addAddress(event)"><label>Label<input class="input" name="label" required value="Home"></label><label>Address<input class="input" name="line1" required></label><label>Pincode<input class="input" name="pincode" required inputmode="numeric" maxlength="6" pattern="[0-9]{6}" oninput="schedulePincodeLookup(this.form,this.value)"></label><label>City<input class="input" name="city" required></label><label>District<input class="input" name="district"></label><label>State<input class="input" name="state" required></label><p class="muted" data-pincode-message style="grid-column:1/-1;margin:0">Enter PIN first; city, district and state auto-fill from India Post.</p><button class="btn">Save Address</button></form></div>`;
       if (tab==='orders') return `<div class="grid">${orders.map(o=>orderCard(o)).join('') || '<div class="empty">No orders for this account.</div>'}</div>`;
       if (tab==='wishlist') return `<div class="card pad"><h1 class="serif">Wishlist</h1><a class="btn" href="#/wishlist">Open Wishlist</a></div>`;
       if (tab==='credits') { const summary = creditSummary || { balance: Number(u.credits || 0), transactions: [], rules: {} }; return `<div class="grid"><div class="card pad credit-card"><p class="eyebrow">RIVAYAT loyalty</p><div class="credit-balance">${summary.balance}</div><p>credits available · ₹${summary.balance} redemption value</p><p style="max-width:560px;color:rgba(255,255,255,.72)">Earn ${Number(summary.rules.earnPercent || 2)}% in credits after eligible orders are delivered. Redeem up to ${Number(summary.rules.maxRedemptionPercent || 20)}% of a future merchandise subtotal.</p></div><div class="card pad"><h2>Credit activity</h2>${summary.transactions.length ? summary.transactions.map(item=>`<div class="summary-line"><span><strong>${escapeHtml(item.description || item.type)}</strong><br><small class="muted">${new Date(item.createdAt).toLocaleString('en-IN')}</small></span><strong style="color:${Number(item.amount)>=0?'var(--success)':'var(--danger)'}">${Number(item.amount)>=0?'+':''}${Number(item.amount)}</strong></div>`).join('') : '<p class="muted">No credit activity yet. Credits appear after an eligible order is delivered.</p>'}</div></div>`; }
+      if (tab==='notifications') { const summary = notificationSummary || { notifications: [], unread: 0 }; return `<div class="card pad notification-panel"><div class="section-head"><div><p class="eyebrow">RIVAYAT updates</p><h1 class="serif">Your notifications</h1><p class="muted">Order updates, credit rewards and messages from the Rivayat team stay here.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary small" onclick="enableNotifications()">Enable phone alerts</button><button class="btn ghost small" onclick="markAllNotificationsRead()">Mark all read</button></div></div>${summary.notifications.length ? `<div class="notification-list">${summary.notifications.map(item=>`<article class="notification-item ${item.readAt?'read':'unread'}"><div><span class="notification-kind">${escapeHtml(item.kind || 'Update')}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p><small class="muted">${new Date(item.createdAt).toLocaleString('en-IN')}</small></div><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">${item.url ? `<a class="btn ghost small" href="${escapeHtml(item.url)}">Open</a>` : ''}${!item.readAt ? `<button class="btn secondary small" onclick="markNotificationRead('${escapeHtml(item.id)}')">Read</button>` : '<span class="muted">Read</span>'}</div></article>`).join('')}</div>` : '<div class="empty"><h3>No notifications yet.</h3><p class="muted">Order and account updates will appear here.</p></div>'}</div>`; }
       if (tab==='referral') { const code = `RIV${String(u.email).split('@')[0].replace(/[^a-z0-9]/gi,'').slice(0,8).toUpperCase()}50`; return `<div class="card pad"><h1 class="serif">Referral Program</h1><p class="muted">Share your referral code. Friend gets ₹50 off, and admin can track usage.</p><div class="notice"><strong>${code}</strong><br>${location.origin}${location.pathname}#/shop?ref=${code}</div><button class="btn" onclick="generateReferralCode()">Activate / Sync Referral</button></div>`; }
       if (tab==='settings') return `<div class="card pad"><h1 class="serif">Account Settings</h1><p class="muted">Manage your password, notifications, and privacy preferences for your RIVAYAT account.</p><button class="btn danger" onclick="logoutUser()">Logout</button></div>`;
       return `<div class="card pad"><div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">${safeImageUrl(u.avatar) ? `<img src="${escapeHtml(safeImageUrl(u.avatar))}" alt="${escapeHtml(u.name)} profile photo" style="width:92px;height:92px;border-radius:50%;object-fit:cover;border:3px solid var(--gold)">` : `<div aria-hidden="true" style="width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:var(--gold);font-size:30px;font-weight:800">${escapeHtml(String(u.name||'R').slice(0,1).toUpperCase())}</div>`}<div><h1 class="serif" style="margin:0">Hello, ${escapeHtml(u.name)}</h1><p class="muted">Manage your profile photo and shopping details.</p></div></div><form class="form-grid" onsubmit="updateProfile(event)" style="margin-top:22px"><label>Name<input class="input" name="name" value="${escapeHtml(u.name)}" required></label><label>Phone<input class="input" name="phone" value="${escapeHtml(u.phone || '')}" required></label><label style="grid-column:1/-1">Email<input class="input" name="email" value="${escapeHtml(u.email)}" type="email" readonly></label><label style="grid-column:1/-1">Profile photo<input class="input" name="avatarFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif"><small class="muted">Original image is retained · maximum 8 MB</small></label><button class="btn">Update Profile</button></form></div>`;
+    }
+    async function markNotificationRead(id) { try { await NotificationService.read(id); updateBadges(); render({ preserveScroll: true }); } catch (error) { toast(error.message); } }
+    async function markAllNotificationsRead() { try { await NotificationService.readAll(); updateBadges(); toast('Notifications marked as read'); render({ preserveScroll: true }); } catch (error) { toast(error.message); } }
+    async function enableNotifications() {
+      if (!('Notification' in window)) return toast('This browser does not support phone notifications.');
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return toast('Notifications remain off until you allow them in browser settings.');
+      try { const registration = await navigator.serviceWorker?.ready; await registration?.showNotification('RIVAYAT alerts enabled', { body: 'Order and account updates will appear here.', icon: ASSETS.logo, badge: ASSETS.logo, data: { url: '#/dashboard/notifications' } }); } catch { /* in-app center still works */ }
+      toast('Phone alerts enabled');
     }
     async function updateProfile(event) { event.preventDefault(); try { const fd = new FormData(event.target); const file = fd.get('avatarFile'); const avatar = file instanceof File && file.size ? await fileAsDataUrl(file) : auth.user.avatar || ''; await AuthService.updateProfile({ name: fd.get('name'), phone: fd.get('phone'), avatar }); toast('Profile updated'); render(); } catch(error) { toast(error.message); } }
     async function addAddress(event) { event.preventDefault(); const fd = new FormData(event.target); const addresses = [...(auth.user.addresses || []), { id: uid('addr'), ...Object.fromEntries(fd.entries()) }]; await AuthService.updateProfile({ addresses }); toast('Address saved'); render(); }
@@ -2038,7 +2114,7 @@
       if (auth.user?.role !== 'admin') {
         return `<div class="page section"><div class="container auth-shell"><div class="card pad"><span class="pill">Admin Area</span><h1 class="serif" style="font-size:50px">Admin login required</h1><p class="muted">Owner access is required to manage products, orders, coupons, customers, and reviews.</p><a class="btn" href="#/login">Login as Admin</a></div></div></div>`;
       }
-      const menu = [['analytics','Analytics'],['homepage','Homepage'],['products','Products'],['orders','Orders'],['returns','Returns'],['coupons','Coupons'],['customers','Customers'],['reviews','Reviews'],['team','Team Profiles'],['bugs','Bug Centre'],['leads','Leads'],['referrals','Referrals']];
+      const menu = [['analytics','Analytics'],['homepage','Homepage'],['products','Products'],['orders','Orders'],['returns','Returns'],['coupons','Coupons'],['customers','Customers'],['reviews','Reviews'],['team','Team Profiles'],['bugs','Bug Centre'],['notifications','Notifications'],['leads','Leads'],['referrals','Referrals']];
       return `<div class="page section"><div class="container admin-shell"><aside class="admin-aside"><h2 class="serif" style="margin:8px 12px 18px">Admin</h2>${menu.map(m=>`<a class="${section===m[0]?'active':''}" href="#/admin/${m[0]}">${m[1]}</a>`).join('')}</aside><section>${await adminPanel(section)}</section></div></div>`;
     }
     async function adminPanel(section) {
@@ -2051,6 +2127,7 @@
       if(section==='reviews') return adminReviews(await ReviewService.list());
       if(section==='team') return adminTeam(await TeamService.list());
       if(section==='bugs') return adminBugs(await BugService.list());
+      if(section==='notifications') return adminNotifications(await NotificationService.adminList());
       if(section==='leads') return adminLeads(await NewsletterService.list());
       if(section==='referrals') return adminReferrals(await ReferralService.list());
       return adminAnalytics(await OrderService.list(), await ProductService.list(), await UserService.list(), await ReturnService.list());
@@ -2142,6 +2219,20 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
     }
     async function updateBugStatus(id, status) { try { await BugService.update(id, status); toast('Bug status updated'); render(); } catch(error) { toast(error.message); } }
 
+    function adminNotifications(notifications=[]) {
+      return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Notification Studio</h1><p>Send an update to one customer or every customer. Order and credit events are added automatically.</p></div></div><form class="card pad grid" onsubmit="sendAdminNotification(event)"><div class="form-grid"><label>Customer email <span class="muted">leave blank for broadcast</span><input class="input" name="email" type="email" placeholder="customer@example.com"></label><label>Kind<select class="select" name="kind"><option value="admin">Team message</option><option value="drop">New drop</option><option value="service">Service update</option><option value="credit">Credit reward</option></select></label></div><label>Title<input class="input" name="title" maxlength="120" required placeholder="Your RIVAYAT update"></label><label>Message<textarea class="textarea" name="body" maxlength="500" required placeholder="Write a helpful, specific message."></textarea></label><label>Destination <input class="input" name="url" value="#/dashboard/notifications" placeholder="#/shop or #/dashboard/orders"></label><button class="btn">Send notification</button><p id="adminNotificationMessage" class="muted" style="margin:0"></p></form><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Time</th><th>Customer</th><th>Title</th><th>Kind</th><th>Status</th></tr></thead><tbody>${notifications.map(item=>`<tr><td>${new Date(item.createdAt).toLocaleString('en-IN')}</td><td>${escapeHtml(item.email || '-')}</td><td><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.body)}</span></td><td>${escapeHtml(item.kind || 'system')}</td><td>${item.readAt ? 'Read' : 'Unread'}</td></tr>`).join('') || '<tr><td colspan="5">No notifications sent yet.</td></tr>'}</tbody></table></div></div>`;
+    }
+    async function sendAdminNotification(event) {
+      event.preventDefault();
+      const form = event.target; const msg = document.getElementById('adminNotificationMessage');
+      try {
+        const fd = new FormData(form);
+        const result = await NotificationService.send({ email: fd.get('email'), title: fd.get('title'), body: fd.get('body'), kind: fd.get('kind'), url: fd.get('url') });
+        if (msg) msg.textContent = `Sent to ${result.sent || 0} customer(s).`;
+        form.reset(); toast('Notification sent'); render();
+      } catch (error) { if (msg) msg.textContent = error.message; toast(error.message); }
+    }
+
     async function submitBugReport(event) {
       event.preventDefault();
       const button = event.submitter;
@@ -2188,6 +2279,18 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
       event.target.reset();
       toast('Subscribed to RIVAYAT updates');
     }
+
+    function renderArcade() {
+      const target = new Date('2026-10-15T00:00:00+05:30');
+      const days = Math.max(0, Math.ceil((target.getTime() - Date.now()) / 86400000));
+      return `<section class="arcade-panel" aria-label="RIVAYAT arcade"><div class="section-head"><div><p class="eyebrow">Private arcade</p><h2 class="serif">For the love of the game.</h2><p class="muted">Three tiny offline-friendly games. Scores stay on this device.</p></div><div class="arcade-countdown"><strong>${days}</strong><span>days left in ChatGPT subscription ending</span></div></div><div class="grid grid-3"><article class="card pad game-card"><span class="pill">Cricket Tap</span><h3>Hit a six</h3><p class="muted">Tap the bat and chase your best score.</p><strong id="cricketScore">Score: 0 · Best: ${Number(localStorage.getItem('rivayat_cricket_high') || 0)}</strong><button class="btn full" onclick="playCricket()" style="margin-top:14px">🏏 Hit the ball</button></article><article class="card pad game-card"><span class="pill">Vibe Catch</span><h3>Catch the drop</h3><p class="muted">A quick reflex game for a quick break.</p><strong id="vibeScore">Score: 0 · Best: ${Number(localStorage.getItem('rivayat_vibe_high') || 0)}</strong><button class="btn full" onclick="playVibeCatch()" style="margin-top:14px">Catch the vibe</button></article><article class="card pad game-card"><span class="pill">Memory Flip</span><h3>Match the pair</h3><p class="muted">Find two matching symbols in as few turns as possible.</p><div class="memory-board" id="memoryBoard"></div><button class="btn secondary full" onclick="startMemoryGame()" style="margin-top:14px">New round</button></article></div></section>`;
+    }
+    let cricketScore = 0; let vibeScore = 0; let memoryState = null;
+    function playCricket() { const runs = [1,2,3,4,6][Math.floor(Math.random() * 5)]; cricketScore += runs; const best = Math.max(cricketScore, Number(localStorage.getItem('rivayat_cricket_high') || 0)); localStorage.setItem('rivayat_cricket_high', best); const node = document.getElementById('cricketScore'); if (node) node.textContent = `Score: ${cricketScore} · Best: ${best} · +${runs}`; }
+    function playVibeCatch() { const caught = Math.random() > .2; if (caught) vibeScore += 1; const best = Math.max(vibeScore, Number(localStorage.getItem('rivayat_vibe_high') || 0)); localStorage.setItem('rivayat_vibe_high', best); const node = document.getElementById('vibeScore'); if (node) node.textContent = `Score: ${vibeScore} · Best: ${best}${caught ? ' · Nice catch' : ' · Missed it'}`; }
+    function startMemoryGame() { const symbols = ['✦','✦','☀','☀'].sort(() => Math.random() - .5); memoryState = { symbols, open: [], matched: [] }; const board = document.getElementById('memoryBoard'); if (!board) return; board.innerHTML = symbols.map((symbol, index) => `<button class="memory-tile" data-index="${index}" onclick="flipMemory(${index})">?</button>`).join(''); }
+    function flipMemory(index) { if (!memoryState || memoryState.matched.includes(index) || memoryState.open.includes(index)) return; memoryState.open.push(index); const board = document.getElementById('memoryBoard'); const tile = board?.querySelector(`[data-index="${index}"]`); if (tile) tile.textContent = memoryState.symbols[index]; if (memoryState.open.length < 2) return; const [first, second] = memoryState.open; if (memoryState.symbols[first] === memoryState.symbols[second]) memoryState.matched.push(first, second); setTimeout(() => { if (memoryState?.open?.length) { const open = [...memoryState.open]; memoryState.open = []; if (!memoryState.matched.includes(first) || !memoryState.matched.includes(second)) open.forEach(item => { const node = board?.querySelector(`[data-index="${item}"]`); if (node) node.textContent = '?'; }); } }, 500); }
+    async function unlockArcade(event) { event.preventDefault(); const form = event.target; const message = document.getElementById('legalSecretMessage'); const code = String(new FormData(form).get('code') || '').trim(); try { const data = await apiFetch('/legal/secret', { method: 'POST', body: JSON.stringify({ code }), timeoutMs: 6000 }); if (!data.unlocked) throw new Error('Code did not unlock the private page.'); document.getElementById('arcadeHost').innerHTML = renderArcade(); startMemoryGame(); message.textContent = 'Private arcade unlocked on this device.'; } catch (error) { if (message) message.textContent = error.message || 'That code did not unlock this page.'; } }
 
     async function exportOrdersCSV() {
       const orders = await OrderService.list();
@@ -2247,6 +2350,10 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
     }
 
     function renderStaticPage(kind) {
+      if (kind === 'legal') {
+        setSEO('Legal Centre', 'RIVAYAT legal, consumer support, privacy, returns and grievance information for customers in India.');
+        return `<div class="page section policy"><div class="container"><div class="section-head"><div><span class="pill">RIVAYAT · INDIA</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">Legal Centre</h1><p class="muted">Clear information for confident shopping. Please review these operational templates with your legal adviser before launch.</p></div></div><div class="grid grid-2"><article class="card pad"><h2>Consumer information</h2><p>RIVAYAT displays product name, price, available sizes, stock status, delivery charge, exchange window and key product details before checkout. Customers receive an order confirmation and can download an invoice from their account.</p><h3>Returns, refunds and cancellation</h3><p>Eligible orders can be cancelled before packing or dispatch. Returns and exchanges are handled through the published window and product-condition rules. Defective, damaged, wrong or materially misdescribed goods are reviewed with evidence and refunded through the original or agreed method.</p><h3>Grievance support</h3><p>Support: <a href="mailto:${BRAND.email}">${BRAND.email}</a> · WhatsApp <a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">${BRAND.whatsapp}</a>. Customers may also contact the National Consumer Helpline at 1915. Keep your order ID in every request.</p><h3>Applicable framework</h3><p>Operations should be reviewed against the Consumer Protection Act and E-Commerce Rules, the Information Technology Act and Rules, and India’s current digital personal-data requirements. This page is an operational guide, not legal advice.</p></article><article class="card pad"><h2>Privacy and account safety</h2><p>We use account, address and order details to authenticate customers, fulfil orders, prevent abuse, provide support, and send essential service messages. We never ask for your password or OTP by phone or chat. You can request correction or deletion of eligible personal data by contacting support.</p><h3>Payments and delivery</h3><p>Prices, discounts, delivery charges and payment status are confirmed on the checkout screen. COD is the available checkout method until a secure server-side online-payment integration is enabled. PIN code lookup uses India Post data to help prefill locality and state.</p><h3>Business disclosures</h3><p>Legal business name: RIVAYAT Fashion · Address: India · GSTIN: configured in the business settings when applicable. Product manufacturer, packer, country-of-origin, material and care labels should be completed for each SKU before public sale.</p></article></div><div class="card pad legal-links"><h2>Read the full policies</h2><div class="state-actions"><a class="btn secondary" href="#/privacy">Privacy</a><a class="btn secondary" href="#/terms">Terms</a><a class="btn secondary" href="#/returns-policy">Returns</a><a class="btn secondary" href="#/shipping">Shipping</a><a class="btn secondary" href="#/cookies">Cookie notice</a><a class="btn secondary" href="#/contact">Contact</a></div></div><div class="card pad secret-gate"><p class="eyebrow">Owner access</p><h2>Private page</h2><p class="muted">Enter the private code supplied by the Rivayat owner.</p><form class="form-grid" onsubmit="unlockArcade(event)"><label>Code<input class="input" name="code" type="password" inputmode="numeric" autocomplete="off" maxlength="32" required></label><button class="btn">Unlock</button></form><p id="legalSecretMessage" class="muted" aria-live="polite"></p></div><div id="arcadeHost"></div></div></div>`;
+      }
       const map = {
         about: ['About RIVAYAT', 'RIVAYAT is an independent Indian fashion label built by Swastik Shukla and Shashvat Shukla around clean comfort, youth culture, and confident everyday fits. We create limited, expressive drops and keep product information, support and community feedback easy to understand.'],
         contact: ['Contact Us', `Email: ${BRAND.email}
@@ -2296,7 +2403,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
         else if (route === 'forgot-password') nextHtml = renderAuth('forgot');
         else if (route === 'dashboard') nextHtml = await renderDashboard(parts[1] || 'profile');
         else if (route === 'admin') nextHtml = await renderAdmin(parts[1] || 'analytics');
-        else if (['about','contact','privacy','terms','refund','returns-policy','shipping','cookies'].includes(route)) nextHtml = renderStaticPage(route);
+        else if (['about','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal'].includes(route)) nextHtml = renderStaticPage(route);
         else nextHtml = notFound();
         if (renderId !== renderSequence) return;
         app.innerHTML = nextHtml;
@@ -2311,10 +2418,22 @@ Business WhatsApp: ${BRAND.whatsapp}`],
     window.addEventListener('error', event => reportClientFault(event.error || event.message, 'Window error'));
     window.addEventListener('hashchange', render);
     window.addEventListener('online', () => BugService.flushQueue());
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault(); deferredInstallPrompt = event;
+      const button = document.getElementById('installAppButton'); if (button) button.hidden = false;
+    });
+    window.addEventListener('appinstalled', () => { deferredInstallPrompt = null; const button = document.getElementById('installAppButton'); if (button) button.hidden = true; toast('RIVAYAT installed on this device'); });
+    async function installApp() {
+      if (!deferredInstallPrompt) return toast('Use your browser menu and choose Add to Home screen.');
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice.catch(() => null);
+      deferredInstallPrompt = null; const button = document.getElementById('installAppButton'); if (button) button.hidden = true;
+    }
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(error => console.warn('Offline service worker unavailable:', error.message)));
     }
-    updateBadges(); BugService.flushQueue(); render();
+    updateBadges(); BugService.flushQueue(); render(); maybeDailyNotification();
   </script>
 </body>
 </html>

@@ -13,6 +13,57 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+#app {
+  min-height: 70vh;
+}
+
+img {
+  max-width: 100%;
+}
+
+.site-footer {
+  min-height: 320px;
+  contain: layout paint;
+}
+
+.notification-button,
+.install-app-button,
+.bag-button {
+  position: relative;
+}
+
+.notification-button .badge,
+.bag-button .badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 18px;
+  padding: 3px 5px;
+  border: 2px solid var(--paper, #fffaf1);
+  border-radius: 999px;
+  color: #fff;
+  background: var(--store-coral);
+  font-size: 10px;
+  line-height: 1;
+  text-align: center;
+}
+
+.cart-logo {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.drawer-notification-link {
+  margin-top: 14px;
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid rgba(15, 42, 44, .14);
+  font-weight: 900;
+}
+
 .topbar {
   display: flex;
   justify-content: center;
@@ -42,6 +93,7 @@ body {
   overflow: hidden;
   color: #fff;
   background: var(--store-teal-deep);
+  contain: layout paint;
 }
 
 .hero-image-aerial {
@@ -52,6 +104,12 @@ body {
   height: 100%;
   object-fit: cover;
   object-position: center 48%;
+  max-width: none;
+  max-height: none;
+  display: block;
+  pointer-events: none;
+  transform: translateZ(0);
+  overflow-anchor: none;
 }
 
 .hero-wash {
@@ -387,6 +445,7 @@ body {
   isolation: isolate;
   overflow: hidden;
   color: #fff;
+  contain: layout paint;
 }
 
 .gender-card > img {
@@ -396,6 +455,12 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  max-width: none;
+  max-height: none;
+  display: block;
+  pointer-events: none;
+  transform: translateZ(0);
+  overflow-anchor: none;
 }
 
 .gender-overlay {
@@ -448,12 +513,17 @@ body {
 .season-visual {
   position: relative;
   overflow: hidden;
+  contain: layout paint;
 }
 
 .season-visual img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  max-width: none;
+  max-height: none;
+  transform: translateZ(0);
 }
 
 .vertical-label {
@@ -521,6 +591,7 @@ body {
   overflow: hidden;
   color: #fff;
   background: #0b1718;
+  contain: layout paint;
 }
 
 .winter-landscape-frame,
@@ -535,6 +606,12 @@ body {
 
 .winter-background {
   object-fit: cover;
+  max-width: none;
+  max-height: none;
+  display: block;
+  pointer-events: none;
+  transform: translateZ(0);
+  overflow-anchor: none;
 }
 
 .winter-overlay {
@@ -629,12 +706,112 @@ body {
 .home-about-image {
   min-height: 520px;
   overflow: hidden;
+  contain: layout paint;
 }
 
 .home-about-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  max-width: none;
+  max-height: none;
+  transform: translateZ(0);
+}
+
+.notification-panel .section-head {
+  align-items: start;
+}
+
+.notification-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-item {
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: start;
+  border: 1px solid rgba(15, 42, 44, .13);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .58);
+}
+
+.notification-item.unread {
+  border-color: var(--store-coral);
+  box-shadow: 0 8px 26px rgba(255, 108, 81, .12);
+}
+
+.notification-item h3,
+.notification-item p {
+  margin: 5px 0;
+}
+
+.notification-kind {
+  color: var(--store-teal);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.arcade-panel {
+  margin-top: 24px;
+  padding: clamp(22px, 4vw, 44px);
+  border-radius: 24px;
+  color: #fff;
+  background: linear-gradient(135deg, #092c2e, #176467 60%, #ff6c51);
+}
+
+.arcade-panel .section-head {
+  align-items: start;
+}
+
+.arcade-panel .card {
+  color: var(--ink, #111);
+}
+
+.arcade-countdown {
+  min-width: 190px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, .26);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.arcade-countdown strong,
+.arcade-countdown span {
+  display: block;
+}
+
+.arcade-countdown strong {
+  font: 500 48px/1 Georgia, serif;
+  color: var(--store-sun);
+}
+
+.arcade-countdown span {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.memory-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.memory-tile {
+  min-height: 42px;
+  border: 1px solid rgba(15, 42, 44, .18);
+  border-radius: 12px;
+  color: var(--store-teal-deep);
+  background: var(--store-mist);
+  font-size: 20px;
+  font-weight: 900;
 }
 
 .home-about-copy {
@@ -917,6 +1094,11 @@ body {
   .topbar { min-height: 30px; font-size: 9px; }
   .topbar span:nth-child(3) { display: none; }
   .header .nav { height: 64px; }
+  .notification-button,
+  .install-app-button { display: inline-grid; }
+  .notification-button { width: 38px; height: 38px; padding: 0; }
+  .cart-logo { margin-right: 0; }
+  .bag-button .label { display: none; }
   .brand > span:last-child,
   .wish-action,
   .account-button { display: none; }
@@ -926,6 +1108,14 @@ body {
     align-items: end;
   }
   .hero-image-aerial { object-position: center; }
+  .storefront-home .hero,
+  .gender-card,
+  .season-visual,
+  .winter-story,
+  .home-about-image { overflow: hidden; }
+  .hero-image-aerial,
+  .gender-card > img,
+  .winter-background { width: 100%; height: 100%; inset: 0; }
   .hero-wash { background: linear-gradient(0deg, rgba(5, 23, 25, .9), rgba(5, 23, 25, .18) 75%); }
   .hero-side-note,
   .hero-scroll { display: none; }
@@ -956,7 +1146,7 @@ body {
   .season-content,
   .home-about-copy { padding: 56px 22px; }
   .mini-product-row { margin-inline: -6px; }
-  .winter-story { min-height: 760px; padding: 60px 22px; }
+  .winter-story { min-height: 760px; max-height: none; padding: 60px 22px; }
   .winter-picks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home-about-people,
   .community-stats { grid-template-columns: 1fr; }
@@ -966,6 +1156,9 @@ body {
   .modal-backdrop { padding: 12px; }
   .offline-card,
   .report-card { border-radius: 22px; }
+  .notification-item { display: grid; gap: 12px; }
+  .arcade-panel .section-head { display: grid; }
+  .arcade-countdown { width: 100%; }
 }
 
 @media (max-width: 390px) {
