@@ -578,6 +578,14 @@
     <div class="notice">Official RIVAYAT shopping website: explore products, place orders, track purchases, and manage your account.</div>
   </aside>
 
+  <nav class="mobile-bottom-nav" aria-label="Quick shopping navigation">
+    <a href="#/" aria-label="Home"><span aria-hidden="true">⌂</span><small>Home</small></a>
+    <a href="#/shop" aria-label="Shop categories"><span aria-hidden="true">▦</span><small>Shop</small></a>
+    <a href="#/wishlist" aria-label="Wishlist"><span aria-hidden="true">♡</span><small>Wishlist</small></a>
+    <a href="#/cart" aria-label="Bag"><span aria-hidden="true">🛒</span><small>Bag</small><b id="mobileCartCount" class="mobile-bottom-badge hide">0</b></a>
+    <a href="#/dashboard" aria-label="Account"><span aria-hidden="true">♙</span><small>Account</small></a>
+  </nav>
+
   <main id="app"><section class="startup-shell" aria-live="polite"><div class="startup-card"><p class="startup-logo serif">RIVAYAT</p><p class="muted">Preparing your storefront…</p><div class="startup-bar" aria-hidden="true"></div></div></section></main>
   <div class="toast-host" id="toastHost"></div>
   <section class="offline-screen" id="offlineScreen" role="alertdialog" aria-modal="true" aria-labelledby="offlineTitle" hidden>
@@ -1682,6 +1690,8 @@
     function updateBadges() {
       const cartCount = cart.items.reduce((s,i)=>s+i.qty,0); const wishCount = wishlist.ids.length;
       document.getElementById('cartCount').textContent = cartCount; document.getElementById('cartCount').classList.toggle('hide', !cartCount);
+      const mobileCartCount = document.getElementById('mobileCartCount');
+      if (mobileCartCount) { mobileCartCount.textContent = cartCount; mobileCartCount.classList.toggle('hide', !cartCount); }
       document.getElementById('wishCount').textContent = wishCount; document.getElementById('wishCount').classList.toggle('hide', !wishCount);
       const email = String(auth.user?.email || '').toLowerCase();
       const unreadNotifications = auth.user ? db.get('rivayat_notifications', []).filter(item => !item.readAt && ((item.email || '').toLowerCase() === email || item.userId === auth.user.id)).length : 0;
