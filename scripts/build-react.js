@@ -1,9 +1,19 @@
-const esbuild = require("esbuild");
 const fs = require("fs");
 const path = require("path");
 
 const output = path.join(__dirname, "..", "assets", "react", "rivayat-interactive.js");
 fs.mkdirSync(path.dirname(output), { recursive: true });
+
+let esbuild;
+try {
+  esbuild = require("esbuild");
+} catch (error) {
+  if (fs.existsSync(output)) {
+    console.warn("esbuild is unavailable; using the committed React interaction bundle.");
+    process.exit(0);
+  }
+  throw error;
+}
 
 esbuild.build({
   entryPoints: [path.join(__dirname, "..", "react", "interactive.jsx")],
