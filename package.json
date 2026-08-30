@@ -13,7 +13,7 @@
     "export:algolia": "node scripts/export-algolia-records.js",
     "export:merchant": "node scripts/export-merchant-feed.js",
     "build:react": "node scripts/build-react.js",
-    "build": "npm run export:algolia && npm run export:merchant && npm run build:react",
+    "build:release": "npm run export:algolia && npm run export:merchant && npm run build:react",
     "test": "npm run check",
     "check": "node --check server.js && node --check scripts/export-algolia-records.js && node --check scripts/export-merchant-feed.js && node --check scripts/build-react.js && npm run export:algolia && npm run export:merchant && npm run build:react && node tests/catalog.test.js && node tests/static-files.test.js && node tests/style.test.js && node tests/http-smoke.test.js"
   },
