@@ -705,6 +705,18 @@
       primaryButtonText: 'Shop the edit',
       secondaryButtonText: 'Enter GOAT Mode'
     };
+    function normalizeHomepageSettings(value={}) {
+      const source = value && typeof value === 'object' ? value : {};
+      const merged = { ...DEFAULT_HOMEPAGE, ...source };
+      const legacyCopy = [source.heroPill, source.heroTitle, source.heroSubtitle, source.heroOffer, source.primaryButtonText, source.secondaryButtonText]
+        .filter(Boolean).join(' ').toLowerCase();
+      const legacyHero = source.heroImage === '/assets/storefront/categories/men.png' || source.darkHeroImage === '/assets/storefront/categories/men.png';
+      const staleBackendSettings = !source.darkHeroImage || legacyHero || /new arrivals|drop 01|everyday streetwear|free shipping|free delivery|new collection|shop now/.test(legacyCopy);
+      if (staleBackendSettings) return { ...DEFAULT_HOMEPAGE };
+      if (!merged.heroImage) merged.heroImage = ASSETS.lightHero;
+      if (!merged.darkHeroImage) merged.darkHeroImage = ASSETS.darkHero;
+      return merged;
+    }
     const db = {
       get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
       set(key, value) { localStorage.setItem(key, JSON.stringify(value)); },
@@ -756,9 +768,7 @@
     // state are intentionally left untouched when a new storefront is shipped.
     const homepageMigrationKey = 'rivayat_homepage_visual_v2';
     const savedHomepage = db.get('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
-    const migratedHomepage = { ...DEFAULT_HOMEPAGE, ...(savedHomepage || {}) };
-    if (!migratedHomepage.heroImage || migratedHomepage.heroImage === '/assets/storefront/categories/men.png') migratedHomepage.heroImage = ASSETS.lightHero;
-    if (!migratedHomepage.darkHeroImage || migratedHomepage.darkHeroImage === '/assets/storefront/categories/men.png') migratedHomepage.darkHeroImage = ASSETS.darkHero;
+    const migratedHomepage = normalizeHomepageSettings(savedHomepage);
     if (migratedHomepage.heroPill === 'RIVAYAT New Collection • India 2026') migratedHomepage.heroPill = DEFAULT_HOMEPAGE.heroPill;
     if (migratedHomepage.heroOffer === 'New collection now live with 32 supplied styles') migratedHomepage.heroOffer = DEFAULT_HOMEPAGE.heroOffer;
     if (migratedHomepage.primaryButtonText === 'Shop New Collection') migratedHomepage.primaryButtonText = DEFAULT_HOMEPAGE.primaryButtonText;
@@ -951,16 +961,11 @@
     // Service layer for catalogue, coupons, accounts, orders, returns, settings, and reviews.
     const SettingsService = {
       cachedHomepage() {
-        const settings = { ...DEFAULT_HOMEPAGE, ...db.get('rivayat_homepage_settings', DEFAULT_HOMEPAGE) };
-        if (!settings.heroImage || settings.heroImage === '/assets/storefront/categories/men.png') settings.heroImage = ASSETS.lightHero;
-        if (!settings.darkHeroImage || settings.darkHeroImage === '/assets/storefront/categories/men.png') settings.darkHeroImage = ASSETS.darkHero;
-        return settings;
+        return normalizeHomepageSettings(db.get('rivayat_homepage_settings', DEFAULT_HOMEPAGE));
       },
       async refreshHomepage({ timeoutMs=API_TIMEOUT_MS }={}) {
         const data = await apiFetch('/settings/homepage', { timeoutMs });
-        const settings = { ...DEFAULT_HOMEPAGE, ...(data.settings || {}) };
-        if (!settings.heroImage || settings.heroImage === '/assets/storefront/categories/men.png') settings.heroImage = ASSETS.lightHero;
-        if (!settings.darkHeroImage || settings.darkHeroImage === '/assets/storefront/categories/men.png') settings.darkHeroImage = ASSETS.darkHero;
+        const settings = normalizeHomepageSettings(data.settings || DEFAULT_HOMEPAGE);
         db.set('rivayat_homepage_settings', settings);
         return settings;
       },
@@ -976,7 +981,7 @@
       },
       async saveHomepage(settings) {
         await sleep();
-        const merged = { ...DEFAULT_HOMEPAGE, ...settings };
+        const merged = normalizeHomepageSettings(settings);
         if (CONFIG.apiBaseUrl) {
           const data = await apiFetch('/settings/homepage', { method:'PUT', body: JSON.stringify(merged) });
           const saved = data.settings || merged;
