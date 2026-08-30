@@ -3,7 +3,7 @@ services:
     name: rivayat
     runtime: node
     plan: starter
-    buildCommand: npm ci
+    buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /health
     autoDeployTrigger: commit
@@ -35,7 +35,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
-        value: gemini-2.0-flash
+        value: gemini-2.5-flash
       - key: SWASTIK_SECRET
         sync: false
       - key: ALGOLIA_APP_ID
@@ -44,5 +44,11 @@ services:
         sync: false
       - key: ALGOLIA_ADMIN_API_KEY
         sync: false
+      - key: ALGOLIA_INDEX_NAME
+        value: rivayat_products
+      - key: ALGOLIA_AUTO_REINDEX
+        value: "true"
+      - key: MERCHANT_CENTER_ID
+        value: 10717371386
       - key: GOOGLE_SITE_VERIFICATION
         sync: false

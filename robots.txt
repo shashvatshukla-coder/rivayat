@@ -9,8 +9,11 @@ Allow: /privacy
 Allow: /terms
 Allow: /cookies
 Allow: /legal
+Allow: /style
 Allow: /product/
 Allow: /assets/
+Allow: /merchant-feed.xml
+Allow: /google-merchant-feed.xml
 Disallow: /api
 Disallow: /admin
 Disallow: /auth/

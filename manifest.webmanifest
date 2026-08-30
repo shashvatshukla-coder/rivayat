@@ -27,6 +27,7 @@
   ],
   "shortcuts": [
     { "name": "Shop Collection", "short_name": "Shop", "url": "/shop" },
+    { "name": "RIVAYAT Style Lab", "short_name": "Style Lab", "url": "/style" },
     { "name": "My Orders", "short_name": "Orders", "url": "/#/orders" },
     { "name": "My Account", "short_name": "Account", "url": "/#/dashboard" }
   ]

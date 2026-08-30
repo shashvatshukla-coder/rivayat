@@ -11,14 +11,22 @@
   "scripts": {
     "start": "node server.js",
     "export:algolia": "node scripts/export-algolia-records.js",
+    "export:merchant": "node scripts/export-merchant-feed.js",
+    "build:react": "node scripts/build-react.js",
+    "build": "npm run export:algolia && npm run export:merchant && npm run build:react",
     "test": "npm run check",
-    "check": "node --check server.js && node --check scripts/export-algolia-records.js && npm run export:algolia && node tests/catalog.test.js && node tests/static-files.test.js && node tests/http-smoke.test.js"
+    "check": "node --check server.js && node --check scripts/export-algolia-records.js && node --check scripts/export-merchant-feed.js && node --check scripts/build-react.js && npm run export:algolia && npm run export:merchant && npm run build:react && node tests/catalog.test.js && node tests/static-files.test.js && node tests/style.test.js && node tests/http-smoke.test.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mongoose": "^8.18.1",
-    "pdfkit": "^0.17.2"
+    "pdfkit": "^0.17.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.9"
   }
 }

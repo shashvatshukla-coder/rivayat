@@ -34,9 +34,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/branding/rivayat-favicon-96.png" />
+  <link rel="shortcut icon" href="/assets/branding/rivayat-favicon-96.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/branding/rivayat-apple-touch.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="preload" as="image" href="/assets/storefront/categories/men.png" fetchpriority="high" />
+  <link rel="preload" as="image" href="/assets/storefront/hero/rivayat-home-light.png" fetchpriority="high" />
+  <link rel="preload" as="image" href="/assets/storefront/hero/rivayat-home-dark.png" media="(prefers-color-scheme: dark)" fetchpriority="high" />
   <script type="application/ld+json" id="siteStructuredData">
     {
       "@context": "https://schema.org",
@@ -547,7 +549,6 @@
   <link rel="stylesheet" href="/storefront.css" />
 </head>
 <body>
-  <div class="topbar"><span>Free delivery over ₹1,999</span><span>Rivayat summer / winter edit · 2026</span><span>Easy 7-day exchange</span></div>
   <header class="header">
     <div class="container nav">
       <a class="brand" href="#/" aria-label="RIVAYAT Home">
@@ -556,11 +557,12 @@
       </a>
       <nav class="nav-links" id="desktopNav"></nav>
       <div class="nav-actions">
+        <div id="reactSearchRoot"></div>
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch colour theme"><span class="theme-track"><span class="theme-thumb">☀</span></span></button>
-        <button class="text-action wish-action" onclick="go('#/wishlist')" aria-label="Wishlist">Wishlist <span id="wishCount" class="badge hide">0</span></button>
-        <button class="icon-btn notification-button" onclick="go(auth.user ? '#/dashboard/notifications' : '#/login')" aria-label="Notifications" title="Notifications"><span aria-hidden="true">♢</span><span id="notificationCount" class="badge hide">0</span></button>
+        <button class="text-action wish-action" onclick="go('#/wishlist')" aria-label="Wishlist"><img class="nav-action-logo" src="/assets/branding/wishlist-mark.png" width="736" height="1041" alt="" aria-hidden="true">Wishlist <span id="wishCount" class="badge hide">0</span></button>
+        <button class="icon-btn notification-button" onclick="go(auth.user ? '#/dashboard/notifications' : '#/login')" aria-label="Notifications" title="Notifications"><img class="nav-icon-logo" src="/assets/branding/notification-mark.png" width="736" height="736" alt="" aria-hidden="true"><span id="notificationCount" class="badge hide">0</span></button>
         <button class="text-action account-button" onclick="go(auth.user ? '#/dashboard' : '#/login')"><span class="label" id="accountLabel">Account</span></button>
-        <button class="bag-button" onclick="go('#/cart')" aria-label="Cart"><span class="cart-logo" aria-hidden="true">🛒</span><span class="label">Bag</span> <span id="cartCount">0</span></button>
+        <button class="bag-button" onclick="go('#/cart')" aria-label="Cart"><img class="nav-icon-logo" src="/assets/branding/bag-mark.png" width="512" height="512" alt="" aria-hidden="true"><span class="label">Bag</span> <span id="cartCount">0</span><span id="reactCartBadgeRoot" aria-live="polite"></span></button>
         <button class="icon-btn install-app-button" id="installAppButton" onclick="installApp()" aria-label="Install RIVAYAT app" title="Install app" hidden>＋</button>
         <button class="icon-btn menu-btn" onclick="toggleDrawer(true)" aria-label="Menu">☰</button>
       </div>
@@ -574,7 +576,7 @@
       <button class="icon-btn" onclick="toggleDrawer(false)">×</button>
     </div>
     <div class="drawer-links" id="mobileNav"></div>
-    <a class="drawer-notification-link" href="#/dashboard/notifications" onclick="toggleDrawer(false)">♢ Notifications <span id="drawerNotificationCount" class="badge hide">0</span></a>
+    <a class="drawer-notification-link" href="#/dashboard/notifications" onclick="toggleDrawer(false)"><img class="nav-icon-logo" src="/assets/branding/notification-mark.png" width="736" height="736" alt="" aria-hidden="true"> Notifications <span id="drawerNotificationCount" class="badge hide">0</span></a>
     <div class="notice">Official RIVAYAT shopping website: explore products, place orders, track purchases, and manage your account.</div>
   </aside>
 
@@ -609,7 +611,7 @@
   </section>
 
   <footer class="site-footer">
-    <div class="footer-main"><div><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('men')">Men</button><button onclick="homeScroll('women')">Women</button><a href="#/wishlist">Wishlist</a></div><div><p>Help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a></div><div><p>Inside Rivayat</p><a href="#/about">About us</a><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Social media</a><a href="#/legal">Legal centre</a><a href="#/contact">Contact</a></div></div></div>
+    <div class="footer-main"><div><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('goat-mode')">GOAT Mode</button><button onclick="homeScroll('mr')">Mr.</button><button onclick="homeScroll('muse')">Muse</button><a href="#/wishlist">Wishlist</a></div><div><p>Help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a></div><div><p>Inside Rivayat</p><a href="#/about">About us</a><a href="#/style">Style Lab</a><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Social media</a><a href="#/legal">Legal centre</a><a href="#/contact">Contact</a></div></div></div>
     <div class="newsletter"><div><p class="eyebrow">No spam. Just good clothes.</p><h3>Get first dibs on every drop.</h3></div><form onsubmit="subscribeNewsletter(event)"><input name="email" type="email" required placeholder="Email address" aria-label="Email address"><button>Join ↗</button></form></div>
     <div class="footer-bottom"><span>© <span id="year"></span> Rivayat</span><span>Made in India · worn everywhere</span><span><a href="#/privacy">Privacy</a> · <a href="#/terms">Terms</a> · <button onclick="openBugReporter()">Report a problem</button></span></div>
   </footer>
@@ -633,8 +635,34 @@
 
     const ASSETS = {
       logo: '/assets/branding/rivayat-logo.webp',
-      fallbackProduct: '/assets/products/tshirts/chicago_23_cream_red_tshirt.png'
+      fallbackProduct: '/assets/products/tshirts/chicago_23_cream_red_tshirt.png',
+      lightHero: '/assets/storefront/hero/rivayat-home-light.png',
+      darkHero: '/assets/storefront/hero/rivayat-home-dark.png',
+      goat: '/assets/branding/goat-mode.png',
+      mr: '/assets/branding/mr-mark.png',
+      muse: '/assets/branding/muse-mark.png',
+      summer: '/assets/branding/summer-mark.png',
+      winter: '/assets/branding/winter-mark.png',
+      wishlist: '/assets/branding/wishlist-mark.png',
+      notifications: '/assets/branding/notification-mark.png',
+      bag: '/assets/branding/bag-mark.png',
+      monogram: '/assets/branding/rivayat-monogram.png',
+      crest: '/assets/branding/rivayat-crest.png'
     };
+
+    const CATEGORY_LABELS = {
+      'Cricket Jerseys': 'Cricket',
+      'Football Jerseys': 'Football',
+      'T-Shirts': 'Tees',
+      Shorts: 'Shorts',
+      Women: 'Muse',
+      Overshirts: 'Overshirts',
+      Jackets: 'Layers'
+    };
+    const DISPLAY_BADGES = { 'New Drop': 'Featured' };
+    const categoryLabel = category => CATEGORY_LABELS[category] || category || 'RIVAYAT';
+    const badgeLabel = badge => DISPLAY_BADGES[badge] || badge || 'Featured';
+    const isJerseyProduct = product => /jersey/i.test(`${product?.category || ''} ${product?.name || ''}`);
 
     const INITIAL_PRODUCTS = Array.isArray(window.RIVAYAT_PRODUCTS) ? window.RIVAYAT_PRODUCTS : [];
 
@@ -660,20 +688,22 @@
 
     const APP_VERSION = 'rivayat-2026-08-24-supplied-catalog-v1';
    const DEFAULT_API_BASE_URL = 'https://rivayat.onrender.com';
-   const API_BASE_URL = localStorage.getItem('rivayat_api_base_url') || DEFAULT_API_BASE_URL;
+   const API_BASE_URL = String(localStorage.getItem('rivayat_api_base_url') || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
    const CONFIG = {
   apiBaseUrl: API_BASE_URL,
   ordersApiUrl: `${API_BASE_URL}/orders`
 };
+    window.RivayatRuntime = { apiBaseUrl: CONFIG.apiBaseUrl, catalogueCount: INITIAL_PRODUCTS.length };
 
     const DEFAULT_HOMEPAGE = {
-      heroPill: 'RIVAYAT New Collection • India 2026',
-      heroTitle: 'Own Your Vibe with RIVAYAT.',
-      heroSubtitle: 'Fan jerseys, expressive layers, women’s edits and easy everyday fits selected for the way young India dresses now.',
-      heroImage: '/assets/storefront/categories/men.png',
-      heroOffer: 'New collection now live with 32 supplied styles',
-      primaryButtonText: 'Shop New Collection',
-      secondaryButtonText: 'Buy on WhatsApp'
+      heroPill: 'RIVAYAT / Everyday expression · India 2026',
+      heroTitle: 'Own your vibe.',
+      heroSubtitle: 'Fan jerseys, expressive layers and easy everyday fits selected for the way young India dresses now.',
+      heroImage: ASSETS.lightHero,
+      darkHeroImage: ASSETS.darkHero,
+      heroOffer: 'A considered edit for every mood',
+      primaryButtonText: 'Shop the edit',
+      secondaryButtonText: 'Enter GOAT Mode'
     };
     const db = {
       get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
@@ -721,6 +751,20 @@
       }
     };
     db.init();
+
+    // Migrate only stale homepage defaults. Cart, account, wishlist and order
+    // state are intentionally left untouched when a new storefront is shipped.
+    const homepageMigrationKey = 'rivayat_homepage_visual_v2';
+    const savedHomepage = db.get('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
+    const migratedHomepage = { ...DEFAULT_HOMEPAGE, ...(savedHomepage || {}) };
+    if (!migratedHomepage.heroImage || migratedHomepage.heroImage === '/assets/storefront/categories/men.png') migratedHomepage.heroImage = ASSETS.lightHero;
+    if (!migratedHomepage.darkHeroImage || migratedHomepage.darkHeroImage === '/assets/storefront/categories/men.png') migratedHomepage.darkHeroImage = ASSETS.darkHero;
+    if (migratedHomepage.heroPill === 'RIVAYAT New Collection • India 2026') migratedHomepage.heroPill = DEFAULT_HOMEPAGE.heroPill;
+    if (migratedHomepage.heroOffer === 'New collection now live with 32 supplied styles') migratedHomepage.heroOffer = DEFAULT_HOMEPAGE.heroOffer;
+    if (migratedHomepage.primaryButtonText === 'Shop New Collection') migratedHomepage.primaryButtonText = DEFAULT_HOMEPAGE.primaryButtonText;
+    if (migratedHomepage.secondaryButtonText === 'Buy on WhatsApp') migratedHomepage.secondaryButtonText = DEFAULT_HOMEPAGE.secondaryButtonText;
+    if (localStorage.getItem(homepageMigrationKey) !== '1' || JSON.stringify(savedHomepage) !== JSON.stringify(migratedHomepage)) db.set('rivayat_homepage_settings', migratedHomepage);
+    localStorage.setItem(homepageMigrationKey, '1');
 
     const sleep = (ms=0) => ms > 0 ? new Promise(res => setTimeout(res, ms)) : Promise.resolve();
     const API_TIMEOUT_MS = 20000;
@@ -901,16 +945,22 @@
     const save = () => {
       db.set('rivayat_cart', cart.items); db.set('rivayat_wishlist', wishlist.ids); db.set('rivayat_auth', auth.user); db.set('rivayat_recent', recent.ids);
       updateBadges();
+      window.dispatchEvent(new CustomEvent('rivayat:state', { detail: { cartCount: cart.items.reduce((sum, item) => sum + Number(item.qty || 0), 0), wishlistCount: wishlist.ids.length } }));
     };
 
     // Service layer for catalogue, coupons, accounts, orders, returns, settings, and reviews.
     const SettingsService = {
       cachedHomepage() {
-        return { ...DEFAULT_HOMEPAGE, ...db.get('rivayat_homepage_settings', DEFAULT_HOMEPAGE) };
+        const settings = { ...DEFAULT_HOMEPAGE, ...db.get('rivayat_homepage_settings', DEFAULT_HOMEPAGE) };
+        if (!settings.heroImage || settings.heroImage === '/assets/storefront/categories/men.png') settings.heroImage = ASSETS.lightHero;
+        if (!settings.darkHeroImage || settings.darkHeroImage === '/assets/storefront/categories/men.png') settings.darkHeroImage = ASSETS.darkHero;
+        return settings;
       },
       async refreshHomepage({ timeoutMs=API_TIMEOUT_MS }={}) {
         const data = await apiFetch('/settings/homepage', { timeoutMs });
         const settings = { ...DEFAULT_HOMEPAGE, ...(data.settings || {}) };
+        if (!settings.heroImage || settings.heroImage === '/assets/storefront/categories/men.png') settings.heroImage = ASSETS.lightHero;
+        if (!settings.darkHeroImage || settings.darkHeroImage === '/assets/storefront/categories/men.png') settings.darkHeroImage = ASSETS.darkHero;
         db.set('rivayat_homepage_settings', settings);
         return settings;
       },
@@ -1045,15 +1095,22 @@
       async search(query) {
         const q = String(query || '').trim();
         if (!q) return ProductService.cachedList();
+        rememberSearch(q);
         if (CONFIG.apiBaseUrl) {
           try {
             const data = await apiFetch(`/search?q=${encodeURIComponent(q)}`, { timeoutMs: 5000 });
-            if (Array.isArray(data.products)) return data.products;
+            if (Array.isArray(data.products) && (data.products.length || data.source !== 'algolia')) return data.products;
           } catch (error) {
             console.warn('Algolia/Mongo search failed, using the saved catalogue:', error.message);
           }
         }
         return ProductService.cachedList({ search: q });
+      }
+    };
+
+    const StyleService = {
+      async recommend(payload) {
+        return apiFetch('/style/recommendation', { method: 'POST', body: JSON.stringify(payload), timeoutMs: 35000 });
       }
     };
 
@@ -1115,19 +1172,18 @@
         if (CONFIG.apiBaseUrl) await apiFetch('/notifications/read-all', { method: 'POST', body: JSON.stringify({}) });
         const email = String(auth.user?.email || '').toLowerCase(); const items = db.get('rivayat_notifications', []).map(item => ((item.email || '').toLowerCase() === email || item.userId === auth.user?.id) ? { ...item, readAt: item.readAt || new Date().toISOString() } : item); db.set('rivayat_notifications', items); return true;
       },
-      async daily() {
-        if (!auth.user || !CONFIG.apiBaseUrl) return null;
-        try {
-          const data = await apiFetch('/notifications/daily', { method: 'POST', body: JSON.stringify({}), timeoutMs: 9000 });
-          if (data.notification) { const items = db.get('rivayat_notifications', []); db.set('rivayat_notifications', mergeById(items, [data.notification]).slice(0, 100)); }
-          return data.notification;
-        } catch (error) { console.warn('Daily notification skipped:', error.message); return null; }
-      },
       async adminList() {
         const data = await apiFetch('/admin/notifications'); return data.notifications || [];
       },
       async send(payload) {
         const data = await apiFetch('/admin/notifications', { method: 'POST', body: JSON.stringify(payload) }); return data;
+      }
+    };
+
+    const SearchAdminService = {
+      async reindex() {
+        const data = await apiFetch('/admin/search/reindex', { method: 'POST', body: JSON.stringify({}), timeoutMs: 15000 });
+        return data;
       }
     };
 
@@ -1208,7 +1264,6 @@
         const data = await apiFetch('/login', { method: 'POST', body: JSON.stringify({ email: identifier, identifier, password }) });
         auth.user = data.user;
         save();
-        maybeDailyNotification();
         return data.user;
       },
       async requestSignupOtp(payload) {
@@ -1218,7 +1273,6 @@
         const data = await apiFetch('/signup/verify', { method: 'POST', body: JSON.stringify({ email, code }) });
         auth.user = data.user;
         save();
-        maybeDailyNotification();
         return data.user;
       },
       async googleConfig() {
@@ -1228,7 +1282,6 @@
         const data = await apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) });
         auth.user = data.user;
         save();
-        maybeDailyNotification();
         return data.user;
       },
       async forgotPassword(email) {
@@ -1247,6 +1300,7 @@
         });
 
         auth.user = data.user;
+        auth.lastProfileReward = Number(data.profileReward || 0);
         save();
 
         return data.user;
@@ -1533,6 +1587,10 @@
       }
     };
 
+    let selectedSize = 'M';
+    let styleLabFiles = [];
+    let styleLabObjectUrls = [];
+
     const cart = {
       items: db.get('rivayat_cart', []), coupon: null,
       subtotal() { return this.items.reduce((sum, i)=>sum + i.price * i.qty, 0); },
@@ -1556,12 +1614,41 @@
     const wishlist = { ids: db.get('rivayat_wishlist', []), has(id){return this.ids.includes(id)}, toggle(id){ this.ids = this.has(id) ? this.ids.filter(x=>x!==id) : [...this.ids, id]; save(); toast(this.has(id) ? 'Added to wishlist' : 'Removed from wishlist'); render(); } };
     const auth = { user: db.get('rivayat_auth', null) };
     const recent = { ids: db.get('rivayat_recent', []), add(id){ this.ids = [id, ...this.ids.filter(x=>x!==id)].slice(0,4); save(); } };
+    function rememberSearch(query) {
+      const term = String(query || '').trim().slice(0, 80);
+      if (!term) return;
+      const history = db.get('rivayat_search_history', []);
+      db.set('rivayat_search_history', [term, ...history.filter(item => String(item).toLowerCase() !== term.toLowerCase())].slice(0, 12));
+    }
+    function recordProductView(product) {
+      if (!product) return;
+      recent.add(product.id);
+      const categories = db.get('rivayat_viewed_categories', []);
+      db.set('rivayat_viewed_categories', [product.category, ...categories.filter(item => item !== product.category)].filter(Boolean).slice(0, 8));
+    }
+    function personalizedProducts(products) {
+      const history = db.get('rivayat_search_history', []).join(' ').toLowerCase();
+      const viewedCategories = new Set(db.get('rivayat_viewed_categories', []));
+      const recentIds = new Set(recent.ids);
+      const wishlistIds = new Set(wishlist.ids);
+      return [...products].map((product, index) => {
+        const searchable = `${product.name || ''} ${product.category || ''} ${product.color || ''} ${product.description || ''}`.toLowerCase();
+        let score = Math.max(0, 30 - index);
+        if (recentIds.has(product.id)) score += 40;
+        if (wishlistIds.has(product.id)) score += 28;
+        if (viewedCategories.has(product.category)) score += 18;
+        if (history && searchable.split(/\s+/).some(token => token.length > 2 && history.includes(token))) score += 16;
+        score += Math.min(10, Number(product.rating || 0) * 2);
+        return { product, score };
+      }).sort((a, b) => b.score - a.score).slice(0, 6).map(item => item.product);
+    }
+    window.addEventListener('rivayat:search', event => rememberSearch(event.detail?.query));
 
     const navItems = [
-      ['New drop','new-drop'], ['Men','men'], ['Women','women'], ['Summer','summer'], ['Winter','winter'], ['About','about']
+      ['GOAT Mode','goat-mode'], ['Mr.','mr'], ['Muse','muse'], ['Summer','summer'], ['Winter','winter'], ['About','about']
     ];
-    document.getElementById('desktopNav').innerHTML = navItems.map(([label,section])=>`<button class="nav-link" onclick="homeScroll('${section}')">${label}</button>`).join('');
-    document.getElementById('mobileNav').innerHTML = navItems.map(([label,section])=>`<a href="#/" onclick="toggleDrawer(false);setTimeout(()=>homeScroll('${section}'),80)">${label}</a>`).join('') + `<a href="#/login" onclick="toggleDrawer(false)">Login / Signup</a>`;
+    document.getElementById('desktopNav').innerHTML = navItems.map(([label,section])=>`<button class="nav-link" onclick="homeScroll('${section}')">${label}</button>`).join('') + `<a class="nav-link" href="#/style">Style Lab</a>`;
+    document.getElementById('mobileNav').innerHTML = navItems.map(([label,section])=>`<a href="#/" onclick="toggleDrawer(false);setTimeout(()=>homeScroll('${section}'),80)">${label}</a>`).join('') + `<a href="#/style" onclick="toggleDrawer(false)">Style Lab</a><a href="#/login" onclick="toggleDrawer(false)">Login / Signup</a>`;
     document.getElementById('year').textContent = new Date().getFullYear();
 
     function applyTheme(theme) {
@@ -1581,6 +1668,11 @@
     }
     function toggleTheme() { applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); }
     applyTheme(localStorage.getItem('rivayat_theme') || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    function updateExperienceMode() {
+      document.documentElement.dataset.experience = window.matchMedia?.('(max-width: 720px)').matches ? 'mobile' : 'desktop';
+    }
+    updateExperienceMode();
+    window.matchMedia?.('(max-width: 720px)').addEventListener?.('change', updateExperienceMode);
 
     function go(hash) { location.hash = hash; }
     function homeScroll(sectionId) {
@@ -1611,11 +1703,6 @@
     function showBrowserNotification(title, body, url='#/dashboard/notifications') {
       if (!auth.user || !('Notification' in window) || Notification.permission !== 'granted') return;
       navigator.serviceWorker?.ready.then(registration => registration.showNotification(title, { body, icon: ASSETS.logo, badge: ASSETS.logo, tag: `rivayat-${title.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`, data: { url } })).catch(() => {});
-    }
-    async function maybeDailyNotification() {
-      if (!auth.user) return;
-      const notification = await NotificationService.daily();
-      if (notification) { updateBadges(); showBrowserNotification(notification.title, notification.body, notification.url); }
     }
     function setSEO(title, description) {
       const text = description || 'Premium fashion by RIVAYAT.';
@@ -1671,7 +1758,7 @@
       setRouteStructuredData(structured);
     }
     function updateRouteSEO(route, parts) {
-      const publicRoutes = new Set(['home','shop','product','about','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal']);
+      const publicRoutes = new Set(['home','shop','product','style','about','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal']);
       const routePath = route === 'home' ? '' : route === 'refund' ? 'returns-policy' : route === 'product' ? `product/${encodeURIComponent(parts[1] || '')}` : route;
       const canonical = `https://www.rivayat.shop/${routePath}`;
       document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical);
@@ -1708,18 +1795,18 @@
       return `<div class="${fallbackCls}"></div>`;
     }
     function productCard(product) {
-      const off = Math.round((product.mrp - product.price) / product.mrp * 100);
+      const off = product.mrp > 0 ? Math.max(0, Math.round((product.mrp - product.price) / product.mrp * 100)) : 0;
       const stock = totalProductStock(product);
-      const smartBadge = (product.soldCount || 0) >= 5 ? 'Best Seller' : ((product.reviews || 0) >= 50 ? 'Trending' : product.badge);
+      const smartBadge = (product.soldCount || 0) >= 5 ? 'Best Seller' : ((product.reviews || 0) >= 50 ? 'Trending' : badgeLabel(product.badge));
       return `<article class="product-card">
         <a class="product-image-wrap" href="#/product/${encodeURIComponent(product.slug)}" aria-label="View ${escapeHtml(product.name)}" style="--product-bg:${safeProductBackground(product.bg)}">
-          <span class="product-badge">${escapeHtml(smartBadge || 'New drop')}</span>
+          <span class="product-badge">${escapeHtml(smartBadge)}</span>
           ${productArt(product)}
           <span class="image-cta">Quick look ↗</span>
         </a>
         <div class="product-info">
           <div>
-            <p class="product-kicker">${escapeHtml(product.category)} · ${stock > 0 ? `${stock} available` : 'Sold out'}</p>
+            <p class="product-kicker">${escapeHtml(categoryLabel(product.category))} · ${stock > 0 ? `${stock} available` : 'Sold out'}</p>
             <a class="product-title" href="#/product/${encodeURIComponent(product.slug)}">${escapeHtml(product.name)}</a>
             <p class="product-color">${escapeHtml(product.color || 'Rivayat original')}</p>
             <p class="product-rating">${Number(product.reviews || 0) ? `★ ${Number(product.rating || 0).toFixed(1)} · ${Number(product.reviews || 0)}` : '☆ Be first to review'}</p>
@@ -1754,55 +1841,72 @@
     async function renderHome({ revalidate=true }={}) {
       setSEO('Young Indian Streetwear, Jerseys & Everyday Fits', 'Shop Rivayat young Indian streetwear, jerseys, summer layers and winter fits.');
       const products = ProductService.cachedList({ sort: 'rating' });
+      const home = SettingsService.cachedHomepage();
       if (revalidate) queueMicrotask(scheduleStorefrontRefresh);
       const summerProducts = products.filter(product => /half|short|white/i.test(`${product.category} ${product.name} ${product.color}`)).slice(0, 3);
       const winterProducts = products.filter(product => /full|black/i.test(`${product.category} ${product.name} ${product.color}`)).slice(0, 2);
       const summerPicks = summerProducts.length ? summerProducts : products.slice(0, 3);
       const winterPicks = winterProducts.length ? winterProducts : products.slice(0, 2);
+      const goatProducts = products.filter(isJerseyProduct).sort((a, b) => Number(/cricket/i.test(b.category)) - Number(/cricket/i.test(a.category)) || Number(b.soldCount || 0) - Number(a.soldCount || 0)).slice(0, 8);
+      const forYouProducts = personalizedProducts(products);
+      const lightHero = safeImageUrl(home.heroImage) || ASSETS.lightHero;
+      const darkHero = safeImageUrl(home.darkHeroImage) || ASSETS.darkHero;
+      const heroTitle = escapeHtml(home.heroTitle || DEFAULT_HOMEPAGE.heroTitle).replace(/(vibe)/ig, '<em>$1</em>');
       return `<div class="page storefront-home">
         <section class="hero" aria-labelledby="hero-title">
-          <img class="hero-image hero-image-aerial" src="/assets/storefront/categories/men.png" width="736" height="1308" alt="RIVAYAT men's fashion collection in store" fetchpriority="high">
+          <img class="hero-image hero-image-aerial hero-image-light" src="${escapeHtml(lightHero)}" width="736" height="1308" alt="RIVAYAT fashion edit" fetchpriority="high">
+          <img class="hero-image hero-image-aerial hero-image-dark" src="${escapeHtml(darkHero)}" width="736" height="1307" alt="RIVAYAT dark-mode fashion edit" loading="lazy" decoding="async">
           <div class="hero-wash"></div>
           <div class="hero-copy">
-            <p class="hero-tag">New collection · India 2026</p>
-            <h1 id="hero-title">Own your <em>vibe.</em></h1>
-            <p class="hero-subtitle">Fan jerseys, expressive layers and easy everyday fits selected for the way young India dresses now.</p>
-            <div class="hero-actions"><button class="button button-light" onclick="homeScroll('summer')">Shop summer <span>↗</span></button><button class="button button-glass" onclick="homeScroll('new-drop')">Explore the drop</button></div>
+            <p class="hero-tag">${escapeHtml(home.heroPill)}</p>
+            <h1 id="hero-title">${heroTitle}</h1>
+            <p class="hero-subtitle">${escapeHtml(home.heroSubtitle)}</p>
+            <div class="hero-actions"><button class="button button-light" onclick="homeScroll('goat-mode')">${escapeHtml(home.primaryButtonText)} <span>↗</span></button><button class="button button-glass" onclick="homeScroll('catalogue')">Browse the catalogue</button></div>
           </div>
-          <div class="hero-side-note"><span>01</span><p>Turquoise mornings.<br>Saffron evenings.</p></div>
+          <div class="hero-side-note"><span>01</span><p>${escapeHtml(home.heroOffer || 'A considered edit for every mood')}</p></div>
           <div class="hero-scroll">Scroll to discover ↓</div>
         </section>
         <section class="marquee" aria-label="Rivayat values"><div><span>Made for your story</span><i>✦</i><span>New India, new uniform</span><i>✦</i><span>Original quality</span><i>✦</i><span>Made for your story</span><i>✦</i><span>New India, new uniform</span><i>✦</i><span>Original quality</span><i>✦</i></div></section>
 
-        <section class="section new-drop" id="new-drop">
-          <div class="section-heading"><div><p class="eyebrow">Just landed · ${products.length} current styles</p><h2>Fresh out of the group chat.</h2></div><a class="underlined" href="#/shop">View every style ↗</a></div>
-          <div class="product-rail">${products.slice(0, 8).map(productCard).join('')}</div>
+        <section class="section goat-mode-section" id="goat-mode">
+          <div class="section-heading"><div class="section-heading-brand"><img class="section-logo goat-logo" src="${ASSETS.goat}" width="1200" height="1200" alt="GOAT Mode logo" loading="lazy" decoding="async"><div><p class="eyebrow">Jerseys only · cricket first</p><h2>GOAT MODE.</h2><p class="section-intro">The match-day rotation: fan jerseys, bold colour and nothing that sits on the bench.</p></div></div><div class="section-links"><a class="underlined" href="#/shop?category=Cricket%20Jerseys">Cricket jerseys ↗</a><a class="underlined" href="#/shop?category=Football%20Jerseys">Football jerseys ↗</a></div></div>
+          ${goatProducts.length ? `<div class="product-rail">${goatProducts.map(productCard).join('')}</div>` : '<div class="empty"><h3>GOAT Mode is warming up.</h3><p class="muted">Jerseys will appear here as soon as they are available.</p></div>'}
+        </section>
+
+        <section class="section personalized-section" id="for-you">
+          <div class="section-heading"><div><p class="eyebrow">Picked for your vibe</p><h2>Because you looked twice.</h2><p class="section-intro">Your feed learns from searches, views and wishlist saves on this device.</p></div><a class="underlined" href="#/shop">See the full edit ↗</a></div>
+          <div class="product-rail">${forYouProducts.map(productCard).join('')}</div>
         </section>
 
         <section class="gender-grid">
-          <article class="gender-card" id="men"><img src="/assets/storefront/categories/men.png" width="736" height="1308" alt="RIVAYAT men's clothing section" loading="lazy" decoding="async"><div class="gender-overlay"></div><div class="gender-copy"><p class="eyebrow">Fan jerseys / graphic tees / shorts</p><h2>Men</h2><a class="button button-light" href="#/shop">Shop men ↗</a><div class="gender-subcategories"><a href="#/shop?category=Cricket%20Jerseys">Cricket jerseys</a><a href="#/shop?category=Football%20Jerseys">Football jerseys</a></div></div></article>
-          <article class="gender-card" id="women"><img src="/assets/storefront/categories/women.png" width="736" height="1308" alt="RIVAYAT women's clothing section" loading="lazy" decoding="async"><div class="gender-overlay gender-overlay-teal"></div><div class="gender-copy"><p class="eyebrow">Soft / playful / made to move</p><h2>Women</h2><a class="button button-light" href="#/shop?category=Women">Shop women ↗</a></div></article>
+          <article class="gender-card" id="mr"><img src="/assets/storefront/categories/men.png" width="736" height="1308" alt="RIVAYAT Mr. clothing section" loading="lazy" decoding="async"><div class="gender-overlay"></div><div class="gender-logo-wrap"><img class="category-logo" src="${ASSETS.mr}" width="1080" height="1080" alt="Mr. logo" loading="lazy" decoding="async"></div><div class="gender-copy"><p class="eyebrow">Fan jerseys / graphic tees / shorts</p><h2>Mr.</h2><a class="button button-light" href="#/shop">Shop Mr. ↗</a><div class="gender-subcategories"><a href="#/shop?category=Cricket%20Jerseys">Cricket jerseys</a><a href="#/shop?category=Football%20Jerseys">Football jerseys</a></div></div></article>
+          <article class="gender-card" id="muse"><img src="/assets/storefront/categories/women.png" width="736" height="1308" alt="RIVAYAT Muse clothing section" loading="lazy" decoding="async"><div class="gender-overlay gender-overlay-teal"></div><div class="gender-logo-wrap"><img class="category-logo" src="${ASSETS.muse}" width="644" height="644" alt="Muse logo" loading="lazy" decoding="async"></div><div class="gender-copy"><p class="eyebrow">Soft / playful / made to move</p><h2>Muse</h2><a class="button button-light" href="#/shop?category=Women">Shop Muse ↗</a></div></article>
         </section>
 
         <section class="season-story summer-story" id="summer">
-          <div class="season-visual"><img src="/assets/products/shorts/new_york_blue_shorts.png" width="736" height="980" alt="RIVAYAT washed blue graphic shorts" loading="lazy" decoding="async"><span class="vertical-label">SUMMER / 26</span></div>
+          <div class="season-visual"><img src="/assets/products/shorts/new_york_blue_shorts.png" width="736" height="980" alt="RIVAYAT washed blue graphic shorts" loading="lazy" decoding="async"><img class="season-logo" src="${ASSETS.summer}" width="832" height="1248" alt="Summer logo" loading="lazy" decoding="async"><span class="vertical-label">SUMMER / 26</span></div>
           <div class="season-content"><p class="eyebrow">The heatwave edit</p><h2>Coast first.<br><em>Plans later.</em></h2><p class="season-intro">Breeze-through separates and easy layers in colours borrowed from pools, palms and late sunsets.</p><div class="mini-product-row">${summerPicks.map(product=>`<a class="mini-product" href="#/product/${encodeURIComponent(product.slug)}"><span class="mini-product-image">${productArt(product)}</span><span>${escapeHtml(product.name)}</span><strong>${money(product.price)}</strong></a>`).join('')}</div><a class="button button-dark" href="#/shop">Enter summer ↗</a></div>
         </section>
 
         <section class="winter-story" id="winter">
-          <div class="winter-landscape-frame"><img class="winter-background" src="/assets/products/collection/clothing_02.png" width="736" height="980" alt="RIVAYAT heather grey cropped hoodie" loading="lazy" decoding="async"></div><div class="winter-overlay"></div>
+          <div class="winter-landscape-frame"><img class="winter-background" src="/assets/products/collection/clothing_02.png" width="736" height="980" alt="RIVAYAT heather grey cropped hoodie" loading="lazy" decoding="async"><img class="season-logo winter-logo" src="${ASSETS.winter}" width="800" height="600" alt="Winter logo" loading="lazy" decoding="async"></div><div class="winter-overlay"></div>
           <div class="winter-copy"><p class="eyebrow">After-dark layers · winter 2026</p><h2>Cold streets.<br><em>Warm signal.</em></h2><p>Comfort-first layers and cold-weather fits for chai runs that become midnight walks.</p><a class="button button-light" href="#/shop">Shop winter ↗</a></div>
           <div class="winter-picks">${winterPicks.map(product=>`<a href="#/product/${encodeURIComponent(product.slug)}">${productArt(product)}<span>${escapeHtml(product.name)}</span></a>`).join('')}</div>
         </section>
 
         <section class="section catalogue" id="catalogue">
-          <div class="section-heading catalogue-heading"><div><p class="eyebrow">The complete new collection</p><h2>Find your next repeat.</h2></div><a class="underlined" href="#/shop">Search and filter ↗</a></div>
-          <div class="filter-row" aria-label="Product categories"><a class="active" href="#/shop">All</a><a href="#/shop?category=Women">Women</a><a href="#/shop?category=Cricket%20Jerseys">Cricket jerseys</a><a href="#/shop?category=Football%20Jerseys">Football jerseys</a><a href="#/shop?category=T-Shirts">T-shirts</a><a href="#/shop?category=Shorts">Shorts</a><a href="#/shop?category=Jackets">Jackets</a></div>
+          <div class="section-heading catalogue-heading"><div><p class="eyebrow">Classified RIVAYAT edits</p><h2>Find your next repeat.</h2></div><a class="underlined" href="#/shop">Search and filter ↗</a></div>
+          <div class="filter-row" aria-label="Product categories"><a class="active" href="#/shop">All</a><a href="#/shop?category=Women">Muse</a><a href="#/shop?category=Cricket%20Jerseys">Cricket jerseys</a><a href="#/shop?category=Football%20Jerseys">Football jerseys</a><a href="#/shop?category=T-Shirts">Tees</a><a href="#/shop?category=Shorts">Shorts</a><a href="#/shop?category=Jackets">Layers</a></div>
           <div class="catalogue-meta"><p>${products.length} styles</p><p>Original product photography · no recompression</p></div>
           <div class="product-grid">${products.map(productCard).join('')}</div>
         </section>
 
-        <section class="home-about" id="about"><div class="home-about-image"><img src="/assets/branding/rivayat-logo.webp" width="1100" height="1100" alt="RIVAYAT Fashion logo" loading="lazy" decoding="async"></div><div class="home-about-copy"><p class="eyebrow">The people behind Rivayat</p><h2>Small team.<br><em>Big point of view.</em></h2><p>Rivayat is an independent Indian label shaped by sport, street culture and everyday tradition. We build expressive, comfortable clothing and a shopping experience that stays clear and human.</p><div class="home-about-people">${TeamService.cached().slice(0,4).map(member=>`<div><span>${escapeHtml(member.role)}</span><strong>${escapeHtml(member.name)}</strong></div>`).join('')}</div><a class="button button-dark" href="#/about">Meet the people ↗</a><div class="home-socials"><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Instagram ↗</a><a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="mailto:${BRAND.email}">Email ↗</a></div></div></section>
+        <section class="section style-lab-teaser" aria-labelledby="styleLabTeaserTitle">
+          <div class="style-teaser-copy"><p class="eyebrow">New · RIVAYAT Style Lab</p><h2 id="styleLabTeaserTitle">Make more outfits<br><em>from what you own.</em></h2><p>Upload a few clothing photos and get colour, layering and occasion ideas that feel like you.</p><a class="button button-light" href="#/style">Open Style Lab ↗</a><p class="style-privacy-note">Private request · your clothing photos are not saved.</p></div>
+          <div class="style-teaser-pills" aria-hidden="true"><span>Colour pairing</span><span>Layering ideas</span><span>Occasion ready</span><span>RIVAYAT matches</span></div>
+        </section>
+
+        <section class="home-about" id="about"><div class="home-about-image"><img src="${ASSETS.crest}" width="736" height="736" alt="RIVAYAT Fashion crest" loading="lazy" decoding="async"></div><div class="home-about-copy"><p class="eyebrow">The people behind Rivayat</p><h2>Small team.<br><em>Big point of view.</em></h2><p>Rivayat is an independent Indian label shaped by sport, street culture and everyday tradition. We build expressive, comfortable clothing and a shopping experience that stays clear and human.</p><div class="home-about-people">${TeamService.cached().slice(0,4).map(member=>`<div><span>${escapeHtml(member.role)}</span><strong>${escapeHtml(member.name)}</strong></div>`).join('')}</div><a class="button button-dark" href="#/about">Meet the people ↗</a><div class="home-socials"><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Instagram ↗</a><a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="mailto:${BRAND.email}">Email ↗</a></div></div></section>
 
         <section class="community-strip"><div><p class="eyebrow">Rivayat people</p><h2>Built for the version of you that says yes.</h2></div><div class="community-stats"><div><strong>${products.length}</strong><span>current styles</span></div><div><strong>10</strong><span>type families, one voice</span></div><div><strong>4</strong><span>digits in every OTP</span></div></div></section>
       </div>`;
@@ -1827,7 +1931,7 @@
         <div class="shop-layout">
           <aside class="card filter-panel">
             <h3 style="margin-top:0">Filters</h3>
-            <div class="filter-group"><label>Category<select class="select" id="categoryFilter"><option value="All">All Categories</option>${['Cricket Jerseys', 'Football Jerseys', 'T-Shirts', 'Shorts', 'Women', 'Overshirts', 'Jackets'].map(c => `<option value="${c}" ${val('category')===c?'selected':''}>${c}</option>`).join('')}</select></label></div>
+            <div class="filter-group"><label>Category<select class="select" id="categoryFilter"><option value="All">All Categories</option>${['Cricket Jerseys', 'Football Jerseys', 'T-Shirts', 'Shorts', 'Women', 'Overshirts', 'Jackets'].map(c => `<option value="${c}" ${val('category')===c?'selected':''}>${categoryLabel(c)}</option>`).join('')}</select></label></div>
             <div class="filter-group"><label>Color<select class="select" id="colorFilter"><option value="All">All Colors</option>${['Black', 'White', 'Grey', 'Charcoal', 'Blue', 'Green', 'Olive', 'Brown', 'Beige', 'Tan', 'Red', 'Navy'].map(c => `<option value="${c}" ${val('color')===c?'selected':''}>${c}</option>`).join('')}</select></label></div>
             <div class="filter-group"><label>Size<select class="select" id="sizeFilter"><option>All</option>${SIZES.map(s=>`<option ${val('size')===s?'selected':''}>${s}</option>`).join('')}</select></label></div>
             <button class="btn full" onclick="applyShopFilters()">Apply Filters</button>
@@ -1853,7 +1957,7 @@
 
     async function renderProduct(slug) {
       const product = await ProductService.get(slug); if (!product) return notFound();
-      recent.add(product.id); setProductSEO(product);
+      recordProductView(product); setProductSEO(product);
       const related = (await ProductService.list()).filter(p=>p.id!==product.id).slice(0,3);
       const reviews = (await ReviewService.list()).filter(r=>r.productId===product.id && r.status==='Approved');
       const gallery = (product.gallery && product.gallery.length ? product.gallery : [product.image]).map(safeImageUrl).filter(Boolean);
@@ -1861,7 +1965,7 @@
       const chartRows = productSizeChart(product);
       return `<div class="page section"><div class="container product-detail">
         <div class="detail-gallery"><div class="detail-media" style="--product-bg:${safeProductBackground(product.bg)}">${gallery[0] ? `<img id="detailMainImage" class="detail-image-main" src="${escapeHtml(gallery[0])}" alt="${escapeHtml(product.name)}" onerror="this.onerror=null;this.src='${ASSETS.fallbackProduct}'">` : productArt(product, 'detail-image-main')}</div>${gallery.length > 1 ? `<div class="thumb-grid">${gallery.map((src,i)=>`<button class="thumb ${i===0 ? 'active' : ''}" onclick="setDetailImage(this, ${i})" aria-label="View ${escapeHtml(product.name)} image ${i+1}"><img src="${escapeHtml(src)}" alt="${escapeHtml(product.name)} view ${i+1}" loading="lazy" onerror="this.onerror=null;this.src='${ASSETS.fallbackProduct}'"></button>`).join('')}</div>` : ''}</div>
-        <div class="detail-content"><span class="pill">${escapeHtml(product.badge)} • ${escapeHtml(product.category)}</span><h1 class="serif">${escapeHtml(product.name)}</h1><p class="muted" style="line-height:1.7">${escapeHtml(product.description)}</p><div class="price"><span class="sale" style="font-size:28px">${money(product.price)}</span><span class="mrp">${money(product.mrp)}</span><span class="off">Launch Price</span></div><p class="muted">${Number(product.reviews || 0) ? `★ ${Number(product.rating || 0).toFixed(1)} from ${Number(product.reviews)} reviews` : '☆ Be the first verified customer to review this product'}</p>
+        <div class="detail-content"><span class="pill">${escapeHtml(badgeLabel(product.badge))} • ${escapeHtml(categoryLabel(product.category))}</span><h1 class="serif">${escapeHtml(product.name)}</h1><p class="muted" style="line-height:1.7">${escapeHtml(product.description)}</p><div class="price"><span class="sale" style="font-size:28px">${money(product.price)}</span><span class="mrp">${money(product.mrp)}</span><span class="off">RIVAYAT price</span></div><p class="muted">${Number(product.reviews || 0) ? `★ ${Number(product.rating || 0).toFixed(1)} from ${Number(product.reviews)} reviews` : '☆ Be the first verified customer to review this product'}</p>
           <h3>Select Size</h3><div class="option-row" id="detailSizes">${product.sizes.map((s,i)=>`<button class="size-chip ${i===1?'active':''}" ${productStock(product, s) <= 0 ? 'disabled' : ''} onclick="selectSize(this,'${s}')">${s} ${productStock(product, s) <= 0 ? '• Out' : '• ' + productStock(product, s)}</button>`).join('')}</div>
           <h3>Quantity</h3><div class="qty"><button onclick="changeDetailQty(-1)">−</button><span id="detailQty">1</span><button onclick="changeDetailQty(1)">+</button></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:26px 0"><button class="btn" onclick="addDetailToCart('${product.id}')">Add to Cart</button><button class="btn secondary" onclick="wishlist.toggle('${product.id}')">${wishlist.has(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}</button><a class="btn ghost" target="_blank" href="https://wa.me/${BRAND.whatsappDigits}?text=${encodeURIComponent('Hi RIVAYAT, I want to buy ' + product.name)}">Buy on WhatsApp</a></div><div class="notice">Live stock is connected to admin inventory. If a size is sold out, it cannot be added to cart.</div>
           <div class="accord"><details open><summary>Product Details</summary><ul>${(product.details || []).map(d=>`<li>${escapeHtml(d)}</li>`).join('')}</ul></details><details><summary>Size Chart</summary>${safeImageUrl(product.sizeChartImage) ? `<img src="${escapeHtml(safeImageUrl(product.sizeChartImage))}" alt="Size chart" style="border-radius:18px;margin:12px 0;max-height:360px;object-fit:contain">` : ''}<table class="size-chart"><thead><tr><th>Size</th><th>Measurements</th></tr></thead><tbody>${chartRows.map(row=>`<tr><td><strong>${escapeHtml(row.size)}</strong></td><td>${escapeHtml(row.value)}</td></tr>`).join('')}</tbody></table></details><details><summary>Shipping & Returns</summary><p>Cash on Delivery is available. Eligible return or exchange requests can be raised from My Orders within 7 days after delivery.</p></details></div>
@@ -2011,6 +2115,79 @@
       } catch(error) { toast(error.message); }
     }
 
+    function renderStyleLab() {
+      styleLabFiles = [];
+      styleLabObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+      styleLabObjectUrls = [];
+      setSEO('Style Lab', 'Upload clothing photos and get a practical RIVAYAT outfit plan for your occasion and vibe.');
+      return `<div class="page section style-lab-page"><div class="container">
+        <div class="section-head style-lab-heading"><div><span class="pill">RIVAYAT · STYLE LAB</span><h1 class="serif">Your clothes.<br><em>New combinations.</em></h1><p>Upload up to three clothing photos and get a practical outfit plan built around what you already own.</p></div><a class="underlined" href="#/shop">Shop the collection ↗</a></div>
+        <div class="style-lab-layout">
+          <form class="card pad style-upload-card" onsubmit="requestStyleRecommendation(event)">
+            <div class="style-step"><span>01</span><div><h2>Show us the pieces</h2><p class="muted">PNG, JPG, WEBP or AVIF · up to 3 MB each</p></div></div>
+            <label class="style-file-drop" for="styleImagesInput"><span class="style-upload-icon" aria-hidden="true">＋</span><strong>Choose clothing photos</strong><small>Upload 1 to 3 clear flat-lay or garment photos</small><input id="styleImagesInput" name="styleImages" type="file" accept="image/png,image/jpeg,image/webp,image/avif" multiple onchange="previewStyleImages(this)" required></label>
+            <div id="stylePreview" class="style-preview-grid" aria-live="polite"><p class="muted style-preview-empty">Your selected pieces will appear here.</p></div>
+            <div class="form-grid style-preferences"><label>Occasion<select class="select" name="occasion"><option>Everyday</option><option>College</option><option>Date night</option><option>Travel</option><option>Match day</option><option>Party</option></select></label><label>Vibe<select class="select" name="vibe"><option>Open to ideas</option><option>Minimal</option><option>Streetwear</option><option>Sporty</option><option>Smart casual</option><option>Festive</option></select></label></div>
+            <button class="btn full" id="styleLabSubmit" type="submit">Get my outfit plan ↗</button>
+            <p class="style-privacy-note">Your images are sent only for this request and are not saved in your RIVAYAT account.</p>
+          </form>
+          <section class="card pad style-result" id="styleResult" aria-live="polite"><div class="style-result-empty"><span class="eyebrow">02 · Your edit</span><h2 class="serif">A better fit is a few good choices away.</h2><p class="muted">Choose your pieces, set the mood, and your personal style plan will appear here.</p></div></section>
+        </div>
+      </div></div>`;
+    }
+    function previewStyleImages(input) {
+      styleLabFiles = Array.from(input?.files || []);
+      styleLabObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+      styleLabObjectUrls = [];
+      const preview = document.getElementById('stylePreview');
+      if (!preview) return;
+      const invalid = styleLabFiles.filter((file) => !['image/png', 'image/jpeg', 'image/webp', 'image/avif'].includes(file.type) || file.size > 3 * 1024 * 1024);
+      const cards = styleLabFiles.slice(0, 3).map((file) => {
+        const url = URL.createObjectURL(file);
+        styleLabObjectUrls.push(url);
+        const warning = file.size > 3 * 1024 * 1024 ? '<span class="style-preview-warning">Over 3 MB</span>' : '';
+        return `<figure class="style-preview"><img src="${escapeHtml(url)}" alt="Selected clothing photo"><figcaption>${escapeHtml(file.name)}${warning}</figcaption></figure>`;
+      }).join('');
+      const countMessage = styleLabFiles.length > 3 ? '<p class="error">Choose no more than three photos.</p>' : '';
+      const invalidMessage = invalid.length ? '<p class="error">Each photo must be PNG, JPG, WEBP or AVIF under 3 MB.</p>' : '';
+      preview.innerHTML = `${cards || '<p class="muted style-preview-empty">Your selected pieces will appear here.</p>'}${countMessage}${invalidMessage}`;
+    }
+    async function requestStyleRecommendation(event) {
+      event.preventDefault();
+      const files = styleLabFiles.slice();
+      const result = document.getElementById('styleResult');
+      const button = document.getElementById('styleLabSubmit');
+      if (!files.length) return toast('Choose at least one clothing photo.');
+      if (files.length > 3) return toast('Choose no more than three clothing photos.');
+      if (files.some((file) => !['image/png', 'image/jpeg', 'image/webp', 'image/avif'].includes(file.type) || file.size > 3 * 1024 * 1024)) return toast('Use PNG, JPG, WEBP or AVIF photos under 3 MB each.');
+      if (button) { button.disabled = true; button.textContent = 'Building your outfit plan…'; }
+      if (result) result.innerHTML = '<div class="style-loading"><span class="eyebrow">Style Lab</span><h2 class="serif">Reading the textures and colours…</h2><p class="muted">This can take a few seconds. Your images are not saved.</p><div class="startup-bar" aria-hidden="true"></div></div>';
+      try {
+        const fd = new FormData(event.target);
+        const images = await Promise.all(files.map((file) => fileAsDataUrl(file, 3 * 1024 * 1024)));
+        const data = await StyleService.recommend({ images, occasion: fd.get('occasion'), vibe: fd.get('vibe') });
+        if (result) { result.innerHTML = renderStyleRecommendation(data); result.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      } catch (error) {
+        const isUnconfigured = error.data?.code === 'STYLE_AI_NOT_CONFIGURED';
+        if (result) result.innerHTML = `<div class="style-result-empty"><span class="eyebrow">Style Lab</span><h2 class="serif">${isUnconfigured ? 'Almost ready.' : 'The fit needs another try.'}</h2><p class="muted">${isUnconfigured ? 'Add GEMINI_API_KEY on Render to enable clothing recommendations.' : escapeHtml(error.message || 'We could not prepare the recommendation right now.')}</p><button class="btn secondary" onclick="render({ revalidate: false, preserveScroll: true })">Try again</button></div>`;
+        toast(isUnconfigured ? 'Style Lab needs GEMINI_API_KEY on Render.' : 'Style recommendation unavailable.');
+      } finally {
+        if (button) { button.disabled = false; button.textContent = 'Get my outfit plan ↗'; }
+      }
+    }
+    function renderStyleRecommendation(data) {
+      const recommendation = data?.recommendation || {};
+      const matches = Array.isArray(data?.products) ? data.products : [];
+      const matchById = new Map(matches.map((product) => [product.id, product]));
+      const palette = (recommendation.palette || []).map((item) => `<span class="style-tag">${escapeHtml(item)}</span>`).join('') || '<span class="muted">Balanced neutrals with one accent.</span>';
+      const fitNotes = (recommendation.fitNotes || []).map((item) => `<li>${escapeHtml(item)}</li>`).join('') || '<li>Keep the strongest piece as the focus and let the rest stay easy.</li>';
+      const looks = (recommendation.looks || []).map((look, index) => {
+        const products = (look.recommendedProductIds || []).map((id) => matchById.get(id)).filter(Boolean).slice(0, 3);
+        return `<article class="style-look-card"><div class="style-look-number">0${index + 1}</div><div><p class="eyebrow">${escapeHtml(look.occasion || 'Everyday')}</p><h3>${escapeHtml(look.title || `Look ${index + 1}`)}</h3><p>${escapeHtml(look.why || '')}</p><ul>${(look.pieces || []).map((piece) => `<li>${escapeHtml(piece)}</li>`).join('')}</ul>${products.length ? `<div class="style-match-row">${products.map((product) => `<a class="style-match-card" href="#/product/${encodeURIComponent(product.slug)}">${productArt(product, 'style-match-image')}<span>${escapeHtml(product.name)}</span><strong>${money(product.price)}</strong></a>`).join('')}</div>` : ''}</div></article>`;
+      }).join('') || '<div class="notice">Try another clear photo for more outfit directions.</div>';
+      return `<div class="style-result-content"><div class="style-result-top"><div><span class="eyebrow">02 · Your edit</span><h2 class="serif">${escapeHtml(recommendation.summary || 'Your RIVAYAT outfit plan')}</h2></div><span class="style-ai-badge">Private request</span></div><div class="style-insight-grid"><div><p class="eyebrow">Palette</p><div class="style-tags">${palette}</div></div><div><p class="eyebrow">Fit notes</p><ul class="style-fit-list">${fitNotes}</ul></div></div><div class="style-looks"><p class="eyebrow">Three ways to wear it</p>${looks}</div><p class="style-care"><strong>Care note:</strong> ${escapeHtml(recommendation.careNote || 'Check the garment care label before washing or ironing.')}</p><a class="button button-dark" href="#/shop">Browse more RIVAYAT pieces ↗</a></div>`;
+    }
+
     async function renderWishlist() {
       setSEO('Wishlist', 'Saved RIVAYAT products.');
       const products = (await ProductService.list()).filter(p=>wishlist.ids.includes(p.id));
@@ -2049,7 +2226,9 @@
           return;
         }
         const user = await AuthService.verifySignup(email, fd.get('code'));
+        localStorage.setItem('rivayat_onboarding_pending', '1');
         toast(`Welcome, ${user.name}`); go('#/dashboard');
+        setTimeout(openProfileOnboarding, 260);
         return;
       }
       if (mode === 'forgot') {
@@ -2078,6 +2257,34 @@
       } catch(e) { msg.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`; }
     }
 
+    function closeProfileOnboarding() {
+      document.getElementById('profileOnboarding')?.remove();
+      document.body.classList.remove('no-scroll');
+    }
+    function dismissProfileOnboarding() {
+      localStorage.setItem('rivayat_onboarding_pending', '0');
+      closeProfileOnboarding();
+    }
+    function startProfileTour() {
+      localStorage.setItem('rivayat_onboarding_pending', '0');
+      const host = document.getElementById('profileOnboarding');
+      if (!host) return;
+      host.innerHTML = `<div class="onboarding-dialog" role="dialog" aria-modal="true" aria-labelledby="profileTourTitle"><button class="onboarding-close" onclick="closeProfileOnboarding()" aria-label="Close profile tour">×</button><img class="onboarding-logo" src="${ASSETS.crest}" width="736" height="736" alt="RIVAYAT crest"><p class="eyebrow">Your RIVAYAT map</p><h2 id="profileTourTitle">You’re set. Here’s the good stuff.</h2><div class="onboarding-steps"><a href="#/dashboard/profile" onclick="closeProfileOnboarding()"><strong>01 · Profile</strong><span>Add your name, phone and photo.</span></a><a href="#/dashboard/addresses" onclick="closeProfileOnboarding()"><strong>02 · Address</strong><span>Save a PIN-first delivery address.</span></a><a href="#/dashboard/orders" onclick="closeProfileOnboarding()"><strong>03 · Orders</strong><span>Track every order and download invoices.</span></a><a href="#/dashboard/credits" onclick="closeProfileOnboarding()"><strong>04 · Credits</strong><span>Use loyalty rewards at checkout.</span></a><a href="#/dashboard/notifications" onclick="closeProfileOnboarding()"><strong>05 · Alerts</strong><span>Keep order updates in your phone-ready inbox.</span></a></div><button class="btn full" onclick="closeProfileOnboarding()">Let’s shop</button></div>`;
+    }
+    function openProfileOnboarding() {
+      if (!auth.user || localStorage.getItem('rivayat_onboarding_pending') !== '1' || document.getElementById('profileOnboarding')) return;
+      const host = document.createElement('div');
+      host.id = 'profileOnboarding';
+      host.className = 'onboarding-overlay';
+      host.innerHTML = `<div class="onboarding-dialog" role="dialog" aria-modal="true" aria-labelledby="profileOnboardingTitle"><button class="onboarding-close" onclick="dismissProfileOnboarding()" aria-label="Close profile setup prompt">×</button><img class="onboarding-logo" src="${ASSETS.crest}" width="736" height="736" alt="RIVAYAT crest"><p class="eyebrow">Welcome to RIVAYAT</p><h2 id="profileOnboardingTitle">Want a quick profile setup tour?</h2><p class="muted">We’ll show you where your orders, saved addresses, credits and notifications live. It takes less than a minute.</p><div class="onboarding-actions"><button class="btn" onclick="startProfileTour()">Yes, show me around</button><button class="btn ghost" onclick="dismissProfileOnboarding()">I’ll explore</button></div></div>`;
+      document.body.appendChild(host);
+      document.body.classList.add('no-scroll');
+    }
+    function profileSetupPrompt() {
+      const user = auth.user;
+      if (!user || user.profileComplete) return '';
+      return `<div class="profile-progress-card"><div><p class="eyebrow">Complete your profile</p><h3>Unlock 100 RIVAYAT Credits</h3><p>Add a saved PIN-first address to finish setup. Your reward is added once and appears in Credits.</p></div><a class="btn" href="#/dashboard/addresses">Finish setup ↗</a></div>`;
+    }
     async function renderDashboard(tab='profile') {
       setSEO('User Dashboard', 'Manage RIVAYAT profile, addresses, wishlist, and orders.');
       if (!auth.user) return renderAuth('login');
@@ -2085,7 +2292,7 @@
       const creditSummary = tab === 'credits' ? await CreditService.get().catch(() => ({ balance: Number(auth.user.credits || 0), transactions: [], rules: {} })) : null;
       const notificationSummary = tab === 'notifications' ? await NotificationService.list().catch(() => ({ notifications: [], unread: 0 })) : null;
       const tabs = [['profile','Profile'],['addresses','Saved Addresses'],['orders','My Orders'],['wishlist','Wishlist'],['credits','RIVAYAT Credits'],['notifications','Notifications'],['referral','Referral'],['settings','Account Settings']];
-      return `<div class="page section"><div class="container dashboard-layout"><aside class="card side-nav">${tabs.map(t=>`<a class="${tab===t[0]?'active':''}" href="#/dashboard/${t[0]}">${t[1]}${t[0]==='notifications' && notificationSummary?.unread ? ` <span class="badge">${notificationSummary.unread}</span>` : ''}</a>`).join('')}<button onclick="logoutUser()">Logout</button></aside><section>${dashboardPanel(tab, orders, creditSummary, notificationSummary)}</section></div></div>`;
+      return `<div class="page section"><div class="container dashboard-layout"><aside class="card side-nav">${tabs.map(t=>`<a class="${tab===t[0]?'active':''}" href="#/dashboard/${t[0]}">${t[1]}${t[0]==='notifications' && notificationSummary?.unread ? ` <span class="badge">${notificationSummary.unread}</span>` : ''}</a>`).join('')}<button onclick="logoutUser()">Logout</button></aside><section>${tab === 'profile' ? profileSetupPrompt() : ''}${dashboardPanel(tab, orders, creditSummary, notificationSummary)}</section></div></div>`;
     }
     function dashboardPanel(tab, orders, creditSummary=null, notificationSummary=null) {
       const u = auth.user;
@@ -2107,9 +2314,9 @@
       try { const registration = await navigator.serviceWorker?.ready; await registration?.showNotification('RIVAYAT alerts enabled', { body: 'Order and account updates will appear here.', icon: ASSETS.logo, badge: ASSETS.logo, data: { url: '#/dashboard/notifications' } }); } catch { /* in-app center still works */ }
       toast('Phone alerts enabled');
     }
-    async function updateProfile(event) { event.preventDefault(); try { const fd = new FormData(event.target); const file = fd.get('avatarFile'); const avatar = file instanceof File && file.size ? await fileAsDataUrl(file) : auth.user.avatar || ''; await AuthService.updateProfile({ name: fd.get('name'), phone: fd.get('phone'), avatar }); toast('Profile updated'); render(); } catch(error) { toast(error.message); } }
-    async function addAddress(event) { event.preventDefault(); const fd = new FormData(event.target); const addresses = [...(auth.user.addresses || []), { id: uid('addr'), ...Object.fromEntries(fd.entries()) }]; await AuthService.updateProfile({ addresses }); toast('Address saved'); render(); }
-    async function removeAddress(id) { const addresses = (auth.user.addresses || []).filter(address=>address.id !== id); await AuthService.updateProfile({ addresses }); toast('Address removed'); render(); }
+    async function updateProfile(event) { event.preventDefault(); try { const fd = new FormData(event.target); const file = fd.get('avatarFile'); const avatar = file instanceof File && file.size ? await fileAsDataUrl(file) : auth.user.avatar || ''; await AuthService.updateProfile({ name: fd.get('name'), phone: fd.get('phone'), avatar }); toast(auth.lastProfileReward ? 'Profile complete — 100 Credits added' : 'Profile updated'); render(); } catch(error) { toast(error.message); } }
+    async function addAddress(event) { event.preventDefault(); try { const fd = new FormData(event.target); const addresses = [...(auth.user.addresses || []), { id: uid('addr'), ...Object.fromEntries(fd.entries()) }]; await AuthService.updateProfile({ addresses }); toast(auth.lastProfileReward ? 'Address saved — 100 Credits added' : 'Address saved'); render(); } catch(error) { toast(error.message); } }
+    async function removeAddress(id) { try { const addresses = (auth.user.addresses || []).filter(address=>address.id !== id); await AuthService.updateProfile({ addresses }); toast('Address removed'); render(); } catch(error) { toast(error.message); } }
     async function generateReferralCode() { try { const ref = await ReferralService.me(); toast('Referral active: ' + ref.code); render(); } catch(e) { toast(e.message); } }
     async function logoutUser() { 
   auth.user = null; 
@@ -2124,11 +2331,12 @@
       if (auth.user?.role !== 'admin') {
         return `<div class="page section"><div class="container auth-shell"><div class="card pad"><span class="pill">Admin Area</span><h1 class="serif" style="font-size:50px">Admin login required</h1><p class="muted">Owner access is required to manage products, orders, coupons, customers, and reviews.</p><a class="btn" href="#/login">Login as Admin</a></div></div></div>`;
       }
-      const menu = [['analytics','Analytics'],['homepage','Homepage'],['products','Products'],['orders','Orders'],['returns','Returns'],['coupons','Coupons'],['customers','Customers'],['reviews','Reviews'],['team','Team Profiles'],['bugs','Bug Centre'],['notifications','Notifications'],['leads','Leads'],['referrals','Referrals']];
+      const menu = [['analytics','Analytics'],['homepage','Homepage'],['search','Search / Algolia'],['products','Products'],['orders','Orders'],['returns','Returns'],['coupons','Coupons'],['customers','Customers'],['reviews','Reviews'],['team','Team Profiles'],['bugs','Bug Centre'],['notifications','Notifications'],['leads','Leads'],['referrals','Referrals']];
       return `<div class="page section"><div class="container admin-shell"><aside class="admin-aside"><h2 class="serif" style="margin:8px 12px 18px">Admin</h2>${menu.map(m=>`<a class="${section===m[0]?'active':''}" href="#/admin/${m[0]}">${m[1]}</a>`).join('')}</aside><section>${await adminPanel(section)}</section></div></div>`;
     }
     async function adminPanel(section) {
       if(section==='homepage') return adminHomepage(await SettingsService.getHomepage());
+      if(section==='search') return adminSearch();
       if(section==='products') return adminProducts(await ProductService.list());
       if(section==='orders') return adminOrders(await OrderService.list());
       if(section==='returns') return adminReturns(await ReturnService.list());
@@ -2191,8 +2399,10 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
     }
     function adminReturns(requests) { return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Returns & Exchanges</h1><p>Approve, reject, or resolve customer return/exchange requests.</p></div></div><div class="table-wrap"><table><thead><tr><th>Request</th><th>Order</th><th>Customer</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead><tbody>${requests.map(r=>`<tr><td><strong>${r.type}</strong><br><span class="muted">${new Date(r.createdAt).toLocaleString('en-IN')}</span></td><td>${r.orderId}</td><td>${escapeHtml(r.customer?.name || '-')}<br><span class="muted">${escapeHtml(r.customer?.phone || '')}</span></td><td>${escapeHtml(r.reason || '-')}</td><td><span class="request-badge">${r.status}</span></td><td><select class="select" onchange="returnStatus('${r.id}', this.value)">${RETURN_STATUSES.map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div></div>`; }
     async function returnStatus(id, status) { await ReturnService.updateStatus(id, status); toast('Request updated'); render(); }
-    function adminHomepage(home) { return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Homepage Banner</h1><p>Edit hero title, subtitle, offer text, buttons, and image without touching code.</p></div></div><div class="grid grid-2"><form class="card pad grid" onsubmit="saveHomepage(event)"><label>Small Pill Text<input class="input" name="heroPill" value="${escapeHtml(home.heroPill)}"></label><label>Hero Title<input class="input" name="heroTitle" value="${escapeHtml(home.heroTitle)}"></label><label>Hero Subtitle<textarea class="textarea" name="heroSubtitle">${escapeHtml(home.heroSubtitle)}</textarea></label><label>Hero Offer<input class="input" name="heroOffer" value="${escapeHtml(home.heroOffer)}"></label><label>Primary Button<input class="input" name="primaryButtonText" value="${escapeHtml(home.primaryButtonText)}"></label><label>Secondary Button<input class="input" name="secondaryButtonText" value="${escapeHtml(home.secondaryButtonText)}"></label><label>Hero Image URL<input class="input" name="heroImage" value="${escapeHtml(home.heroImage || '')}"></label><label>Upload Hero Image<input class="input" name="heroImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif"></label><button class="btn">Save Homepage</button></form><div class="card pad"><h2>Preview</h2><div class="hero-preview"><img src="${escapeHtml(safeImageUrl(home.heroImage) || ASSETS.fallbackProduct)}" alt="Homepage preview"></div><h3 class="serif" style="font-size:38px">${escapeHtml(home.heroTitle)}</h3><p class="muted">${escapeHtml(home.heroSubtitle)}</p></div></div></div>`; }
-    async function saveHomepage(event) { event.preventDefault(); const fd = new FormData(event.target); const file = fd.get('heroImageFile'); const uploaded = file && file.size ? await fileToDataUrl(file) : ''; const settings = { heroPill: fd.get('heroPill'), heroTitle: fd.get('heroTitle'), heroSubtitle: fd.get('heroSubtitle'), heroOffer: fd.get('heroOffer'), primaryButtonText: fd.get('primaryButtonText'), secondaryButtonText: fd.get('secondaryButtonText'), heroImage: uploaded || String(fd.get('heroImage') || '').trim() || DEFAULT_HOMEPAGE.heroImage }; await SettingsService.saveHomepage(settings); toast('Homepage banner saved'); render(); }
+    function adminSearch() { return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Search / Algolia</h1><p>Keep the searchable product index in sync with the authoritative RIVAYAT catalogue.</p></div></div><div class="card pad search-admin-card"><img class="search-admin-logo" src="${ASSETS.monogram}" width="1080" height="1350" alt="RIVAYAT monogram" loading="lazy" decoding="async"><div><p class="eyebrow">One-click index repair</p><h2>Search should never go blank.</h2><p class="muted">The server now rebuilds the index after catalogue changes and falls back to MongoDB or the supplied catalogue if Algolia is unavailable. Use this button after adding or changing credentials on Render.</p><button class="btn" onclick="reindexAlgoliaFromAdmin()">Reindex ${escapeHtml('RIVAYAT')} products</button><p id="algoliaAdminMessage" class="muted" aria-live="polite" style="margin:12px 0 0"></p></div></div><div class="grid grid-2" style="margin-top:18px"><div class="card pad"><h3>Render variables</h3><p class="muted"><code>ALGOLIA_APP_ID</code><br><code>ALGOLIA_SEARCH_API_KEY</code><br><code>ALGOLIA_ADMIN_API_KEY</code><br><code>ALGOLIA_INDEX_NAME=rivayat_products</code><br><code>ALGOLIA_AUTO_REINDEX=true</code></p></div><div class="card pad"><h3>Search quality</h3><p class="muted">Records include product name, category, colour, badge, description, price, stock, image URL, product URL and searchable keywords. Keep the search-only key server-side in this build; the browser calls Rivayat’s safe <code>/search</code> endpoint.</p></div></div></div>`; }
+    async function reindexAlgoliaFromAdmin() { const message = document.getElementById('algoliaAdminMessage'); try { if (message) message.textContent = 'Syncing products…'; const result = await SearchAdminService.reindex(); if (message) message.textContent = result.message || `${result.count || 0} products indexed.`; toast('Algolia index refreshed'); } catch (error) { if (message) message.textContent = error.message || 'Algolia index could not be refreshed.'; toast(error.message || 'Algolia index could not be refreshed.'); } }
+    function adminHomepage(home) { return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Homepage Banner</h1><p>Edit the light and dark hero art, title, subtitle and buttons without touching code.</p></div></div><div class="grid grid-2"><form class="card pad grid" onsubmit="saveHomepage(event)"><label>Small Pill Text<input class="input" name="heroPill" value="${escapeHtml(home.heroPill)}"></label><label>Hero Title<input class="input" name="heroTitle" value="${escapeHtml(home.heroTitle)}"></label><label>Hero Subtitle<textarea class="textarea" name="heroSubtitle">${escapeHtml(home.heroSubtitle)}</textarea></label><label>Hero Offer<input class="input" name="heroOffer" value="${escapeHtml(home.heroOffer)}"></label><label>Primary Button<input class="input" name="primaryButtonText" value="${escapeHtml(home.primaryButtonText)}"></label><label>Secondary Button<input class="input" name="secondaryButtonText" value="${escapeHtml(home.secondaryButtonText)}"></label><label>Light Hero Image URL<input class="input" name="heroImage" value="${escapeHtml(home.heroImage || '')}"></label><label>Upload Light Hero Image<input class="input" name="heroImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif"></label><label>Dark Hero Image URL<input class="input" name="darkHeroImage" value="${escapeHtml(home.darkHeroImage || '')}"></label><label>Upload Dark Hero Image<input class="input" name="darkHeroImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif"></label><button class="btn">Save Homepage</button></form><div class="card pad"><h2>Preview</h2><div class="hero-preview hero-preview-pair"><img src="${escapeHtml(safeImageUrl(home.heroImage) || ASSETS.lightHero)}" alt="Light homepage preview"><img src="${escapeHtml(safeImageUrl(home.darkHeroImage) || ASSETS.darkHero)}" alt="Dark homepage preview"></div><h3 class="serif" style="font-size:38px">${escapeHtml(home.heroTitle)}</h3><p class="muted">${escapeHtml(home.heroSubtitle)}</p></div></div></div>`; }
+    async function saveHomepage(event) { event.preventDefault(); const fd = new FormData(event.target); const file = fd.get('heroImageFile'); const darkFile = fd.get('darkHeroImageFile'); const uploaded = file && file.size ? await fileToDataUrl(file) : ''; const uploadedDark = darkFile && darkFile.size ? await fileToDataUrl(darkFile) : ''; const settings = { heroPill: fd.get('heroPill'), heroTitle: fd.get('heroTitle'), heroSubtitle: fd.get('heroSubtitle'), heroOffer: fd.get('heroOffer'), primaryButtonText: fd.get('primaryButtonText'), secondaryButtonText: fd.get('secondaryButtonText'), heroImage: uploaded || String(fd.get('heroImage') || '').trim() || DEFAULT_HOMEPAGE.heroImage, darkHeroImage: uploadedDark || String(fd.get('darkHeroImage') || '').trim() || DEFAULT_HOMEPAGE.darkHeroImage }; await SettingsService.saveHomepage(settings); toast('Homepage banner saved'); render(); }
     function adminCoupons(coupons) { return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Coupon System</h1><p>Create, edit, delete, enable, disable, set expiry and discount rules.</p></div></div><div class="card pad"><form class="form-grid" onsubmit="saveCoupon(event)"><input type="hidden" name="id"><label>Code<input class="input" name="code" required></label><label>Type<select class="select" name="type"><option value="percent">Percentage</option><option value="fixed">Fixed Amount</option></select></label><label>Value<input class="input" name="value" type="number" required></label><label>Minimum Cart<input class="input" name="minCart" type="number" value="0"></label><label>Expiry<input class="input" name="expiry" type="date" value="2027-12-31"></label><label>Enabled<select class="select" name="active"><option value="true">Enabled</option><option value="false">Disabled</option></select></label><button class="btn">Save Coupon</button></form></div><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Code</th><th>Discount</th><th>Min Cart</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead><tbody>${coupons.map(c=>`<tr><td><strong>${c.code}</strong></td><td>${c.type==='percent'?c.value+'%':money(c.value)}</td><td>${money(c.minCart)}</td><td>${c.expiry}</td><td><span class="status ${c.active?'Active':'Disabled'}">${c.active?'Active':'Disabled'}</span></td><td><button class="btn secondary small" onclick='fillCoupon(${JSON.stringify(c).replaceAll("'","&#39;")})'>Edit</button> <button class="btn danger small" onclick="deleteCoupon('${c.id}')">Delete</button></td></tr>`).join('')}</tbody></table></div></div>`; }
     async function saveCoupon(event) { event.preventDefault(); const fd = new FormData(event.target); const coupon = { id: fd.get('id') || uid('coupon'), code: String(fd.get('code')).toUpperCase(), type: fd.get('type'), value: Number(fd.get('value')), minCart: Number(fd.get('minCart')), expiry: fd.get('expiry'), active: fd.get('active') === 'true', description: 'Admin-created coupon' }; await CouponService.upsert(coupon); toast('Coupon saved'); render(); }
     function fillCoupon(c) { const form = document.querySelector('form[onsubmit="saveCoupon(event)"]'); if(!form) return; form.querySelector('[name="id"]').value=c.id; form.querySelector('[name="code"]').value=c.code; form.querySelector('[name="type"]').value=c.type; form.querySelector('[name="value"]').value=c.value; form.querySelector('[name="minCart"]').value=c.minCart; form.querySelector('[name="expiry"]').value=c.expiry; form.querySelector('[name="active"]').value=String(!!c.active); scrollTo({top:0,behavior:'smooth'}); }
@@ -2230,7 +2440,7 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
     async function updateBugStatus(id, status) { try { await BugService.update(id, status); toast('Bug status updated'); render(); } catch(error) { toast(error.message); } }
 
     function adminNotifications(notifications=[]) {
-      return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Notification Studio</h1><p>Send an update to one customer or every customer. Order and credit events are added automatically.</p></div></div><form class="card pad grid" onsubmit="sendAdminNotification(event)"><div class="form-grid"><label>Customer email <span class="muted">leave blank for broadcast</span><input class="input" name="email" type="email" placeholder="customer@example.com"></label><label>Kind<select class="select" name="kind"><option value="admin">Team message</option><option value="drop">New drop</option><option value="service">Service update</option><option value="credit">Credit reward</option></select></label></div><label>Title<input class="input" name="title" maxlength="120" required placeholder="Your RIVAYAT update"></label><label>Message<textarea class="textarea" name="body" maxlength="500" required placeholder="Write a helpful, specific message."></textarea></label><label>Destination <input class="input" name="url" value="#/dashboard/notifications" placeholder="#/shop or #/dashboard/orders"></label><button class="btn">Send notification</button><p id="adminNotificationMessage" class="muted" style="margin:0"></p></form><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Time</th><th>Customer</th><th>Title</th><th>Kind</th><th>Status</th></tr></thead><tbody>${notifications.map(item=>`<tr><td>${new Date(item.createdAt).toLocaleString('en-IN')}</td><td>${escapeHtml(item.email || '-')}</td><td><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.body)}</span></td><td>${escapeHtml(item.kind || 'system')}</td><td>${item.readAt ? 'Read' : 'Unread'}</td></tr>`).join('') || '<tr><td colspan="5">No notifications sent yet.</td></tr>'}</tbody></table></div></div>`;
+      return `<div><div class="section-head"><div><h1 class="serif" style="font-size:58px;margin:0">Notification Studio</h1><p>Send an update to one customer or every customer. Order and credit events are added automatically.</p></div></div><form class="card pad grid" onsubmit="sendAdminNotification(event)"><div class="form-grid"><label>Customer email <span class="muted">leave blank for broadcast</span><input class="input" name="email" type="email" placeholder="customer@example.com"></label><label>Kind<select class="select" name="kind"><option value="admin">Team message</option><option value="drop">GOAT update</option><option value="service">Service update</option><option value="credit">Credit reward</option></select></label></div><label>Title<input class="input" name="title" maxlength="120" required placeholder="Your RIVAYAT update"></label><label>Message<textarea class="textarea" name="body" maxlength="500" required placeholder="Write a helpful, specific message."></textarea></label><label>Destination <input class="input" name="url" value="#/dashboard/notifications" placeholder="#/shop or #/dashboard/orders"></label><button class="btn">Send notification</button><p id="adminNotificationMessage" class="muted" style="margin:0"></p></form><div class="table-wrap" style="margin-top:18px"><table><thead><tr><th>Time</th><th>Customer</th><th>Title</th><th>Kind</th><th>Status</th></tr></thead><tbody>${notifications.map(item=>`<tr><td>${new Date(item.createdAt).toLocaleString('en-IN')}</td><td>${escapeHtml(item.email || '-')}</td><td><strong>${escapeHtml(item.title)}</strong><br><span class="muted">${escapeHtml(item.body)}</span></td><td>${escapeHtml(item.kind || 'system')}</td><td>${item.readAt ? 'Read' : 'Unread'}</td></tr>`).join('') || '<tr><td colspan="5">No notifications sent yet.</td></tr>'}</tbody></table></div></div>`;
     }
     async function sendAdminNotification(event) {
       event.preventDefault();
@@ -2349,7 +2559,7 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
       if (document.getElementById('offerPopup')) return;
       const box = document.createElement('div');
       box.id = 'offerPopup';
-      box.innerHTML = `<div style="position:fixed;right:18px;bottom:18px;z-index:120;background:#111;color:#fff;border-radius:22px;padding:18px;max-width:330px;box-shadow:0 24px 80px rgba(0,0,0,.35)"><button onclick="dismissOfferPopup()" style="float:right;background:transparent;color:#fff;border:0;font-size:20px">×</button><span class="pill" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff">Launch Offer</span><h3 class="serif" style="font-size:30px;margin:12px 0 6px">Get 10% off</h3><p style="color:rgba(255,255,255,.75)">Use code <strong>VIBE10</strong> or subscribe for new drops.</p><form onsubmit="subscribeNewsletter(event);dismissOfferPopup()"><input class="input" name="email" type="email" required placeholder="Email for offers"><button class="btn gold full" style="margin-top:10px">Subscribe</button></form></div>`;
+      box.innerHTML = `<div style="position:fixed;right:18px;bottom:18px;z-index:120;background:#111;color:#fff;border-radius:22px;padding:18px;max-width:330px;box-shadow:0 24px 80px rgba(0,0,0,.35)"><button onclick="dismissOfferPopup()" style="float:right;background:transparent;color:#fff;border:0;font-size:20px">×</button><span class="pill" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff">Launch Offer</span><h3 class="serif" style="font-size:30px;margin:12px 0 6px">Get 10% off</h3><p style="color:rgba(255,255,255,.75)">Use code <strong>VIBE10</strong> or subscribe for first access to fresh edits.</p><form onsubmit="subscribeNewsletter(event);dismissOfferPopup()"><input class="input" name="email" type="email" required placeholder="Email for offers"><button class="btn gold full" style="margin-top:10px">Subscribe</button></form></div>`;
       document.body.appendChild(box);
     }
     function dismissOfferPopup() { localStorage.setItem('rivayat_offer_popup_closed','1'); document.getElementById('offerPopup')?.remove(); }
@@ -2408,6 +2618,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
         else if (route === 'confirmation') nextHtml = await renderConfirmation(parts[1]);
         else if (route === 'orders') nextHtml = await renderOrders();
         else if (route === 'wishlist') nextHtml = await renderWishlist();
+        else if (route === 'style') nextHtml = renderStyleLab();
         else if (route === 'login') nextHtml = renderAuth('login');
         else if (route === 'signup') nextHtml = renderAuth('signup');
         else if (route === 'forgot-password') nextHtml = renderAuth('forgot');
@@ -2417,7 +2628,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
         else nextHtml = notFound();
         if (renderId !== renderSequence) return;
         app.innerHTML = nextHtml;
-        updateBadges(); if (!preserveScroll) window.scrollTo({top:0, behavior:'smooth'}); if (route === 'home' && revalidate) setTimeout(showOfferPopup, 900); if (route === 'login' || route === 'signup') setTimeout(mountGoogleSignIn, 0); showAbandonedCartReminder();
+        updateBadges(); if (!preserveScroll) window.scrollTo({top:0, behavior:'smooth'}); if (route === 'login' || route === 'signup') setTimeout(mountGoogleSignIn, 0); if (route === 'dashboard' && parts[1] === 'profile') setTimeout(openProfileOnboarding, 120); showAbandonedCartReminder();
       } catch (e) { if (renderId !== renderSequence) return; console.error(e); reportClientFault(e, 'Route render'); app.innerHTML = `<div class="section"><div class="container"><div class="state-screen"><span class="error-code">Something went wrong</span><h1>We hit a loose thread.</h1><p class="muted">${escapeHtml(e.message || 'This page could not be prepared right now.')}</p><div class="state-actions"><button class="btn" onclick="render({revalidate:true})">Try again</button><a class="btn secondary" href="#/">Go home</a><button class="btn ghost" onclick="openBugReporter()">Report this problem</button></div></div></div></div>`; }
     }
     window.addEventListener('unhandledrejection', event => {
@@ -2443,7 +2654,8 @@ Business WhatsApp: ${BRAND.whatsapp}`],
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(error => console.warn('Offline service worker unavailable:', error.message)));
     }
-    updateBadges(); BugService.flushQueue(); render(); maybeDailyNotification();
+    updateBadges(); BugService.flushQueue(); render();
   </script>
+  <script src="/assets/react/rivayat-interactive.js"></script>
 </body>
 </html>
