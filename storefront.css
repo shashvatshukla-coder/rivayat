@@ -1087,6 +1087,7 @@ img {
   .winter-story { grid-template-columns: 1fr; }
   .winter-picks { width: min(100%, 420px); }
   .community-strip { grid-template-columns: 1fr; }
+  .detail-gallery { position: static; }
 }
 
 @media (max-width: 720px) {
