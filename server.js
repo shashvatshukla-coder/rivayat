@@ -1008,7 +1008,15 @@ app.get(["/merchant-feed.xml", "/google-merchant-feed.xml"], (req, res) => {
   return Product.find({ active: { $ne: false } }).lean().then((products) => sendFeed(products.length ? products : CATALOG_PRODUCTS)).catch(() => sendFeed(CATALOG_PRODUCTS));
 });
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
-app.get("/health", (req, res) => res.json({ success: true }));
+app.get("/health", (req, res) => res.json({
+  success: true,
+  passwordPolicy: {
+    version: "customer-password-v1",
+    length: 6,
+    requiresNumber: true,
+    requiresSymbol: true
+  }
+}));
 
 app.post("/style/recommendation", async (req, res) => {
   const rawImages = Array.isArray(req.body?.images) ? req.body.images : [];

@@ -89,6 +89,7 @@
   <script type="application/ld+json" id="routeStructuredData">{}</script>
   <style>
     :root {
+      color-scheme: light;
       --black: #070707;
       --ink: #111111;
       --muted: #6e6a63;
@@ -101,6 +102,13 @@
       --gold: #b9945d;
       --danger: #9b1c1c;
       --success: #12723c;
+      --auth-surface: #fffdf8;
+      --auth-text: #111111;
+      --auth-muted: #5b564e;
+      --auth-field: #ffffff;
+      --auth-link: #76501e;
+      --auth-danger: #9b1c1c;
+      --auth-success: #0d6b38;
       --shadow: 0 24px 70px rgba(0,0,0,.12);
       --radius: 24px;
       --radius-sm: 16px;
@@ -447,7 +455,27 @@
     .timeline-row.done .dot { background: var(--success); box-shadow: 0 0 0 5px rgba(18,114,60,.12); }
     .timeline-row.cancel .dot { background: var(--danger); }
 
-    .auth-shell { max-width: 500px; margin: 0 auto; }
+    .auth-shell { max-width: 500px; margin: 0 auto; color: var(--auth-text); }
+    .auth-shell .card { background: var(--auth-surface); color: var(--auth-text); }
+    .auth-shell h1 { color: var(--auth-text); }
+    .auth-shell label,
+    .auth-shell .muted,
+    .auth-shell .password-strength-head,
+    .auth-shell .password-strength-rule { color: var(--auth-muted); }
+    .auth-shell .input {
+      background: var(--auth-field);
+      color: var(--auth-text);
+      caret-color: var(--auth-text);
+    }
+    .auth-shell .input::placeholder { color: var(--auth-muted); opacity: .82; }
+    .auth-shell .accent { color: var(--auth-link); text-decoration-color: currentColor; }
+    .auth-shell .error { color: var(--auth-danger); }
+    .auth-shell .success-text,
+    .auth-shell .password-strength-rule.met { color: var(--auth-success); }
+    .auth-shell .btn:not(.secondary):not(.ghost):not(.gold):not(.danger):not(.success) {
+      background: #070707;
+      color: #ffffff;
+    }
     .password-strength { margin-top: 10px; }
     .password-strength-meter { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
     .password-strength-cell { height:6px; overflow:hidden; border-radius:3px; background:rgba(17,17,17,.12); }
@@ -507,8 +535,20 @@
       --white: #171a19;
       --danger: #ff8e8e;
       --success: #74d59c;
+      --auth-surface: #151e1d;
+      --auth-text: #f5f1e8;
+      --auth-muted: #b9c0ba;
+      --auth-field: #0d1514;
+      --auth-link: #e7c185;
+      --auth-danger: #ff9b9b;
+      --auth-success: #82dda7;
       --shadow: 0 24px 70px rgba(0,0,0,.42);
     }
+    [data-theme="light"] .auth-shell .card { border-color: rgba(17,17,17,.12); }
+    [data-theme="light"] .auth-shell .pill { background: #f8f1e6; color: #5b564e; }
+    [data-theme="light"] .auth-shell .input { border-color: rgba(17,17,17,.18); }
+    [data-theme="light"] .auth-shell .input:focus { background: #ffffff; }
+    [data-theme="dark"] .auth-shell .card { border-color: rgba(255,255,255,.14); }
     [data-theme="dark"] .header { background: rgba(9,12,12,.86); }
     [data-theme="dark"] .nav-link:hover,
     [data-theme="dark"] .nav-link.active { color: var(--ink); background: rgba(255,255,255,.09); }

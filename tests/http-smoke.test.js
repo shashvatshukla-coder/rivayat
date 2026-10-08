@@ -27,6 +27,14 @@ function request(port, pathname) {
     const home = await request(port, "/");
     assert.match(home.body.toString("utf8"), /RIVAYAT \| Premium Indian Fashion/);
     assert.match(String(home.headers["content-security-policy"]), /frame-ancestors 'none'/);
+    const health = await request(port, "/health");
+    assert.equal(health.status, 200);
+    assert.deepEqual(JSON.parse(health.body.toString("utf8")).passwordPolicy, {
+      version: "customer-password-v1",
+      length: 6,
+      requiresNumber: true,
+      requiresSymbol: true
+    });
     console.log(`HTTP smoke OK: ${routes.length} public assets and security headers.`);
   } finally {
     await new Promise((resolve) => server.close(resolve));
