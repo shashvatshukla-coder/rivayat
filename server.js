@@ -36,6 +36,8 @@ const BUSINESS_ADDRESS = process.env.BUSINESS_ADDRESS || "India";
 const BUSINESS_GSTIN = process.env.BUSINESS_GSTIN || "";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "houseofrivayat@gmail.com";
 const SUPPORT_PHONE = process.env.SUPPORT_PHONE || "+91 80041 09305";
+const CUSTOMER_PASSWORD_MESSAGE = "Password must be exactly 6 characters and include at least one number and one symbol.";
+const CUSTOMER_PASSWORD_PATTERN = /^(?=.*\d)(?=.*[!-/:-@[-`{-~])\S{6}$/;
 const configuredEarnPercent = Number(process.env.LOYALTY_EARN_PERCENT || 2);
 const configuredRedeemPercent = Number(process.env.LOYALTY_MAX_REDEMPTION_PERCENT || 20);
 const LOYALTY_EARN_PERCENT = Number.isFinite(configuredEarnPercent) ? Math.max(0, Math.min(20, configuredEarnPercent)) : 2;
@@ -82,6 +84,10 @@ const DEFAULT_COUPONS = [
   { id: "c2", code: "VIBE10", type: "percent", value: 10, minCart: 0, active: true, expiry: "2027-12-31", description: "10% off on all orders" },
   { id: "c3", code: "LAUNCH20", type: "percent", value: 20, minCart: 999, active: false, expiry: "2027-12-31", description: "20% launch discount above Rs 999" }
 ];
+
+function isValidCustomerPassword(value) {
+  return CUSTOMER_PASSWORD_PATTERN.test(String(value || ""));
+}
 
 app.disable("x-powered-by");
 app.use(cors({
@@ -1142,7 +1148,7 @@ async function requestSignupOtp(req, res) {
     const plainPassword = String(password || "");
     if (cleanName.length < 2) return res.status(400).json({ success: false, message: "Please enter your full name." });
     if (!EMAIL_PATTERN.test(cleanEmail)) return res.status(400).json({ success: false, message: "Enter a valid email address." });
-    if (plainPassword.length < 8) return res.status(400).json({ success: false, message: "Password must contain at least 8 characters." });
+    if (!isValidCustomerPassword(plainPassword)) return res.status(400).json({ success: false, message: CUSTOMER_PASSWORD_MESSAGE });
     if (await User.findOne({ email: cleanEmail })) return res.status(409).json({ success: false, message: "Email already registered. Please login." });
 
     const previous = await SignupVerification.findOne({ email: cleanEmail });
@@ -1395,7 +1401,7 @@ app.post("/reset-password", async (req, res) => {
     const code = String(req.body.code || "").trim();
     const password = String(req.body.password || "");
     if (!EMAIL_PATTERN.test(email) || !/^\d{4}$/.test(code) || !password) return res.status(400).json({ success: false, message: "Email, 4-digit reset code, and new password are required." });
-    if (password.length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
+    if (!isValidCustomerPassword(password)) return res.status(400).json({ success: false, message: CUSTOMER_PASSWORD_MESSAGE });
     const reset = await PasswordReset.findOne({ email, usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
     if (!reset || Number(reset.attempts || 0) >= 5) return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
     if (!sameHash(reset.codeHash, hashResetCode(email, code))) {
@@ -2398,6 +2404,7 @@ module.exports = {
     createToken,
     deliveryChargeByPincode,
     hashResetCode,
+    isValidCustomerPassword,
     normalizeEmail,
     orderPlainText,
     randomFourDigitCode,

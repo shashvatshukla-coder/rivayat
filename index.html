@@ -189,14 +189,19 @@
     }
     .brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: .22em; }
     .brand-mark {
-      width: 42px; height: 42px; border-radius: 50%; background: #080808; color: #fff;
+      width: 42px; height: 42px; border-radius: 50%; background: var(--ink); color: var(--ivory);
       display: grid; place-items: center; font-family: Georgia, serif; letter-spacing: -.04em; font-size: 21px;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 30px rgba(0,0,0,.12);
+      transition: background-color .25s ease, color .25s ease;
     }
 
-    .brand-mark img {
-      width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
-    }
+    .brand-logo-svg { width: 30px; height: 30px; }
+    .nav-svg-icon { width: 20px; height: 20px; flex:0 0 auto; color:currentColor; transition:color .25s ease; }
+    .nav-svg-icon path, .nav-svg-icon circle, .nav-svg-icon line, .nav-svg-icon polyline { vector-effect:non-scaling-stroke; }
+    .theme-icon { width:16px; height:16px; }
+    .theme-moon { display:none; }
+    [data-theme="dark"] .theme-sun { display:none; }
+    [data-theme="dark"] .theme-moon { display:block; }
     .brand small { display: block; letter-spacing: .08em; font-size: 10px; color: var(--muted); margin-top: 1px; }
     .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-link {
@@ -443,6 +448,22 @@
     .timeline-row.cancel .dot { background: var(--danger); }
 
     .auth-shell { max-width: 500px; margin: 0 auto; }
+    .password-strength { margin-top: 10px; }
+    .password-strength-meter { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+    .password-strength-cell { height:6px; overflow:hidden; border-radius:3px; background:rgba(17,17,17,.12); }
+    .password-strength-fill { display:block; width:100%; height:100%; border-radius:inherit; background:#b7b0a5; transform:scaleX(0); transform-origin:left; transition:transform .28s var(--ease), background-color .2s ease; }
+    .password-strength[data-score="1"] .password-strength-cell:nth-child(-n+1) .password-strength-fill,
+    .password-strength[data-score="2"] .password-strength-cell:nth-child(-n+2) .password-strength-fill,
+    .password-strength[data-score="3"] .password-strength-cell:nth-child(-n+3) .password-strength-fill { transform:scaleX(1); }
+    .password-strength[data-score="1"] .password-strength-fill { background:#cf3d3d; }
+    .password-strength[data-score="2"] .password-strength-fill { background:#c58a1b; }
+    .password-strength[data-score="3"] .password-strength-fill { background:#198754; }
+    .password-strength-head { display:flex; justify-content:space-between; gap:12px; margin-top:8px; font-size:12px; font-weight:850; color:var(--muted); }
+    .password-strength-rules { display:flex; flex-wrap:wrap; gap:6px 12px; margin:9px 0 0; padding:0; list-style:none; }
+    .password-strength-rule { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; }
+    .password-strength-rule::before { content:'○'; font-size:15px; line-height:1; }
+    .password-strength-rule.met { color:var(--success); }
+    .password-strength-rule.met::before { content:'✓'; font-weight:950; }
     .dashboard-layout { display:grid; grid-template-columns: 265px 1fr; gap: 24px; align-items:start; }
     .side-nav { position: sticky; top: 96px; padding: 14px; display:grid; gap: 8px; }
     .side-nav a, .side-nav button { border:0; text-align:left; padding: 13px 14px; border-radius: 16px; background: transparent; color: var(--muted); font-weight:900; }
@@ -517,6 +538,11 @@
     [data-theme="dark"] .chart-bars { background: linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03)); }
     [data-theme="dark"] .status { background: rgba(255,255,255,.1); color: var(--ink); }
     [data-theme="dark"] .footer { background: #050606; }
+    [data-theme="dark"] .password-strength-cell { background:rgba(255,255,255,.14); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .password-strength-fill { transition:none; }
+    }
 
     @media (max-width: 980px) {
       .nav-links { display: none; }
@@ -555,19 +581,19 @@
   <header class="header">
     <div class="container nav">
       <a class="brand" href="#/" aria-label="RIVAYAT Home">
-        <span class="brand-mark"><img src="/assets/branding/rivayat-logo.webp" width="1100" height="1100" alt="RIVAYAT Fashion logo"></span>
+        <span class="brand-mark" aria-hidden="true"><svg class="brand-logo-svg" viewBox="0 0 48 48" fill="none"><path d="M14 38V10h11c6.1 0 10 3.1 10 8.1 0 5.2-4 8.4-10.4 8.4H14m10.2 0L36 38" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span>RIVAYAT <small>Own Your Vibe</small></span>
       </a>
       <nav class="nav-links" id="desktopNav"></nav>
       <div class="nav-actions">
         <div id="reactSearchRoot"></div>
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch colour theme"><span class="theme-track"><span class="theme-thumb">☀</span></span></button>
-        <button class="text-action wish-action" onclick="go('#/wishlist')" aria-label="Wishlist"><img class="nav-action-logo" src="/assets/branding/wishlist-mark.png" width="736" height="1041" alt="" aria-hidden="true">Wishlist <span id="wishCount" class="badge hide">0</span></button>
-        <button class="icon-btn notification-button" onclick="go(auth.user ? '#/dashboard/notifications' : '#/login')" aria-label="Notifications" title="Notifications"><img class="nav-icon-logo" src="/assets/branding/notification-mark.png" width="736" height="736" alt="" aria-hidden="true"><span id="notificationCount" class="badge hide">0</span></button>
-        <button class="text-action account-button" onclick="go(auth.user ? '#/dashboard' : '#/login')"><span class="label" id="accountLabel">Account</span></button>
-        <button class="bag-button" onclick="go('#/cart')" aria-label="Cart"><img class="nav-icon-logo" src="/assets/branding/bag-mark.png" width="512" height="512" alt="" aria-hidden="true"><span class="label">Bag</span> <span id="cartCount">0</span><span id="reactCartBadgeRoot" aria-live="polite"></span></button>
-        <button class="icon-btn install-app-button" id="installAppButton" onclick="installApp()" aria-label="Install RIVAYAT app" title="Install app" hidden>＋</button>
-        <button class="icon-btn menu-btn" onclick="toggleDrawer(true)" aria-label="Menu">☰</button>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch colour theme"><span class="theme-track"><span class="theme-thumb"><svg class="nav-svg-icon theme-icon theme-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="nav-svg-icon theme-icon theme-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8 8.5 8.5 0 1 0 20.2 15.2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></span></button>
+        <button class="text-action wish-action" onclick="go('#/wishlist')" aria-label="Wishlist"><svg class="nav-svg-icon nav-action-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.5a5.5 5.5 0 0 0 0-7.8Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>Wishlist <span id="wishCount" class="badge hide">0</span></button>
+        <button class="icon-btn notification-button" onclick="go(auth.user ? '#/dashboard/notifications' : '#/login')" aria-label="Notifications" title="Notifications"><svg class="nav-svg-icon nav-icon-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="notificationCount" class="badge hide">0</span></button>
+        <button class="text-action account-button" onclick="go(auth.user ? '#/dashboard' : '#/login')" aria-label="Account"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.9"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span class="label" id="accountLabel">Account</span></button>
+        <button class="bag-button" onclick="go('#/cart')" aria-label="Cart"><svg class="nav-svg-icon nav-icon-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M9 9V6a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span class="label">Bag</span> <span id="cartCount">0</span><span id="reactCartBadgeRoot" aria-live="polite"></span></button>
+        <button class="icon-btn install-app-button" id="installAppButton" onclick="installApp()" aria-label="Install RIVAYAT app" title="Install app" hidden><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="icon-btn menu-btn" onclick="toggleDrawer(true)" aria-label="Menu"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
     </div>
   </header>
@@ -575,20 +601,20 @@
   <div class="drawer-backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
   <aside class="mobile-drawer" id="mobileDrawer">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-      <a class="brand" href="#/" onclick="toggleDrawer(false)"><span class="brand-mark"><img src="/assets/branding/rivayat-logo.webp" width="1100" height="1100" alt="RIVAYAT Fashion logo"></span><span>RIVAYAT<small>Own Your Vibe</small></span></a>
-      <button class="icon-btn" onclick="toggleDrawer(false)">×</button>
+      <a class="brand" href="#/" onclick="toggleDrawer(false)" aria-label="RIVAYAT Home"><span class="brand-mark" aria-hidden="true"><svg class="brand-logo-svg" viewBox="0 0 48 48" fill="none"><path d="M14 38V10h11c6.1 0 10 3.1 10 8.1 0 5.2-4 8.4-10.4 8.4H14m10.2 0L36 38" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>RIVAYAT<small>Own Your Vibe</small></span></a>
+      <button class="icon-btn" onclick="toggleDrawer(false)" aria-label="Close menu"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     </div>
     <div class="drawer-links" id="mobileNav"></div>
-    <a class="drawer-notification-link" href="#/dashboard/notifications" onclick="toggleDrawer(false)"><img class="nav-icon-logo" src="/assets/branding/notification-mark.png" width="736" height="736" alt="" aria-hidden="true"> Notifications <span id="drawerNotificationCount" class="badge hide">0</span></a>
+    <a class="drawer-notification-link" href="#/dashboard/notifications" onclick="toggleDrawer(false)"><svg class="nav-svg-icon nav-icon-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg> Notifications <span id="drawerNotificationCount" class="badge hide">0</span></a>
     <div class="notice">Official RIVAYAT shopping website: explore products, place orders, track purchases, and manage your account.</div>
   </aside>
 
   <nav class="mobile-bottom-nav" aria-label="Quick shopping navigation">
-    <a href="#/" aria-label="Home"><span aria-hidden="true">⌂</span><small>Home</small></a>
-    <a href="#/shop" aria-label="Shop categories"><span aria-hidden="true">▦</span><small>Shop</small></a>
-    <a href="#/wishlist" aria-label="Wishlist"><span aria-hidden="true">♡</span><small>Wishlist</small></a>
-    <a href="#/cart" aria-label="Bag"><span aria-hidden="true">🛒</span><small>Bag</small><b id="mobileCartCount" class="mobile-bottom-badge hide">0</b></a>
-    <a href="#/dashboard" aria-label="Account"><span aria-hidden="true">♙</span><small>Account</small></a>
+    <a href="#/" aria-label="Home"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3V11Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><small>Home</small></a>
+    <a href="#/shop" aria-label="Shop categories"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><small>Shop</small></a>
+    <a href="#/wishlist" aria-label="Wishlist"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.5a5.5 5.5 0 0 0 0-7.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><small>Wishlist</small></a>
+    <a href="#/cart" aria-label="Bag"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9V6a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><small>Bag</small><b id="mobileCartCount" class="mobile-bottom-badge hide">0</b></a>
+    <a href="#/dashboard" aria-label="Account"><svg class="nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><small>Account</small></a>
   </nav>
 
   <main id="app"><section class="startup-shell" aria-live="polite"><div class="startup-card"><p class="startup-logo serif">RIVAYAT</p><p class="muted">Preparing your storefront…</p><div class="startup-bar" aria-hidden="true"></div></div></section></main>
@@ -867,6 +893,45 @@
     }
     function escapeHtml(value='') {
       return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+    }
+    const CUSTOMER_PASSWORD_MESSAGE = 'Password must be exactly 6 characters and include at least one number and one symbol.';
+    function customerPasswordRules(value='') {
+      const password = String(value || '');
+      return [
+        { label: 'Exactly 6 characters', met: password.length === 6 },
+        { label: 'One number', met: /\d/.test(password) },
+        { label: 'One symbol', met: /[!-/:-@[-`{-~]/.test(password) }
+      ];
+    }
+    function isValidCustomerPassword(value='') {
+      const password = String(value || '');
+      return password.length === 6 && !/\s/.test(password) && customerPasswordRules(password).every((rule) => rule.met);
+    }
+    function passwordStrengthMarkup(id) {
+      return `<div class="password-strength" id="${id}" data-score="0"><div class="password-strength-meter" role="meter" aria-label="Password requirements" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" aria-valuetext="Empty"><span class="password-strength-cell"><span class="password-strength-fill"></span></span><span class="password-strength-cell"><span class="password-strength-fill"></span></span><span class="password-strength-cell"><span class="password-strength-fill"></span></span></div><div class="password-strength-head"><span data-strength-label>Enter a password</span><span data-strength-count>0/6</span></div><ul class="password-strength-rules">${customerPasswordRules('').map((rule) => `<li class="password-strength-rule">${rule.label}</li>`).join('')}</ul><p class="sr-only" data-strength-announcement aria-live="polite"></p></div>`;
+    }
+    function updatePasswordStrength(input) {
+      const targetId = input?.getAttribute('data-strength-target');
+      const root = targetId ? document.getElementById(targetId) : null;
+      if (!root) return;
+      const password = String(input.value || '');
+      const rules = customerPasswordRules(password);
+      const score = rules.filter((rule) => rule.met).length;
+      const status = password.length === 0 ? 'Enter a password' : score === 3 && !/\s/.test(password) ? 'All requirements met' : score <= 1 ? 'Weak' : 'Almost there';
+      root.dataset.score = String(score);
+      const meter = root.querySelector('[role="meter"]');
+      meter?.setAttribute('aria-valuenow', String(score));
+      meter?.setAttribute('aria-valuetext', status);
+      const label = root.querySelector('[data-strength-label]');
+      const count = root.querySelector('[data-strength-count]');
+      const announcement = root.querySelector('[data-strength-announcement]');
+      if (label) label.textContent = status;
+      if (count) count.textContent = `${Math.min(password.length, 99)}/6`;
+      root.querySelectorAll('.password-strength-rule').forEach((item, index) => item.classList.toggle('met', Boolean(rules[index]?.met)));
+      if (announcement) announcement.textContent = password.length ? `${status}. ${rules.filter((rule) => !rule.met).map((rule) => rule.label).join(', ') || 'Password is ready.'}` : '';
+    }
+    function requireValidCustomerPassword(value) {
+      if (!isValidCustomerPassword(value)) throw new Error(CUSTOMER_PASSWORD_MESSAGE);
     }
     function safeImageUrl(value='') {
       const source = String(value || '').trim();
@@ -1666,9 +1731,6 @@
       const toggle = document.getElementById('themeToggle');
       if (toggle) {
         const switchingTo = nextTheme === 'dark' ? 'light' : 'dark';
-        const thumb = toggle.querySelector('.theme-thumb');
-        if (thumb) thumb.textContent = nextTheme === 'dark' ? '☾' : '☀';
-        else toggle.textContent = nextTheme === 'dark' ? '☀' : '☾';
         toggle.setAttribute('aria-label', `Switch to ${switchingTo} mode`);
         toggle.title = `Switch to ${switchingTo} mode`;
       }
@@ -2211,8 +2273,8 @@
           ${isForgot || isSignup ? '<input type="hidden" name="stage" value="request">' : ''}
           ${isSignup ? '<label>Name<input class="input" name="name" required></label><label>Phone<input class="input" name="phone" required pattern="[0-9]{10}"></label>' : ''}
           <label>${isSignup || isForgot ? 'Email' : 'Email or Username'}<input class="input" type="${isSignup || isForgot ? 'email' : 'text'}" name="email" required></label>
-          ${isForgot ? '<div id="resetFields" class="grid" style="display:none"><label>4-digit reset code<input class="input" name="code" inputmode="numeric" maxlength="4" pattern="[0-9]{4}"></label><label>New Password<input class="input" type="password" name="password" minlength="8"></label><label>Confirm Password<input class="input" type="password" name="confirmPassword" minlength="8"></label></div>' : ''}
-          ${isSignup ? '<label>Password<input class="input" type="password" name="password" required minlength="8"></label><div id="signupOtpFields" class="grid" style="display:none"><label>4-digit email OTP<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}"></label></div>' : (!isForgot ? '<label>Password<input class="input" type="password" name="password" required minlength="8"></label>' : '')}
+          ${isForgot ? `<div id="resetFields" class="grid" style="display:none"><label>4-digit reset code<input class="input" name="code" inputmode="numeric" maxlength="4" pattern="[0-9]{4}"></label><label>New Password<input class="input" type="password" name="password" required minlength="6" maxlength="6" autocomplete="new-password" aria-describedby="password-strength-reset" data-strength-target="password-strength-reset" oninput="updatePasswordStrength(this)"></label>${passwordStrengthMarkup('password-strength-reset')}<label>Confirm Password<input class="input" type="password" name="confirmPassword" required minlength="6" maxlength="6" autocomplete="new-password"></label></div>` : ''}
+          ${isSignup ? `<label>Password<input class="input" type="password" name="password" required minlength="6" maxlength="6" autocomplete="new-password" aria-describedby="password-strength-signup" data-strength-target="password-strength-signup" oninput="updatePasswordStrength(this)"></label>${passwordStrengthMarkup('password-strength-signup')}<div id="signupOtpFields" class="grid" style="display:none"><label>4-digit email OTP<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}"></label></div>` : (!isForgot ? '<label>Password<input class="input" type="password" name="password" required autocomplete="current-password"></label>' : '')}
           <button class="btn full" id="authSubmitBtn">${isSignup ? 'Send 4-digit OTP' : isForgot ? 'Send Reset Code' : 'Login'}</button>
           <div id="authMsg"></div>
         </form>
@@ -2225,6 +2287,7 @@
         const email = String(fd.get('email') || '').trim();
         const stage = String(fd.get('stage') || 'request');
         if (stage === 'request') {
+          requireValidCustomerPassword(fd.get('password'));
           const data = await AuthService.requestSignupOtp({ name: fd.get('name'), email, phone: fd.get('phone'), password: fd.get('password') });
           event.target.querySelector('[name="stage"]').value = 'verify';
           document.getElementById('signupOtpFields').style.display = 'grid';
@@ -2253,6 +2316,7 @@
         }
         const password = String(fd.get('password') || '');
         const confirmPassword = String(fd.get('confirmPassword') || '');
+        requireValidCustomerPassword(password);
         if (password !== confirmPassword) throw new Error('Passwords do not match');
         const message = await AuthService.resetPassword(email, fd.get('code'), password);
         msg.innerHTML = `<span class="success-text">${escapeHtml(message)}</span>`;

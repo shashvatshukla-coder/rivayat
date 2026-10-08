@@ -93,7 +93,7 @@ function LiveSearch() {
 
   return <div className="react-search-shell" ref={shellRef}>
     <form className="react-search-form" onSubmit={submit} role="search">
-      <span className="react-search-icon" aria-hidden="true">⌕</span>
+      <svg className="react-search-icon nav-svg-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.9"/><path d="m16.2 16.2 4.3 4.3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
       <input value={query} onChange={(event) => setQuery(event.target.value)} onFocus={() => query.trim() && setOpen(true)} onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }} placeholder="Search" aria-label="Search RIVAYAT products" />
     </form>
     {open && <div className="react-search-popover" role="listbox" aria-label="Search results">

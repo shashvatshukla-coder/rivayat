@@ -2585,6 +2585,11 @@ img {
   object-fit: contain;
 }
 
+.nav-svg-icon {
+  display: block;
+  color: currentColor;
+}
+
 .nav-action-logo {
   width: 17px;
   height: 24px;
@@ -2875,12 +2880,6 @@ img {
 [data-theme="dark"] .filter-row a.active {
   color: #0b1718;
   background: #f4eee2;
-}
-
-[data-theme="dark"] .nav-icon-logo,
-[data-theme="dark"] .nav-action-logo,
-[data-theme="dark"] .drawer-notification-link .nav-icon-logo {
-  filter: brightness(0) invert(1);
 }
 
 [data-theme="dark"] .search-admin-logo,
