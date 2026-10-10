@@ -32,6 +32,49 @@ img {
   position: relative;
 }
 
+.theme-toggle,
+.text-action,
+.bag-button {
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .72);
+  font-weight: 900;
+  white-space: nowrap;
+  transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.theme-toggle {
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
+}
+
+.theme-track,
+.theme-thumb {
+  display: grid;
+  place-items: center;
+}
+
+.theme-toggle:hover,
+.text-action:hover,
+.bag-button:hover {
+  border-color: rgba(18, 63, 66, .34);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.storefront-home .hero .hero-copy p,
+.storefront-home .hero .hero-side-note {
+  color: rgba(255, 255, 255, .86);
+}
+
 .notification-button .badge,
 .bag-button .badge {
   position: absolute;
@@ -1071,6 +1114,35 @@ img {
 [data-theme="dark"] .state-screen,
 [data-theme="dark"] .bug-item {
   background: #101717;
+}
+
+[data-theme="dark"] .theme-toggle,
+[data-theme="dark"] .text-action,
+[data-theme="dark"] .bag-button {
+  border-color: rgba(255, 255, 255, .14);
+  color: var(--ink);
+  background: rgba(24, 28, 27, .88);
+}
+
+[data-theme="dark"] .react-search-icon {
+  color: var(--ink);
+}
+
+@media (max-width: 1320px) and (min-width: 981px) {
+  .wish-action,
+  .account-button,
+  .bag-button {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .account-button .label,
+  .bag-button .label,
+  .bag-button #cartCount {
+    display: none;
+  }
 }
 
 [data-theme="dark"] .season-story {

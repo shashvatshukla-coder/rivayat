@@ -12,12 +12,20 @@ assert.doesNotMatch(navigation, /<img\b/i, "Navbar artwork must use theme-aware 
 assert.match(navigation, /class="brand-logo-svg"/);
 assert.match(navigation, /class="nav-svg-icon nav-action-logo"/);
 assert.match(navigation, /class="nav-svg-icon nav-icon-logo"/);
+assert.match(navigation, /class="nav-svg-icon nav-icon-logo nav-bell-icon"/);
+assert.match(navigation, /class="nav-svg-icon nav-account-icon"/);
+assert.match(navigation, /<animate\b/);
 assert.match(navigation, /class="nav-svg-icon theme-icon theme-sun"/);
 assert.match(navigation, /class="nav-svg-icon theme-icon theme-moon"/);
 assert.match(navigation, /class="mobile-bottom-nav"[\s\S]*<svg/);
 assert.match(storefront, /\[data-theme="dark"\] \.theme-sun \{ display:none; \}/);
 assert.match(storefront, /\[data-theme="dark"\] \.theme-moon \{ display:block; \}/);
 assert.doesNotMatch(storefront, /thumb\.textContent\s*=/, "Theme switching must not replace the SVG markup.");
+
+for (const icon of ["bell.svg", "account.svg"]) {
+  const source = fs.readFileSync(path.join(__dirname, "..", "assets", "icons", icon), "utf8");
+  assert.match(source, /stroke="currentColor"/, `${icon} must follow the active theme colour.`);
+}
 
 const reactSource = fs.readFileSync(path.join(__dirname, "..", "react", "interactive.jsx"), "utf8");
 assert.match(reactSource, /<svg className="react-search-icon nav-svg-icon"/);

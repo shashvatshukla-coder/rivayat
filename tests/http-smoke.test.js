@@ -30,8 +30,9 @@ function request(port, pathname) {
     const health = await request(port, "/health");
     assert.equal(health.status, 200);
     assert.deepEqual(JSON.parse(health.body.toString("utf8")).passwordPolicy, {
-      version: "customer-password-v1",
-      length: 6,
+      version: "customer-password-v2",
+      minLength: 8,
+      maxLength: 15,
       requiresNumber: true,
       requiresSymbol: true
     });

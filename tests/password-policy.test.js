@@ -3,25 +3,27 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { helpers } = require("../server");
 
-assert.equal(helpers.isValidCustomerPassword("abc1!x"), true);
-assert.equal(helpers.isValidCustomerPassword("12345!"), true);
-assert.equal(helpers.isValidCustomerPassword("abcde!"), false, "A number is required.");
-assert.equal(helpers.isValidCustomerPassword("abc123"), false, "A symbol is required.");
-assert.equal(helpers.isValidCustomerPassword("ab1!"), false, "The password cannot be shorter than six characters.");
-assert.equal(helpers.isValidCustomerPassword("abcd1!x"), false, "The password cannot be longer than six characters.");
-assert.equal(helpers.isValidCustomerPassword("ab 1!x"), false, "Spaces are not valid password characters.");
+assert.equal(helpers.isValidCustomerPassword("abcdef1!"), true);
+assert.equal(helpers.isValidCustomerPassword("1234567!"), true);
+assert.equal(helpers.isValidCustomerPassword("abcdefgh!"), false, "A number is required.");
+assert.equal(helpers.isValidCustomerPassword("abcdefgh1"), false, "A symbol is required.");
+assert.equal(helpers.isValidCustomerPassword("abcde1!"), false, "The password cannot be shorter than eight characters.");
+assert.equal(helpers.isValidCustomerPassword("abcdefghijklm1!"), true, "Fifteen characters are allowed.");
+assert.equal(helpers.isValidCustomerPassword("abcdefghijklmn1!"), false, "The password cannot be longer than fifteen characters.");
+assert.equal(helpers.isValidCustomerPassword("abc def1!"), false, "Spaces are not valid password characters.");
 
 const storefront = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 assert.match(storefront, /password-strength-signup/);
 assert.match(storefront, /password-strength-reset/);
-assert.match(storefront, /minlength="6" maxlength="6"/);
-assert.doesNotMatch(storefront, /name="password"[^>]*minlength="8"/);
-assert.doesNotMatch(storefront, /Password must contain at least 8 characters/i);
+assert.match(storefront, /minlength="8" maxlength="15"/);
+assert.doesNotMatch(storefront, /name="password"[^>]*minlength="6"/);
+assert.doesNotMatch(storefront, /Password must be exactly 6 characters/i);
 
 const server = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
-assert.match(server, /version: "customer-password-v1"/);
-assert.match(server, /length: 6/);
-assert.doesNotMatch(server, /Password must contain at least 8 characters/i);
+assert.match(server, /version: "customer-password-v2"/);
+assert.match(server, /minLength: 8/);
+assert.match(server, /maxLength: 15/);
+assert.doesNotMatch(server, /Password must be exactly 6 characters/i);
 
 assert.match(storefront, /\[data-theme="light"\] \.auth-shell \.card/);
 assert.match(storefront, /--auth-text: #111111/);
@@ -52,4 +54,4 @@ for (const [theme, variables] of [["light", cssVariables(":root")], ["dark", css
   }
 }
 
-console.log("Password policy OK: exact six-character customer passwords require a number and symbol.");
+console.log("Password policy OK: customer passwords are 8–15 characters and require a number and symbol.");

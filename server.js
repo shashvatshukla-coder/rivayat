@@ -36,8 +36,8 @@ const BUSINESS_ADDRESS = process.env.BUSINESS_ADDRESS || "India";
 const BUSINESS_GSTIN = process.env.BUSINESS_GSTIN || "";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "houseofrivayat@gmail.com";
 const SUPPORT_PHONE = process.env.SUPPORT_PHONE || "+91 80041 09305";
-const CUSTOMER_PASSWORD_MESSAGE = "Password must be exactly 6 characters and include at least one number and one symbol.";
-const CUSTOMER_PASSWORD_PATTERN = /^(?=.*\d)(?=.*[!-/:-@[-`{-~])\S{6}$/;
+const CUSTOMER_PASSWORD_MESSAGE = "Password must be 8 to 15 characters and include at least one number and one symbol.";
+const CUSTOMER_PASSWORD_PATTERN = /^(?=.*\d)(?=.*[!-/:-@[-`{-~])\S{8,15}$/;
 const configuredEarnPercent = Number(process.env.LOYALTY_EARN_PERCENT || 2);
 const configuredRedeemPercent = Number(process.env.LOYALTY_MAX_REDEMPTION_PERCENT || 20);
 const LOYALTY_EARN_PERCENT = Number.isFinite(configuredEarnPercent) ? Math.max(0, Math.min(20, configuredEarnPercent)) : 2;
@@ -1011,8 +1011,9 @@ app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backen
 app.get("/health", (req, res) => res.json({
   success: true,
   passwordPolicy: {
-    version: "customer-password-v1",
-    length: 6,
+    version: "customer-password-v2",
+    minLength: 8,
+    maxLength: 15,
     requiresNumber: true,
     requiresSymbol: true
   }
