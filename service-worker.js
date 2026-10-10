@@ -15,7 +15,7 @@ const CORE_ASSETS = [
   "/assets/branding/rivayat-icon-512.png",
   "/assets/storefront/categories/men.png",
   "/assets/storefront/categories/women.png",
-  "/assets/storefront/hero/rivayat-new-york-collage.png",
+  "/assets/storefront/hero/rivayat-new-york-collage.webp",
   "/assets/branding/goat-mode.png",
   "/assets/branding/mr-mark.png",
   "/assets/branding/muse-mark.png",

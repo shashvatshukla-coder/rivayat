@@ -65,8 +65,8 @@ const DEFAULT_HOMEPAGE = {
   heroPill: "RIVAYAT / Everyday expression · India 2026",
   heroTitle: "Own your vibe.",
   heroSubtitle: "Fan jerseys, expressive layers and easy everyday fits selected for the way young India dresses now.",
-  heroImage: "/assets/storefront/hero/rivayat-new-york-collage.png",
-  darkHeroImage: "/assets/storefront/hero/rivayat-new-york-collage.png",
+  heroImage: "/assets/storefront/hero/rivayat-new-york-collage.webp",
+  darkHeroImage: "/assets/storefront/hero/rivayat-new-york-collage.webp",
   heroOffer: "A considered edit for every mood",
   primaryButtonText: "Shop the edit",
   secondaryButtonText: "Enter GOAT Mode"
