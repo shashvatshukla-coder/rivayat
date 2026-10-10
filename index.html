@@ -37,8 +37,7 @@
   <link rel="shortcut icon" href="/assets/branding/rivayat-favicon-96.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/branding/rivayat-apple-touch.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="preload" as="image" href="/assets/storefront/hero/rivayat-home-light.png" fetchpriority="high" />
-  <link rel="preload" as="image" href="/assets/storefront/hero/rivayat-home-dark.png" media="(prefers-color-scheme: dark)" fetchpriority="high" />
+  <link rel="preload" as="image" href="/assets/storefront/hero/rivayat-new-york-collage.png" fetchpriority="high" />
   <script type="application/ld+json" id="siteStructuredData">
     {
       "@context": "https://schema.org",
@@ -59,14 +58,23 @@
           "areaServed": { "@type": "Country", "name": "India" },
           "founder": {
             "@type": "Person",
+            "@id": "https://www.rivayat.shop/about#founder",
             "name": "Shashvat Shukla",
             "jobTitle": "Founder",
+            "description": "Guides RIVAYAT's brand, product direction and long-term vision.",
             "sameAs": ["https://github.com/shashvatshukla-coder", "https://www.linkedin.com/in/shashvat-shukla-03225b397"]
           },
           "employee": [
-            { "@type": "Person", "name": "Swastik Shukla", "jobTitle": "Manager", "sameAs": ["https://github.com/SwastikShukla006", "https://www.linkedin.com/in/swastikshukla009"] },
-            { "@type": "Person", "name": "Shantanu Shukla", "jobTitle": "Business Head" },
-            { "@type": "Person", "name": "Navneet Tiwari", "jobTitle": "Marketing Head" }
+            { "@type": "Person", "@id": "https://www.rivayat.shop/about#manager", "name": "Swastik Shukla", "jobTitle": "Manager", "description": "Connects product, technology and the day-to-day customer experience.", "sameAs": ["https://github.com/SwastikShukla006", "https://www.linkedin.com/in/swastikshukla009"] },
+            { "@type": "Person", "@id": "https://www.rivayat.shop/about#business-head", "name": "Shantanu Shukla", "jobTitle": "Business Head", "description": "Supports commercial planning, partnerships and sustainable growth." },
+            { "@type": "Person", "@id": "https://www.rivayat.shop/about#marketing-head", "name": "Navneet Tiwari", "jobTitle": "Marketing Head", "description": "Shapes campaigns, community storytelling and launch communication." }
+          ],
+          "additionalProperty": [
+            { "@type": "PropertyValue", "name": "Proposed ownership interest — Shashvat Shukla", "value": "33% (3,300 illustrative units)" },
+            { "@type": "PropertyValue", "name": "Proposed ownership interest — Swastik Shukla", "value": "29% (2,900 illustrative units)" },
+            { "@type": "PropertyValue", "name": "Proposed ownership interest — Navneet Tiwari", "value": "17% (1,700 illustrative units)" },
+            { "@type": "PropertyValue", "name": "Proposed ownership interest — Shantanu Shukla", "value": "15% (1,500 illustrative units)" },
+            { "@type": "PropertyValue", "name": "Proposed ownership interest — Shukla Group of Companies", "value": "6% (600 illustrative units)" }
           ],
           "contactPoint": { "@type": "ContactPoint", "contactType": "customer service", "email": "houseofrivayat@gmail.com", "telephone": "+91-80041-09305", "availableLanguage": ["English", "Hindi"] },
           "sameAs": ["https://www.instagram.com/houseofrivayat"]
@@ -82,6 +90,15 @@
             "target": "https://www.rivayat.shop/shop?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
+        },
+        {
+          "@type": "AboutPage",
+          "@id": "https://www.rivayat.shop/ownership#page",
+          "url": "https://www.rivayat.shop/ownership",
+          "name": "RIVAYAT Proposed Ownership Distribution",
+          "description": "An illustrative proposed distribution dated 11 October 2026. It is not a statutory register or proof that legal shares were issued or transferred.",
+          "about": { "@id": "https://www.rivayat.shop/#organization" },
+          "isPartOf": { "@id": "https://www.rivayat.shop/#website" }
         }
       ]
     }
@@ -680,7 +697,7 @@
   </section>
 
   <footer class="site-footer">
-    <div class="footer-main"><div><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('goat-mode')">GOAT Mode</button><button onclick="homeScroll('mr')">Mr.</button><button onclick="homeScroll('muse')">Muse</button><a href="#/wishlist">Wishlist</a></div><div><p>Help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a></div><div><p>Inside Rivayat</p><a href="#/about">About us</a><a href="#/style">Style Lab</a><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Social media</a><a href="#/legal">Legal centre</a><a href="#/contact">Contact</a></div></div></div>
+    <div class="footer-main"><div><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('goat-mode')">GOAT Mode</button><button onclick="homeScroll('mr')">Mr.</button><button onclick="homeScroll('muse')">Muse</button><a href="#/wishlist">Wishlist</a></div><div><p>Help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a></div><div><p>Inside Rivayat</p><a href="#/about">About us</a><a href="#/ownership">Ownership record</a><a href="#/style">Style Lab</a><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Social media</a><a href="#/legal">Legal centre</a><a href="#/contact">Contact</a></div></div></div>
     <div class="newsletter"><div><p class="eyebrow">No spam. Just good clothes.</p><h3>Get first dibs on every drop.</h3></div><form onsubmit="subscribeNewsletter(event)"><input name="email" type="email" required placeholder="Email address" aria-label="Email address"><button>Join ↗</button></form></div>
     <div class="footer-bottom"><span>© <span id="year"></span> Rivayat</span><span>Made in India · worn everywhere</span><span><a href="#/privacy">Privacy</a> · <a href="#/terms">Terms</a> · <button onclick="openBugReporter()">Report a problem</button></span></div>
   </footer>
@@ -702,11 +719,17 @@
     const RETURN_STATUSES = ['Pending','Approved','Rejected','Resolved'];
     const SIZES = ['S','M','L','XL','XXL'];
 
+    const HERO_IMAGE = '/assets/storefront/hero/rivayat-new-york-collage.png';
+    const LEGACY_HERO_IMAGES = new Set([
+      '/assets/storefront/hero/rivayat-home-light.png',
+      '/assets/storefront/hero/rivayat-home-dark.png',
+      '/assets/storefront/categories/men.png'
+    ]);
     const ASSETS = {
       logo: '/assets/branding/rivayat-logo.webp',
       fallbackProduct: '/assets/products/tshirts/chicago_23_cream_red_tshirt.png',
-      lightHero: '/assets/storefront/hero/rivayat-home-light.png',
-      darkHero: '/assets/storefront/hero/rivayat-home-dark.png',
+      lightHero: HERO_IMAGE,
+      darkHero: HERO_IMAGE,
       goat: '/assets/branding/goat-mode.png',
       mr: '/assets/branding/mr-mark.png',
       muse: '/assets/branding/muse-mark.png',
@@ -751,11 +774,37 @@
       { id: 'marketing-head', name: 'Navneet Tiwari', role: 'Marketing Head', bio: 'Shapes campaigns, community storytelling and launch communication.', photo: '', links: [] }
     ];
 
+    const TEAM_PROFILE_DETAILS = {
+      founder: {
+        story: 'Shashvat guides Rivayat’s brand direction, product choices and long-term vision. His work turns an independent fashion idea into a label with a clear voice, a considered catalogue and a customer-first digital experience.',
+        focus: 'Brand direction · product vision', share: 33, units: 3300
+      },
+      manager: {
+        story: 'Swastik connects product, technology and daily operations. His work keeps the storefront practical, welcoming and easy to use while translating the brand’s plans into repeatable execution.',
+        focus: 'Product · technology · operations', share: 29, units: 2900
+      },
+      'business-head': {
+        story: 'Shantanu supports commercial planning, partnerships and sustainable growth. His role tests ideas against business realities and helps the team grow without losing Rivayat’s independent character.',
+        focus: 'Commercial planning · partnerships', share: 15, units: 1500
+      },
+      'marketing-head': {
+        story: 'Navneet shapes campaign planning, community storytelling and launch communication. His role turns product drops and brand decisions into messages people can understand and share.',
+        focus: 'Campaigns · community · launches', share: 17, units: 1700
+      }
+    };
+    const OWNERSHIP_RECORDS = [
+      { personId: 'founder', name: 'Shashvat Shukla', role: 'Founder', units: 3300, share: 33 },
+      { personId: 'manager', name: 'Swastik Shukla', role: 'Manager', units: 2900, share: 29 },
+      { personId: 'marketing-head', name: 'Navneet Tiwari', role: 'Marketing Head', units: 1700, share: 17 },
+      { personId: 'business-head', name: 'Shantanu Shukla', role: 'Business Head', units: 1500, share: 15 },
+      { personId: 'group', name: 'Shukla Group of Companies', role: 'Proposed institutional interest', units: 600, share: 6 }
+    ];
+
     const INITIAL_ORDERS = [];
 
     const INITIAL_USERS = [];
 
-    const APP_VERSION = 'rivayat-2026-08-24-supplied-catalog-v1';
+    const APP_VERSION = 'rivayat-2026-10-11-story-and-ownership-v1';
    const DEFAULT_API_BASE_URL = 'https://rivayat.onrender.com';
    const API_BASE_URL = String(localStorage.getItem('rivayat_api_base_url') || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
    const CONFIG = {
@@ -779,7 +828,7 @@
       const merged = { ...DEFAULT_HOMEPAGE, ...source };
       const legacyCopy = [source.heroPill, source.heroTitle, source.heroSubtitle, source.heroOffer, source.primaryButtonText, source.secondaryButtonText]
         .filter(Boolean).join(' ').toLowerCase();
-      const legacyHero = source.heroImage === '/assets/storefront/categories/men.png' || source.darkHeroImage === '/assets/storefront/categories/men.png';
+      const legacyHero = LEGACY_HERO_IMAGES.has(source.heroImage) || LEGACY_HERO_IMAGES.has(source.darkHeroImage);
       const staleBackendSettings = !source.darkHeroImage || legacyHero || /new arrivals|drop 01|everyday streetwear|free shipping|free delivery|new collection|shop now/.test(legacyCopy);
       if (staleBackendSettings) return { ...DEFAULT_HOMEPAGE };
       if (!merged.heroImage) merged.heroImage = ASSETS.lightHero;
@@ -835,7 +884,7 @@
 
     // Migrate only stale homepage defaults. Cart, account, wishlist and order
     // state are intentionally left untouched when a new storefront is shipped.
-    const homepageMigrationKey = 'rivayat_homepage_visual_v2';
+    const homepageMigrationKey = 'rivayat_homepage_visual_v3';
     const savedHomepage = db.get('rivayat_homepage_settings', DEFAULT_HOMEPAGE);
     const migratedHomepage = normalizeHomepageSettings(savedHomepage);
     if (migratedHomepage.heroPill === 'RIVAYAT New Collection • India 2026') migratedHomepage.heroPill = DEFAULT_HOMEPAGE.heroPill;
@@ -1868,7 +1917,7 @@
       setRouteStructuredData(structured);
     }
     function updateRouteSEO(route, parts) {
-      const publicRoutes = new Set(['home','shop','product','style','about','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal']);
+      const publicRoutes = new Set(['home','shop','product','style','about','ownership','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal']);
       const routePath = route === 'home' ? '' : route === 'refund' ? 'returns-policy' : route === 'product' ? `product/${encodeURIComponent(parts[1] || '')}` : route;
       const canonical = `https://www.rivayat.shop/${routePath}`;
       document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical);
@@ -1964,8 +2013,8 @@
       const heroTitle = escapeHtml(home.heroTitle || DEFAULT_HOMEPAGE.heroTitle).replace(/(vibe)/ig, '<em>$1</em>');
       return `<div class="page storefront-home">
         <section class="hero" aria-labelledby="hero-title">
-          <img class="hero-image hero-image-aerial hero-image-light" src="${escapeHtml(lightHero)}" width="736" height="1308" alt="RIVAYAT fashion edit" fetchpriority="high">
-          <img class="hero-image hero-image-aerial hero-image-dark" src="${escapeHtml(darkHero)}" width="736" height="1307" alt="RIVAYAT dark-mode fashion edit" loading="lazy" decoding="async">
+          <img class="hero-image hero-image-aerial hero-image-light" src="${escapeHtml(lightHero)}" width="1200" height="675" alt="RIVAYAT New York street-culture collage" fetchpriority="high">
+          <img class="hero-image hero-image-aerial hero-image-dark" src="${escapeHtml(darkHero)}" width="1200" height="675" alt="RIVAYAT New York street-culture collage in dark mode" loading="lazy" decoding="async">
           <div class="hero-wash"></div>
           <div class="hero-copy">
             <p class="hero-tag">${escapeHtml(home.heroPill)}</p>
@@ -2016,16 +2065,27 @@
           <div class="style-teaser-pills" aria-hidden="true"><span>Colour pairing</span><span>Layering ideas</span><span>Occasion ready</span><span>RIVAYAT matches</span></div>
         </section>
 
-        <section class="home-about" id="about"><div class="home-about-image"><img src="${ASSETS.crest}" width="736" height="736" alt="RIVAYAT Fashion crest" loading="lazy" decoding="async"></div><div class="home-about-copy"><p class="eyebrow">The people behind Rivayat</p><h2>Small team.<br><em>Big point of view.</em></h2><p>Rivayat is an independent Indian label shaped by sport, street culture and everyday tradition. We build expressive, comfortable clothing and a shopping experience that stays clear and human.</p><div class="home-about-people">${TeamService.cached().slice(0,4).map(member=>`<div><span>${escapeHtml(member.role)}</span><strong>${escapeHtml(member.name)}</strong></div>`).join('')}</div><a class="button button-dark" href="#/about">Meet the people ↗</a><div class="home-socials"><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Instagram ↗</a><a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="mailto:${BRAND.email}">Email ↗</a></div></div></section>
+        <section class="home-about" id="about"><div class="home-about-image"><img src="${ASSETS.crest}" width="736" height="736" alt="RIVAYAT Fashion crest" loading="lazy" decoding="async"></div><div class="home-about-copy"><p class="eyebrow">The people behind Rivayat</p><h2>Small team.<br><em>Big point of view.</em></h2><p>Rivayat is an independent Indian label shaped by sport, street culture and everyday tradition. We build expressive, comfortable clothing and a shopping experience that stays clear and human.</p><div class="home-about-people">${TeamService.cached().slice(0,4).map(renderTeamPopover).join('')}</div><a class="button button-dark" href="#/about">Meet the people ↗</a><div class="home-socials"><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer">Instagram ↗</a><a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="mailto:${BRAND.email}">Email ↗</a></div></div></section>
 
         <section class="community-strip"><div><p class="eyebrow">Rivayat people</p><h2>Built for the version of you that says yes.</h2></div><div class="community-stats"><div><strong>${products.length}</strong><span>current styles</span></div><div><strong>10</strong><span>type families, one voice</span></div><div><strong>4</strong><span>digits in every OTP</span></div></div></section>
       </div>`;
     }
     
 
+    function teamProfile(person={}) {
+      const byName = DEFAULT_TEAM.find(member => member.name === person.name);
+      return TEAM_PROFILE_DETAILS[person.id] || TEAM_PROFILE_DETAILS[byName?.id] || { story: person.bio || 'Part of the team building RIVAYAT.', focus: person.role || 'RIVAYAT team' };
+    }
+    function renderTeamPopover(person) {
+      const profile = teamProfile(person);
+      return `<details class="home-team-person"><summary><span>${escapeHtml(person.role)}</span><strong>${escapeHtml(person.name)}</strong></summary><div class="team-hover-card"><p>${escapeHtml(person.bio || profile.story)}</p><div class="team-hover-meta"><span>${escapeHtml(profile.focus)}</span>${profile.share ? `<strong>${profile.share}% proposed interest</strong>` : ''}</div><a href="#/about">Read their story ↗</a></div></details>`;
+    }
+    function renderOwnershipSection({ compact=false }={}) {
+      return `<section class="ownership-section ${compact ? 'ownership-section-compact' : ''}" aria-labelledby="ownership-title"><div class="ownership-heading"><div><p class="eyebrow">Proposed ownership record · 11 October 2026</p><h2 id="ownership-title">How the illustrative distribution is structured.</h2></div><p>This public summary reflects certificate reference RIV-SD-001. It is a proposed, illustrative distribution—not a statutory register, legal share certificate, or proof that shares were issued or transferred.</p></div><div class="ownership-table-wrap"><table class="ownership-table"><thead><tr><th>Person or group</th><th>Role</th><th>Illustrative units</th><th>Proposed interest</th></tr></thead><tbody>${OWNERSHIP_RECORDS.map(record=>`<tr><td><strong>${escapeHtml(record.name)}</strong></td><td>${escapeHtml(record.role)}</td><td>${Number(record.units).toLocaleString('en-IN')}</td><td><span class="ownership-share">${record.share}%</span></td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2"><strong>Total illustrative capital</strong></td><td><strong>10,000</strong></td><td><strong>100%</strong></td></tr></tfoot></table></div>${compact ? '<a class="underlined" href="#/ownership">Read the full ownership note ↗</a>' : '<p class="ownership-note">Source note: the attached agreement describes the figures as a draft/demo framework subject to legal verification and formal corporate records.</p>'}</section>`;
+    }
     function renderFoundersSection() {
       const people = TeamService.cached();
-      return `<section class="section"><div class="container"><div class="section-head"><div><h2 class="serif">People Behind RIVAYAT</h2><p>Meet the team building the RIVAYAT shopping experience.</p></div></div><div class="grid grid-4">${people.map(person=>`<article class="card founder-card">${safeImageUrl(person.photo) ? `<img class="team-photo" src="${escapeHtml(safeImageUrl(person.photo))}" alt="${escapeHtml(person.name)} - ${escapeHtml(person.role)}" loading="lazy">` : `<div class="team-photo-placeholder" aria-hidden="true">${escapeHtml(String(person.name || 'R').split(/\s+/).map(part=>part[0]).join('').slice(0,2).toUpperCase())}</div>`}<div><h3 style="margin:14px 0 0">${escapeHtml(person.name)}</h3><p class="muted" style="margin:5px 0 8px">${escapeHtml(person.role)}</p><p>${escapeHtml(person.bio || '')}</p>${Array.isArray(person.links) && person.links.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${person.links.map(link=>`<a class="btn ghost small" target="_blank" rel="noopener noreferrer" href="${escapeHtml(safeExternalUrl(link.url))}">${escapeHtml(link.label)}</a>`).join('')}</div>` : ''}</div></article>`).join('')}</div></div></section>`;
+      return `<section class="team-story-section"><div class="section-head"><div><p class="eyebrow">Four roles · one label</p><h2 class="serif">People behind RIVAYAT</h2><p>Each person brings a different discipline to the same idea: make expressive fashion feel clear, useful and human.</p></div></div><div class="team-story-grid">${people.map((person,index)=>{ const profile=teamProfile(person); return `<article class="team-story-card" id="${escapeHtml(String(person.id || person.name).replace(/[^a-z0-9-]+/gi,'-').toLowerCase())}"><div class="team-story-number">0${index+1}</div>${safeImageUrl(person.photo) ? `<img class="team-photo" src="${escapeHtml(safeImageUrl(person.photo))}" alt="${escapeHtml(person.name)} - ${escapeHtml(person.role)}" loading="lazy">` : `<div class="team-photo-placeholder" aria-hidden="true">${escapeHtml(String(person.name || 'R').split(/\s+/).map(part=>part[0]).join('').slice(0,2).toUpperCase())}</div>`}<div class="team-story-copy"><p class="eyebrow">${escapeHtml(person.role)}</p><h3>${escapeHtml(person.name)}</h3><p>${escapeHtml(profile.story)}</p><div class="team-focus"><span>Focus</span><strong>${escapeHtml(profile.focus)}</strong></div>${profile.share ? `<div class="team-focus"><span>Proposed interest</span><strong>${profile.share}% · ${Number(profile.units).toLocaleString('en-IN')} illustrative units</strong></div>` : ''}${Array.isArray(person.links) && person.links.length ? `<div class="team-links">${person.links.map(link=>`<a class="btn ghost small" target="_blank" rel="noopener noreferrer" href="${escapeHtml(safeExternalUrl(link.url))}">${escapeHtml(link.label)}</a>`).join('')}</div>` : ''}</div></article>`}).join('')}</div></section>`;
     }
 
     async function renderShop({ revalidate=true }={}) {
@@ -2612,18 +2672,6 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
       toast('Subscribed to RIVAYAT updates');
     }
 
-    function renderArcade() {
-      const target = new Date('2026-10-15T00:00:00+05:30');
-      const days = Math.max(0, Math.ceil((target.getTime() - Date.now()) / 86400000));
-      return `<section class="arcade-panel" aria-label="RIVAYAT arcade"><div class="section-head"><div><p class="eyebrow">Private arcade</p><h2 class="serif">For the love of the game.</h2><p class="muted">Three tiny offline-friendly games. Scores stay on this device.</p></div><div class="arcade-countdown"><strong>${days}</strong><span>days left in ChatGPT subscription ending</span></div></div><div class="grid grid-3"><article class="card pad game-card"><span class="pill">Cricket Tap</span><h3>Hit a six</h3><p class="muted">Tap the bat and chase your best score.</p><strong id="cricketScore">Score: 0 · Best: ${Number(localStorage.getItem('rivayat_cricket_high') || 0)}</strong><button class="btn full" onclick="playCricket()" style="margin-top:14px">🏏 Hit the ball</button></article><article class="card pad game-card"><span class="pill">Vibe Catch</span><h3>Catch the drop</h3><p class="muted">A quick reflex game for a quick break.</p><strong id="vibeScore">Score: 0 · Best: ${Number(localStorage.getItem('rivayat_vibe_high') || 0)}</strong><button class="btn full" onclick="playVibeCatch()" style="margin-top:14px">Catch the vibe</button></article><article class="card pad game-card"><span class="pill">Memory Flip</span><h3>Match the pair</h3><p class="muted">Find two matching symbols in as few turns as possible.</p><div class="memory-board" id="memoryBoard"></div><button class="btn secondary full" onclick="startMemoryGame()" style="margin-top:14px">New round</button></article></div></section>`;
-    }
-    let cricketScore = 0; let vibeScore = 0; let memoryState = null;
-    function playCricket() { const runs = [1,2,3,4,6][Math.floor(Math.random() * 5)]; cricketScore += runs; const best = Math.max(cricketScore, Number(localStorage.getItem('rivayat_cricket_high') || 0)); localStorage.setItem('rivayat_cricket_high', best); const node = document.getElementById('cricketScore'); if (node) node.textContent = `Score: ${cricketScore} · Best: ${best} · +${runs}`; }
-    function playVibeCatch() { const caught = Math.random() > .2; if (caught) vibeScore += 1; const best = Math.max(vibeScore, Number(localStorage.getItem('rivayat_vibe_high') || 0)); localStorage.setItem('rivayat_vibe_high', best); const node = document.getElementById('vibeScore'); if (node) node.textContent = `Score: ${vibeScore} · Best: ${best}${caught ? ' · Nice catch' : ' · Missed it'}`; }
-    function startMemoryGame() { const symbols = ['✦','✦','☀','☀'].sort(() => Math.random() - .5); memoryState = { symbols, open: [], matched: [] }; const board = document.getElementById('memoryBoard'); if (!board) return; board.innerHTML = symbols.map((symbol, index) => `<button class="memory-tile" data-index="${index}" onclick="flipMemory(${index})">?</button>`).join(''); }
-    function flipMemory(index) { if (!memoryState || memoryState.matched.includes(index) || memoryState.open.includes(index)) return; memoryState.open.push(index); const board = document.getElementById('memoryBoard'); const tile = board?.querySelector(`[data-index="${index}"]`); if (tile) tile.textContent = memoryState.symbols[index]; if (memoryState.open.length < 2) return; const [first, second] = memoryState.open; if (memoryState.symbols[first] === memoryState.symbols[second]) memoryState.matched.push(first, second); setTimeout(() => { if (memoryState?.open?.length) { const open = [...memoryState.open]; memoryState.open = []; if (!memoryState.matched.includes(first) || !memoryState.matched.includes(second)) open.forEach(item => { const node = board?.querySelector(`[data-index="${item}"]`); if (node) node.textContent = '?'; }); } }, 500); }
-    async function unlockArcade(event) { event.preventDefault(); const form = event.target; const message = document.getElementById('legalSecretMessage'); const code = String(new FormData(form).get('code') || '').trim(); try { const data = await apiFetch('/legal/secret', { method: 'POST', body: JSON.stringify({ code }), timeoutMs: 6000 }); if (!data.unlocked) throw new Error('Code did not unlock the private page.'); document.getElementById('arcadeHost').innerHTML = renderArcade(); startMemoryGame(); message.textContent = 'Private arcade unlocked on this device.'; } catch (error) { if (message) message.textContent = error.message || 'That code did not unlock this page.'; } }
-
     async function exportOrdersCSV() {
       const orders = await OrderService.list();
       const rows = [['Order ID','Date','Customer','Phone','Email','Items','Subtotal','Discount','Delivery','Total','Status','Payment']];
@@ -2682,9 +2730,14 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
     }
 
     function renderStaticPage(kind) {
+      if (kind === 'ownership') {
+        setSEO('Proposed Ownership Distribution', 'Read RIVAYAT’s proposed illustrative ownership distribution and the status of the public record.');
+        setRouteStructuredData({ '@context': 'https://schema.org', '@type': 'AboutPage', '@id': 'https://www.rivayat.shop/ownership#page', url: 'https://www.rivayat.shop/ownership', name: 'RIVAYAT Proposed Ownership Distribution', description: 'An illustrative proposed distribution dated 11 October 2026. It is not a statutory register or proof that legal shares were issued or transferred.', about: { '@id': 'https://www.rivayat.shop/#organization' }, isPartOf: { '@id': 'https://www.rivayat.shop/#website' } });
+        return `<div class="page section policy ownership-page"><div class="container"><div class="section-head ownership-hero"><div><span class="pill">PUBLIC SUMMARY · RIV-SD-001</span><h1 class="serif">Proposed ownership distribution.</h1><p>This page makes the supplied distribution easy to find and understand while keeping its legal status explicit.</p></div><div class="ownership-total"><strong>10,000</strong><span>illustrative units · 100%</span></div></div>${renderOwnershipSection()}<div class="legal-callout"><p class="eyebrow">Status of this record</p><h2>Transparent, but not a statutory share register.</h2><p>The source agreement is marked as a draft/demo framework. These figures describe a proposed distribution only and must not be read as evidence that a company has issued or transferred legal shares. Formal ownership should be confirmed through the relevant entity’s executed agreements, statutory registers and regulatory filings.</p><a class="button button-dark" href="#/about">Meet the team ↗</a></div></div></div>`;
+      }
       if (kind === 'legal') {
         setSEO('Legal Centre', 'RIVAYAT legal, consumer support, privacy, returns and grievance information for customers in India.');
-        return `<div class="page section policy"><div class="container"><div class="section-head"><div><span class="pill">RIVAYAT · INDIA</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">Legal Centre</h1><p class="muted">Clear information for confident shopping. Please review these operational templates with your legal adviser before launch.</p></div></div><div class="grid grid-2"><article class="card pad"><h2>Consumer information</h2><p>RIVAYAT displays product name, price, available sizes, stock status, delivery charge, exchange window and key product details before checkout. Customers receive an order confirmation and can download an invoice from their account.</p><h3>Returns, refunds and cancellation</h3><p>Eligible orders can be cancelled before packing or dispatch. Returns and exchanges are handled through the published window and product-condition rules. Defective, damaged, wrong or materially misdescribed goods are reviewed with evidence and refunded through the original or agreed method.</p><h3>Grievance support</h3><p>Support: <a href="mailto:${BRAND.email}">${BRAND.email}</a> · WhatsApp <a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">${BRAND.whatsapp}</a>. Customers may also contact the National Consumer Helpline at 1915. Keep your order ID in every request.</p><h3>Applicable framework</h3><p>Operations should be reviewed against the Consumer Protection Act and E-Commerce Rules, the Information Technology Act and Rules, and India’s current digital personal-data requirements. This page is an operational guide, not legal advice.</p></article><article class="card pad"><h2>Privacy and account safety</h2><p>We use account, address and order details to authenticate customers, fulfil orders, prevent abuse, provide support, and send essential service messages. We never ask for your password or OTP by phone or chat. You can request correction or deletion of eligible personal data by contacting support.</p><h3>Payments and delivery</h3><p>Prices, discounts, delivery charges and payment status are confirmed on the checkout screen. COD is the available checkout method until a secure server-side online-payment integration is enabled. PIN code lookup uses India Post data to help prefill locality and state.</p><h3>Business disclosures</h3><p>Legal business name: RIVAYAT Fashion · Address: India · GSTIN: configured in the business settings when applicable. Product manufacturer, packer, country-of-origin, material and care labels should be completed for each SKU before public sale.</p></article></div><div class="card pad legal-links"><h2>Read the full policies</h2><div class="state-actions"><a class="btn secondary" href="#/privacy">Privacy</a><a class="btn secondary" href="#/terms">Terms</a><a class="btn secondary" href="#/returns-policy">Returns</a><a class="btn secondary" href="#/shipping">Shipping</a><a class="btn secondary" href="#/cookies">Cookie notice</a><a class="btn secondary" href="#/contact">Contact</a></div></div><div class="card pad secret-gate"><p class="eyebrow">Owner access</p><h2>Private page</h2><p class="muted">Enter the private code supplied by the Rivayat owner.</p><form class="form-grid" onsubmit="unlockArcade(event)"><label>Code<input class="input" name="code" type="password" inputmode="numeric" autocomplete="off" maxlength="32" required></label><button class="btn">Unlock</button></form><p id="legalSecretMessage" class="muted" aria-live="polite"></p></div><div id="arcadeHost"></div></div></div>`;
+        return `<div class="page section policy legal-centre"><div class="container"><div class="section-head legal-hero"><div><span class="pill">RIVAYAT · INDIA</span><h1 class="serif">Legal Centre</h1><p>Plain-language information for shopping, account safety and support. These operational summaries should be reviewed with a qualified legal adviser.</p></div><a class="button button-dark" href="#/contact">Contact support ↗</a></div><div class="legal-topic-grid"><article class="legal-topic"><span>01</span><h2>Shopping & consumer information</h2><p>Product name, price, available sizes, stock, delivery charge and key details are shown before checkout. Customers receive an order confirmation and can download an invoice from their account.</p><a href="#/returns-policy">Returns and cancellations ↗</a></article><article class="legal-topic"><span>02</span><h2>Privacy & account safety</h2><p>We use account, address and order details to authenticate customers, fulfil orders, prevent abuse and provide support. RIVAYAT will never ask for a password or OTP by phone or chat.</p><a href="#/privacy">Privacy policy ↗</a></article><article class="legal-topic"><span>03</span><h2>Payments & delivery</h2><p>Prices, discounts, delivery charges and payment status are confirmed at checkout. PIN-code lookup uses India Post data to help prefill locality and state.</p><a href="#/shipping">Shipping policy ↗</a></article><article class="legal-topic"><span>04</span><h2>Business & ownership disclosures</h2><p>RIVAYAT Fashion operates from India. Proposed ownership figures are published separately with a clear explanation of their illustrative legal status.</p><a href="#/ownership">Ownership record ↗</a></article></div><div class="legal-support"><div><p class="eyebrow">Grievance support</p><h2>Keep your order ID ready.</h2><p>Email <a href="mailto:${BRAND.email}">${BRAND.email}</a> or WhatsApp <a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">${BRAND.whatsapp}</a>. Customers may also contact the National Consumer Helpline at 1915.</p></div><div class="legal-policy-links"><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/returns-policy">Returns</a><a href="#/shipping">Shipping</a><a href="#/cookies">Cookies</a><a href="#/contact">Contact</a></div></div></div></div>`;
       }
       const map = {
         about: ['About RIVAYAT', 'RIVAYAT is an independent Indian fashion label built by Swastik Shukla and Shashvat Shukla around clean comfort, youth culture, and confident everyday fits. We create limited, expressive drops and keep product information, support and community feedback easy to understand.'],
@@ -2701,7 +2754,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
       };
       const [title, text] = map[kind] || map.about; setSEO(title, text);
       const isContact = kind === 'contact';
-      return `<div class="page section policy"><div class="container"><div class="section-head"><div><span class="pill">RIVAYAT</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">${title}</h1></div></div><div class="grid ${isContact?'grid-2':''}"><article class="card pad"><p>${text.replaceAll('\n','<br>')}</p>${isContact ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><a class="btn" href="mailto:${BRAND.email}">Email Us</a><a class="btn secondary" target="_blank" href="https://wa.me/${BRAND.whatsappDigits}">WhatsApp</a></div>` : ''}<h2>RIVAYAT Promise</h2><p>Premium quality, clean everyday style, quick support, and a smooth shopping experience from browsing to delivery.</p></article>${isContact ? `<form class="card pad" onsubmit="event.preventDefault(); toast('Message submitted. Our team will contact you soon')"><h2>Send a message</h2><label>Name<input class="input" required></label><br><label>Email<input class="input" type="email" required></label><br><label>Message<textarea class="textarea" required></textarea></label><br><button class="btn full">Submit</button></form>` : ''}</div>${kind==='about' ? renderFoundersSection() : ''}</div></div>`;
+      return `<div class="page section policy"><div class="container"><div class="section-head"><div><span class="pill">RIVAYAT</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">${title}</h1></div></div><div class="grid ${isContact?'grid-2':''}"><article class="card pad"><p>${text.replaceAll('\n','<br>')}</p>${isContact ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><a class="btn" href="mailto:${BRAND.email}">Email Us</a><a class="btn secondary" target="_blank" href="https://wa.me/${BRAND.whatsappDigits}">WhatsApp</a></div>` : ''}<h2>RIVAYAT Promise</h2><p>Premium quality, clean everyday style, quick support, and a smooth shopping experience from browsing to delivery.</p></article>${isContact ? `<form class="card pad" onsubmit="event.preventDefault(); toast('Message submitted. Our team will contact you soon')"><h2>Send a message</h2><label>Name<input class="input" required></label><br><label>Email<input class="input" type="email" required></label><br><label>Message<textarea class="textarea" required></textarea></label><br><button class="btn full">Submit</button></form>` : ''}</div>${kind==='about' ? renderFoundersSection() + renderOwnershipSection({ compact: true }) : ''}</div></div>`;
     }
 
     function notFound() { setSEO('Page Not Found', 'This RIVAYAT page does not exist.'); document.querySelector('meta[name="robots"]')?.setAttribute('content','noindex,follow'); return `<div class="page section"><div class="container"><div class="state-screen"><span class="error-code">404 · Page not found</span><h1>That page slipped away.</h1><p class="muted">The link may be old, incomplete, or no longer available.</p><div class="state-actions"><a class="btn" href="#/">Go home</a><a class="btn secondary" href="#/shop">Shop collection</a></div></div></div></div>`; }
@@ -2736,7 +2789,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
         else if (route === 'forgot-password') nextHtml = renderAuth('forgot');
         else if (route === 'dashboard') nextHtml = await renderDashboard(parts[1] || 'profile');
         else if (route === 'admin') nextHtml = await renderAdmin(parts[1] || 'analytics');
-        else if (['about','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal'].includes(route)) nextHtml = renderStaticPage(route);
+        else if (['about','ownership','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal'].includes(route)) nextHtml = renderStaticPage(route);
         else nextHtml = notFound();
         if (renderId !== renderSequence) return;
         app.innerHTML = nextHtml;

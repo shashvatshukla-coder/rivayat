@@ -18,7 +18,7 @@ function request(port, pathname) {
   await new Promise((resolve) => server.once("listening", resolve));
   const port = server.address().port;
   try {
-    const routes = ["/", "/catalog.js", "/storefront.css", "/manifest.webmanifest", "/service-worker.js", "/sitemap.xml", "/robots.txt", "/llms.txt", "/assets/branding/rivayat-logo.png"];
+    const routes = ["/", "/about", "/ownership", "/legal", "/catalog.js", "/storefront.css", "/manifest.webmanifest", "/service-worker.js", "/sitemap.xml", "/robots.txt", "/llms.txt", "/assets/branding/rivayat-logo.png", "/assets/storefront/hero/rivayat-new-york-collage.png"];
     for (const pathname of routes) {
       const response = await request(port, pathname);
       assert.equal(response.status, 200, `${pathname} should return 200.`);
@@ -26,6 +26,8 @@ function request(port, pathname) {
     }
     const home = await request(port, "/");
     assert.match(home.body.toString("utf8"), /RIVAYAT \| Premium Indian Fashion/);
+    const ownership = await request(port, "/ownership");
+    assert.match(ownership.body.toString("utf8"), /Proposed Ownership Distribution \| RIVAYAT/);
     assert.match(String(home.headers["content-security-policy"]), /frame-ancestors 'none'/);
     const health = await request(port, "/health");
     assert.equal(health.status, 200);

@@ -36,8 +36,6 @@ services:
         sync: false
       - key: GEMINI_MODEL
         value: gemini-2.5-flash
-      - key: SWASTIK_SECRET
-        sync: false
       - key: ALGOLIA_APP_ID
         sync: false
       - key: ALGOLIA_SEARCH_API_KEY

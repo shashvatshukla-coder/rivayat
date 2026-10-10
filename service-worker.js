@@ -1,4 +1,4 @@
-const CACHE_NAME = "rivayat-shell-2026-08-30-v6";
+const CACHE_NAME = "rivayat-shell-2026-10-11-v7";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -15,8 +15,7 @@ const CORE_ASSETS = [
   "/assets/branding/rivayat-icon-512.png",
   "/assets/storefront/categories/men.png",
   "/assets/storefront/categories/women.png",
-  "/assets/storefront/hero/rivayat-home-light.png",
-  "/assets/storefront/hero/rivayat-home-dark.png",
+  "/assets/storefront/hero/rivayat-new-york-collage.png",
   "/assets/branding/goat-mode.png",
   "/assets/branding/mr-mark.png",
   "/assets/branding/muse-mark.png",
@@ -32,7 +31,7 @@ const API_PREFIXES = [
   "/api", "/health", "/login", "/signup", "/auth/", "/profile", "/forgot-password",
   "/reset-password", "/settings/", "/products", "/search", "/coupons", "/orders", "/returns",
   "/users", "/reviews", "/newsletter", "/referrals", "/admin/", "/delivery/", "/pincode/",
-  "/bugs", "/credits", "/telegram/", "/notifications", "/legal/secret", "/style/recommendation"
+  "/bugs", "/credits", "/telegram/", "/notifications", "/style/recommendation"
 ];
 
 self.addEventListener("install", (event) => {

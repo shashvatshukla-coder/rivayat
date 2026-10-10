@@ -21,7 +21,6 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_SITE_VERIFICATION = process.env.GOOGLE_SITE_VERIFICATION || "";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const SWASTIK_SECRET = process.env.SWASTIK_SECRET || "";
 const BASE_URL = String(process.env.BASE_URL || "https://www.rivayat.shop").replace(/\/+$/, "");
 const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID || "";
 const ALGOLIA_SEARCH_API_KEY = process.env.ALGOLIA_SEARCH_API_KEY || "";
@@ -66,13 +65,17 @@ const DEFAULT_HOMEPAGE = {
   heroPill: "RIVAYAT / Everyday expression · India 2026",
   heroTitle: "Own your vibe.",
   heroSubtitle: "Fan jerseys, expressive layers and easy everyday fits selected for the way young India dresses now.",
-  heroImage: "/assets/storefront/hero/rivayat-home-light.png",
-  darkHeroImage: "/assets/storefront/hero/rivayat-home-dark.png",
+  heroImage: "/assets/storefront/hero/rivayat-new-york-collage.png",
+  darkHeroImage: "/assets/storefront/hero/rivayat-new-york-collage.png",
   heroOffer: "A considered edit for every mood",
   primaryButtonText: "Shop the edit",
   secondaryButtonText: "Enter GOAT Mode"
 };
-const LEGACY_HERO_IMAGE = "/assets/storefront/categories/men.png";
+const LEGACY_HERO_IMAGES = new Set([
+  "/assets/storefront/categories/men.png",
+  "/assets/storefront/hero/rivayat-home-light.png",
+  "/assets/storefront/hero/rivayat-home-dark.png"
+]);
 const DEFAULT_TEAM = [
   { id: "founder", name: "Shashvat Shukla", role: "Founder", bio: "Guides the Rivayat brand, product direction and long-term vision.", photo: "", links: [{ label: "GitHub", url: "https://github.com/shashvatshukla-coder" }, { label: "LinkedIn", url: "https://www.linkedin.com/in/shashvat-shukla-03225b397" }] },
   { id: "manager", name: "Swastik Shukla", role: "Manager", bio: "An important part of the Rivayat team, Swastik connects product, technology and the day-to-day customer experience while keeping the label practical, welcoming and easy to use.", photo: "", links: [{ label: "GitHub", url: "https://github.com/SwastikShukla006" }, { label: "LinkedIn", url: "https://www.linkedin.com/in/swastikshukla009" }] },
@@ -145,7 +148,7 @@ app.use(
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 20 })
 );
 app.use(
-  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate", "/bugs", "/search", "/notifications", "/admin/notifications", "/legal/secret"],
+  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate", "/bugs", "/search", "/notifications", "/admin/notifications"],
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 120 })
 );
 app.use(
@@ -481,8 +484,8 @@ function safeImageSource(value, maxBytes = 12 * 1024 * 1024) {
 function normalizeHomepageSettings(value = {}) {
   const source = value && typeof value === "object" ? value : {};
   const settings = { ...DEFAULT_HOMEPAGE, ...source };
-  if (!settings.heroImage || settings.heroImage === LEGACY_HERO_IMAGE) settings.heroImage = DEFAULT_HOMEPAGE.heroImage;
-  if (!settings.darkHeroImage || settings.darkHeroImage === LEGACY_HERO_IMAGE) settings.darkHeroImage = DEFAULT_HOMEPAGE.darkHeroImage;
+  if (!settings.heroImage || LEGACY_HERO_IMAGES.has(settings.heroImage)) settings.heroImage = DEFAULT_HOMEPAGE.heroImage;
+  if (!settings.darkHeroImage || LEGACY_HERO_IMAGES.has(settings.darkHeroImage)) settings.darkHeroImage = DEFAULT_HOMEPAGE.darkHeroImage;
   if (settings.heroPill === "RIVAYAT New Collection • India 2026") settings.heroPill = DEFAULT_HOMEPAGE.heroPill;
   if (settings.heroOffer === "New collection now live with 32 supplied styles") settings.heroOffer = DEFAULT_HOMEPAGE.heroOffer;
   if (settings.primaryButtonText === "Shop New Collection") settings.primaryButtonText = DEFAULT_HOMEPAGE.primaryButtonText;
@@ -951,6 +954,20 @@ async function serveIndex(req, res) {
     } else {
       const cleanPath = req.path === "/index.html" ? "/" : req.path;
       const canonical = `${BASE_URL}${cleanPath === "/" ? "/" : cleanPath}`;
+      const staticMeta = {
+        "/about": ["Our Story & Team | RIVAYAT", "Meet Shashvat Shukla, Swastik Shukla, Shantanu Shukla and Navneet Tiwari—the people shaping RIVAYAT."],
+        "/ownership": ["Proposed Ownership Distribution | RIVAYAT", "RIVAYAT’s illustrative proposed ownership distribution dated 11 October 2026, with its legal status clearly explained."],
+        "/legal": ["Legal Centre | RIVAYAT", "Plain-language RIVAYAT consumer, privacy, delivery, support and business disclosure information."]
+      }[cleanPath];
+      if (staticMeta) {
+        html = html
+          .replace(/<title>[^<]*<\/title>/, `<title>${htmlEscape(staticMeta[0])}</title>`)
+          .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${htmlEscape(staticMeta[1])}" />`)
+          .replace(/<meta property="og:title" content="[^"]*" \/>/, `<meta property="og:title" content="${htmlEscape(staticMeta[0])}" />`)
+          .replace(/<meta property="og:description" content="[^"]*" \/>/, `<meta property="og:description" content="${htmlEscape(staticMeta[1])}" />`)
+          .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${htmlEscape(staticMeta[0])}" />`)
+          .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${htmlEscape(staticMeta[1])}" />`);
+      }
       html = html
         .replace(/<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${htmlEscape(canonical)}" />`)
         .replace(/<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${htmlEscape(canonical)}" />`);
@@ -962,7 +979,7 @@ async function serveIndex(req, res) {
   }
 }
 app.get(["/about-us", "/aboutus"], (req, res) => res.redirect(301, "/about"));
-app.get(["/", "/index.html", "/shop", "/about", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal", "/style"], serveIndex);
+app.get(["/", "/index.html", "/shop", "/about", "/ownership", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal", "/style"], serveIndex);
 app.get("/product/:slug", serveIndex);
 app.get("/catalog.js", (req, res) => {
   res.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
@@ -1066,18 +1083,6 @@ app.post("/style/recommendation", async (req, res) => {
     console.error("Style recommendation error:", cleanText(error.message, 240));
     return res.status(502).json({ success: false, message: "The style recommendation could not be completed. Please try again." });
   }
-});
-
-// The legal page can unlock a private, server-gated arcade without exposing the
-// configured secret in the public HTML or in the downloadable project guide.
-app.post("/legal/secret", (req, res) => {
-  res.set("Cache-Control", "no-store");
-  const submitted = String(req.body?.code || "").trim();
-  const configured = String(SWASTIK_SECRET || "").trim();
-  if (!configured) return res.status(503).json({ success: false, message: "The private panel is not configured on the server yet." });
-  const matches = Boolean(configured && submitted && Buffer.byteLength(submitted) === Buffer.byteLength(configured) && crypto.timingSafeEqual(Buffer.from(submitted), Buffer.from(configured)));
-  if (!matches) return res.status(403).json({ success: false, message: "That code did not unlock this page." });
-  return res.json({ success: true, unlocked: true, expiresOn: "2026-10-15", games: ["Cricket Tap", "Vibe Catch", "Memory Flip"] });
 });
 
 app.get("/notifications", async (req, res) => {
