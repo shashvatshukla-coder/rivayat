@@ -27,7 +27,7 @@ function request(port, pathname) {
     const home = await request(port, "/");
     assert.match(home.body.toString("utf8"), /RIVAYAT \| Premium Indian Fashion/);
     const ownership = await request(port, "/ownership");
-    assert.match(ownership.body.toString("utf8"), /Proposed Ownership Distribution \| RIVAYAT/);
+    assert.match(ownership.body.toString("utf8"), /Final Legal Ownership Distribution \| RIVAYAT/);
     assert.match(String(home.headers["content-security-policy"]), /frame-ancestors 'none'/);
     const health = await request(port, "/health");
     assert.equal(health.status, 200);

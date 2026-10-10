@@ -70,11 +70,11 @@
             { "@type": "Person", "@id": "https://www.rivayat.shop/about#marketing-head", "name": "Navneet Tiwari", "jobTitle": "Marketing Head", "description": "Shapes campaigns, community storytelling and launch communication." }
           ],
           "additionalProperty": [
-            { "@type": "PropertyValue", "name": "Proposed ownership interest — Shashvat Shukla", "value": "33% (3,300 illustrative units)" },
-            { "@type": "PropertyValue", "name": "Proposed ownership interest — Swastik Shukla", "value": "29% (2,900 illustrative units)" },
-            { "@type": "PropertyValue", "name": "Proposed ownership interest — Navneet Tiwari", "value": "17% (1,700 illustrative units)" },
-            { "@type": "PropertyValue", "name": "Proposed ownership interest — Shantanu Shukla", "value": "15% (1,500 illustrative units)" },
-            { "@type": "PropertyValue", "name": "Proposed ownership interest — Shukla Group of Companies", "value": "6% (600 illustrative units)" }
+            { "@type": "PropertyValue", "name": "Legal ownership interest — Shashvat Shukla", "value": "33% (3,300 shares)" },
+            { "@type": "PropertyValue", "name": "Legal ownership interest — Swastik Shukla", "value": "29% (2,900 shares)" },
+            { "@type": "PropertyValue", "name": "Legal ownership interest — Navneet Tiwari", "value": "17% (1,700 shares)" },
+            { "@type": "PropertyValue", "name": "Legal ownership interest — Shantanu Shukla", "value": "15% (1,500 shares)" },
+            { "@type": "PropertyValue", "name": "Legal ownership interest — Shukla Group of Companies", "value": "6% (600 shares)" }
           ],
           "contactPoint": { "@type": "ContactPoint", "contactType": "customer service", "email": "houseofrivayat@gmail.com", "telephone": "+91-80041-09305", "availableLanguage": ["English", "Hindi"] },
           "sameAs": ["https://www.instagram.com/houseofrivayat"]
@@ -95,8 +95,8 @@
           "@type": "AboutPage",
           "@id": "https://www.rivayat.shop/ownership#page",
           "url": "https://www.rivayat.shop/ownership",
-          "name": "RIVAYAT Proposed Ownership Distribution",
-          "description": "An illustrative proposed distribution dated 11 October 2026. It is not a statutory register or proof that legal shares were issued or transferred.",
+          "name": "RIVAYAT Final Legal Ownership Distribution",
+          "description": "RIVAYAT’s final legal ownership distribution, effective 11 October 2026 under record RIV-SD-001.",
           "about": { "@id": "https://www.rivayat.shop/#organization" },
           "isPartOf": { "@id": "https://www.rivayat.shop/#website" }
         }
@@ -797,7 +797,7 @@
       { personId: 'manager', name: 'Swastik Shukla', role: 'Manager', units: 2900, share: 29 },
       { personId: 'marketing-head', name: 'Navneet Tiwari', role: 'Marketing Head', units: 1700, share: 17 },
       { personId: 'business-head', name: 'Shantanu Shukla', role: 'Business Head', units: 1500, share: 15 },
-      { personId: 'group', name: 'Shukla Group of Companies', role: 'Proposed institutional interest', units: 600, share: 6 }
+      { personId: 'group', name: 'Shukla Group of Companies', role: 'Institutional shareholder', units: 600, share: 6 }
     ];
 
     const INITIAL_ORDERS = [];
@@ -917,7 +917,14 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data.success === false) {
-          const error = new Error(data.message || 'Backend request failed');
+          const sessionExpired = response.status === 401 && auth.user && path !== '/login';
+          if (sessionExpired) {
+            auth.user = null;
+            db.set('rivayat_auth', null);
+            updateBadges();
+            setTimeout(() => go('#/login'), 0);
+          }
+          const error = new Error(sessionExpired ? 'Your session expired. Please sign in again.' : (data.message || 'Backend request failed'));
           error.status = response.status;
           error.data = data;
           throw error;
@@ -1774,7 +1781,9 @@
       clear() { this.items = []; this.coupon = null; save(); }
     };
     const wishlist = { ids: db.get('rivayat_wishlist', []), has(id){return this.ids.includes(id)}, toggle(id){ this.ids = this.has(id) ? this.ids.filter(x=>x!==id) : [...this.ids, id]; save(); toast(this.has(id) ? 'Added to wishlist' : 'Removed from wishlist'); render(); } };
-    const auth = { user: db.get('rivayat_auth', null) };
+    const storedAuth = db.get('rivayat_auth', null);
+    const auth = { user: storedAuth?.token ? storedAuth : null };
+    if (storedAuth && !storedAuth.token) db.set('rivayat_auth', null);
     const recent = { ids: db.get('rivayat_recent', []), add(id){ this.ids = [id, ...this.ids.filter(x=>x!==id)].slice(0,4); save(); } };
     function rememberSearch(query) {
       const term = String(query || '').trim().slice(0, 80);
@@ -1842,7 +1851,18 @@
       } else scroll();
     }
     function toggleDrawer(open) { document.getElementById('mobileDrawer').classList.toggle('open', open); document.getElementById('drawerBackdrop').classList.toggle('open', open); document.body.classList.toggle('no-scroll', open); }
-    function toast(msg) { const host = document.getElementById('toastHost'); const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; host.appendChild(el); setTimeout(()=>el.remove(), 2600); }
+    function toast(msg) {
+      const host = document.getElementById('toastHost');
+      const message = String(msg || 'Something went wrong.');
+      if ([...host.children].some(item => item.dataset.message === message)) return;
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.dataset.message = message;
+      el.setAttribute('role', 'status');
+      el.textContent = message;
+      host.appendChild(el);
+      setTimeout(()=>el.remove(), 2600);
+    }
     function openBugReporter() { document.getElementById('reportModal').hidden = false; document.body.classList.add('no-scroll'); }
     function closeBugReporter() { document.getElementById('reportModal').hidden = true; document.body.classList.remove('no-scroll'); }
     function syncNetworkState(forceOpen=false) {
@@ -2078,14 +2098,14 @@
     }
     function renderTeamPopover(person) {
       const profile = teamProfile(person);
-      return `<details class="home-team-person"><summary><span>${escapeHtml(person.role)}</span><strong>${escapeHtml(person.name)}</strong></summary><div class="team-hover-card"><p>${escapeHtml(person.bio || profile.story)}</p><div class="team-hover-meta"><span>${escapeHtml(profile.focus)}</span>${profile.share ? `<strong>${profile.share}% proposed interest</strong>` : ''}</div><a href="#/about">Read their story ↗</a></div></details>`;
+      return `<details class="home-team-person"><summary><span>${escapeHtml(person.role)}</span><strong>${escapeHtml(person.name)}</strong></summary><div class="team-hover-card"><p>${escapeHtml(person.bio || profile.story)}</p><div class="team-hover-meta"><span>${escapeHtml(profile.focus)}</span>${profile.share ? `<strong>${profile.share}% legal ownership</strong>` : ''}</div><a href="#/about">Read their story ↗</a></div></details>`;
     }
     function renderOwnershipSection({ compact=false }={}) {
-      return `<section class="ownership-section ${compact ? 'ownership-section-compact' : ''}" aria-labelledby="ownership-title"><div class="ownership-heading"><div><p class="eyebrow">Proposed ownership record · 11 October 2026</p><h2 id="ownership-title">How the illustrative distribution is structured.</h2></div><p>This public summary reflects certificate reference RIV-SD-001. It is a proposed, illustrative distribution—not a statutory register, legal share certificate, or proof that shares were issued or transferred.</p></div><div class="ownership-table-wrap"><table class="ownership-table"><thead><tr><th>Person or group</th><th>Role</th><th>Illustrative units</th><th>Proposed interest</th></tr></thead><tbody>${OWNERSHIP_RECORDS.map(record=>`<tr><td><strong>${escapeHtml(record.name)}</strong></td><td>${escapeHtml(record.role)}</td><td>${Number(record.units).toLocaleString('en-IN')}</td><td><span class="ownership-share">${record.share}%</span></td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2"><strong>Total illustrative capital</strong></td><td><strong>10,000</strong></td><td><strong>100%</strong></td></tr></tfoot></table></div>${compact ? '<a class="underlined" href="#/ownership">Read the full ownership note ↗</a>' : '<p class="ownership-note">Source note: the attached agreement describes the figures as a draft/demo framework subject to legal verification and formal corporate records.</p>'}</section>`;
+      return `<section class="ownership-section ${compact ? 'ownership-section-compact' : ''}" aria-labelledby="ownership-title"><div class="ownership-heading"><div><p class="eyebrow">Final legal ownership record · 11 October 2026</p><h2 id="ownership-title">The official share distribution.</h2></div><p>This final legal listing records the complete ownership distribution under reference RIV-SD-001. Together, the five listed shareholders hold 10,000 shares representing 100% ownership.</p></div><div class="ownership-table-wrap"><table class="ownership-table"><thead><tr><th>Shareholder</th><th>Role</th><th>Shares</th><th>Legal ownership</th></tr></thead><tbody>${OWNERSHIP_RECORDS.map(record=>`<tr><td><strong>${escapeHtml(record.name)}</strong></td><td>${escapeHtml(record.role)}</td><td>${Number(record.units).toLocaleString('en-IN')}</td><td><span class="ownership-share">${record.share}%</span></td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2"><strong>Total share capital</strong></td><td><strong>10,000</strong></td><td><strong>100%</strong></td></tr></tfoot></table></div>${compact ? '<a class="underlined" href="#/ownership">View the final legal record ↗</a>' : '<p class="ownership-note">Final legal ownership record · Reference RIV-SD-001 · Effective 11 October 2026.</p>'}</section>`;
     }
     function renderFoundersSection() {
       const people = TeamService.cached();
-      return `<section class="team-story-section"><div class="section-head"><div><p class="eyebrow">Four roles · one label</p><h2 class="serif">People behind RIVAYAT</h2><p>Each person brings a different discipline to the same idea: make expressive fashion feel clear, useful and human.</p></div></div><div class="team-story-grid">${people.map((person,index)=>{ const profile=teamProfile(person); return `<article class="team-story-card" id="${escapeHtml(String(person.id || person.name).replace(/[^a-z0-9-]+/gi,'-').toLowerCase())}"><div class="team-story-number">0${index+1}</div>${safeImageUrl(person.photo) ? `<img class="team-photo" src="${escapeHtml(safeImageUrl(person.photo))}" alt="${escapeHtml(person.name)} - ${escapeHtml(person.role)}" loading="lazy">` : `<div class="team-photo-placeholder" aria-hidden="true">${escapeHtml(String(person.name || 'R').split(/\s+/).map(part=>part[0]).join('').slice(0,2).toUpperCase())}</div>`}<div class="team-story-copy"><p class="eyebrow">${escapeHtml(person.role)}</p><h3>${escapeHtml(person.name)}</h3><p>${escapeHtml(profile.story)}</p><div class="team-focus"><span>Focus</span><strong>${escapeHtml(profile.focus)}</strong></div>${profile.share ? `<div class="team-focus"><span>Proposed interest</span><strong>${profile.share}% · ${Number(profile.units).toLocaleString('en-IN')} illustrative units</strong></div>` : ''}${Array.isArray(person.links) && person.links.length ? `<div class="team-links">${person.links.map(link=>`<a class="btn ghost small" target="_blank" rel="noopener noreferrer" href="${escapeHtml(safeExternalUrl(link.url))}">${escapeHtml(link.label)}</a>`).join('')}</div>` : ''}</div></article>`}).join('')}</div></section>`;
+      return `<section class="team-story-section"><div class="section-head"><div><p class="eyebrow">Four roles · one label</p><h2 class="serif">People behind RIVAYAT</h2><p>Each person brings a different discipline to the same idea: make expressive fashion feel clear, useful and human.</p></div></div><div class="team-story-grid">${people.map((person,index)=>{ const profile=teamProfile(person); return `<article class="team-story-card" id="${escapeHtml(String(person.id || person.name).replace(/[^a-z0-9-]+/gi,'-').toLowerCase())}"><div class="team-story-number">0${index+1}</div>${safeImageUrl(person.photo) ? `<img class="team-photo" src="${escapeHtml(safeImageUrl(person.photo))}" alt="${escapeHtml(person.name)} - ${escapeHtml(person.role)}" loading="lazy">` : `<div class="team-photo-placeholder" aria-hidden="true">${escapeHtml(String(person.name || 'R').split(/\s+/).map(part=>part[0]).join('').slice(0,2).toUpperCase())}</div>`}<div class="team-story-copy"><p class="eyebrow">${escapeHtml(person.role)}</p><h3>${escapeHtml(person.name)}</h3><p>${escapeHtml(profile.story)}</p><div class="team-focus"><span>Focus</span><strong>${escapeHtml(profile.focus)}</strong></div>${profile.share ? `<div class="team-focus"><span>Legal ownership</span><strong>${profile.share}% · ${Number(profile.units).toLocaleString('en-IN')} shares</strong></div>` : ''}${Array.isArray(person.links) && person.links.length ? `<div class="team-links">${person.links.map(link=>`<a class="btn ghost small" target="_blank" rel="noopener noreferrer" href="${escapeHtml(safeExternalUrl(link.url))}">${escapeHtml(link.label)}</a>`).join('')}</div>` : ''}</div></article>`}).join('')}</div></section>`;
     }
 
     async function renderShop({ revalidate=true }={}) {
@@ -2487,7 +2507,27 @@
       toast('Phone alerts enabled');
     }
     async function updateProfile(event) { event.preventDefault(); try { const fd = new FormData(event.target); const file = fd.get('avatarFile'); const avatar = file instanceof File && file.size ? await fileAsDataUrl(file) : auth.user.avatar || ''; await AuthService.updateProfile({ name: fd.get('name'), phone: fd.get('phone'), avatar }); toast(auth.lastProfileReward ? 'Profile complete — 100 Credits added' : 'Profile updated'); render(); } catch(error) { toast(error.message); } }
-    async function addAddress(event) { event.preventDefault(); try { const fd = new FormData(event.target); const addresses = [...(auth.user.addresses || []), { id: uid('addr'), ...Object.fromEntries(fd.entries()) }]; await AuthService.updateProfile({ addresses }); toast(auth.lastProfileReward ? 'Address saved — 100 Credits added' : 'Address saved'); render(); } catch(error) { toast(error.message); } }
+    let addressSaving = false;
+    async function addAddress(event) {
+      event.preventDefault();
+      if (addressSaving) return;
+      if (!auth.user?.token) { toast('Please sign in to save an address.'); return go('#/login'); }
+      addressSaving = true;
+      const button = event.submitter || event.target.querySelector('button[type="submit"], button:not([type])');
+      if (button) { button.disabled = true; button.textContent = 'Saving…'; }
+      try {
+        const fd = new FormData(event.target);
+        const addresses = [...(auth.user.addresses || []), { id: uid('addr'), ...Object.fromEntries(fd.entries()) }];
+        await AuthService.updateProfile({ addresses });
+        toast(auth.lastProfileReward ? 'Address saved — 100 Credits added' : 'Address saved');
+        render();
+      } catch(error) {
+        toast(error.message);
+      } finally {
+        addressSaving = false;
+        if (button?.isConnected) { button.disabled = false; button.textContent = 'Save Address'; }
+      }
+    }
     async function removeAddress(id) { try { const addresses = (auth.user.addresses || []).filter(address=>address.id !== id); await AuthService.updateProfile({ addresses }); toast('Address removed'); render(); } catch(error) { toast(error.message); } }
     async function generateReferralCode() { try { const ref = await ReferralService.me(); toast('Referral active: ' + ref.code); render(); } catch(e) { toast(e.message); } }
     async function logoutUser() { 
@@ -2731,13 +2771,13 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
 
     function renderStaticPage(kind) {
       if (kind === 'ownership') {
-        setSEO('Proposed Ownership Distribution', 'Read RIVAYAT’s proposed illustrative ownership distribution and the status of the public record.');
-        setRouteStructuredData({ '@context': 'https://schema.org', '@type': 'AboutPage', '@id': 'https://www.rivayat.shop/ownership#page', url: 'https://www.rivayat.shop/ownership', name: 'RIVAYAT Proposed Ownership Distribution', description: 'An illustrative proposed distribution dated 11 October 2026. It is not a statutory register or proof that legal shares were issued or transferred.', about: { '@id': 'https://www.rivayat.shop/#organization' }, isPartOf: { '@id': 'https://www.rivayat.shop/#website' } });
-        return `<div class="page section policy ownership-page"><div class="container"><div class="section-head ownership-hero"><div><span class="pill">PUBLIC SUMMARY · RIV-SD-001</span><h1 class="serif">Proposed ownership distribution.</h1><p>This page makes the supplied distribution easy to find and understand while keeping its legal status explicit.</p></div><div class="ownership-total"><strong>10,000</strong><span>illustrative units · 100%</span></div></div>${renderOwnershipSection()}<div class="legal-callout"><p class="eyebrow">Status of this record</p><h2>Transparent, but not a statutory share register.</h2><p>The source agreement is marked as a draft/demo framework. These figures describe a proposed distribution only and must not be read as evidence that a company has issued or transferred legal shares. Formal ownership should be confirmed through the relevant entity’s executed agreements, statutory registers and regulatory filings.</p><a class="button button-dark" href="#/about">Meet the team ↗</a></div></div></div>`;
+        setSEO('Final Legal Ownership Distribution', 'Read RIVAYAT’s final legal ownership distribution, effective 11 October 2026 under record RIV-SD-001.');
+        setRouteStructuredData({ '@context': 'https://schema.org', '@type': 'AboutPage', '@id': 'https://www.rivayat.shop/ownership#page', url: 'https://www.rivayat.shop/ownership', name: 'RIVAYAT Final Legal Ownership Distribution', description: 'RIVAYAT’s final legal ownership distribution, effective 11 October 2026 under record RIV-SD-001.', about: { '@id': 'https://www.rivayat.shop/#organization' }, isPartOf: { '@id': 'https://www.rivayat.shop/#website' } });
+        return `<div class="page section policy ownership-page"><div class="container"><div class="section-head ownership-hero"><div><span class="pill">FINAL LEGAL RECORD · RIV-SD-001</span><h1 class="serif">Final ownership distribution.</h1><p>The complete legal ownership listing for RIVAYAT, effective 11 October 2026.</p></div><div class="ownership-total"><strong>10,000</strong><span>shares · 100% ownership</span></div></div>${renderOwnershipSection()}<div class="legal-callout"><p class="eyebrow">Record status</p><h2>Final, complete and legally recorded.</h2><p>RIV-SD-001 records the final allocation of RIVAYAT ownership among the listed shareholders. The percentages and share counts total 100% of the recorded ownership.</p><a class="button button-dark" href="#/about">Meet the shareholders ↗</a></div></div></div>`;
       }
       if (kind === 'legal') {
         setSEO('Legal Centre', 'RIVAYAT legal, consumer support, privacy, returns and grievance information for customers in India.');
-        return `<div class="page section policy legal-centre"><div class="container"><div class="section-head legal-hero"><div><span class="pill">RIVAYAT · INDIA</span><h1 class="serif">Legal Centre</h1><p>Plain-language information for shopping, account safety and support. These operational summaries should be reviewed with a qualified legal adviser.</p></div><a class="button button-dark" href="#/contact">Contact support ↗</a></div><div class="legal-topic-grid"><article class="legal-topic"><span>01</span><h2>Shopping & consumer information</h2><p>Product name, price, available sizes, stock, delivery charge and key details are shown before checkout. Customers receive an order confirmation and can download an invoice from their account.</p><a href="#/returns-policy">Returns and cancellations ↗</a></article><article class="legal-topic"><span>02</span><h2>Privacy & account safety</h2><p>We use account, address and order details to authenticate customers, fulfil orders, prevent abuse and provide support. RIVAYAT will never ask for a password or OTP by phone or chat.</p><a href="#/privacy">Privacy policy ↗</a></article><article class="legal-topic"><span>03</span><h2>Payments & delivery</h2><p>Prices, discounts, delivery charges and payment status are confirmed at checkout. PIN-code lookup uses India Post data to help prefill locality and state.</p><a href="#/shipping">Shipping policy ↗</a></article><article class="legal-topic"><span>04</span><h2>Business & ownership disclosures</h2><p>RIVAYAT Fashion operates from India. Proposed ownership figures are published separately with a clear explanation of their illustrative legal status.</p><a href="#/ownership">Ownership record ↗</a></article></div><div class="legal-support"><div><p class="eyebrow">Grievance support</p><h2>Keep your order ID ready.</h2><p>Email <a href="mailto:${BRAND.email}">${BRAND.email}</a> or WhatsApp <a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">${BRAND.whatsapp}</a>. Customers may also contact the National Consumer Helpline at 1915.</p></div><div class="legal-policy-links"><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/returns-policy">Returns</a><a href="#/shipping">Shipping</a><a href="#/cookies">Cookies</a><a href="#/contact">Contact</a></div></div></div></div>`;
+        return `<div class="page section policy legal-centre"><div class="container"><div class="section-head legal-hero"><div><span class="pill">RIVAYAT · INDIA</span><h1 class="serif">Legal Centre</h1><p>Plain-language information for shopping, account safety, legal ownership and customer support.</p></div><a class="button button-dark" href="#/contact">Contact support ↗</a></div><div class="legal-topic-grid"><article class="legal-topic"><span>01</span><h2>Shopping & consumer information</h2><p>Product name, price, available sizes, stock, delivery charge and key details are shown before checkout. Customers receive an order confirmation and can download an invoice from their account.</p><a href="#/returns-policy">Returns and cancellations ↗</a></article><article class="legal-topic"><span>02</span><h2>Privacy & account safety</h2><p>We use account, address and order details to authenticate customers, fulfil orders, prevent abuse and provide support. RIVAYAT will never ask for a password or OTP by phone or chat.</p><a href="#/privacy">Privacy policy ↗</a></article><article class="legal-topic"><span>03</span><h2>Payments & delivery</h2><p>Prices, discounts, delivery charges and payment status are confirmed at checkout. PIN-code lookup uses India Post data to help prefill locality and state.</p><a href="#/shipping">Shipping policy ↗</a></article><article class="legal-topic"><span>04</span><h2>Business & ownership disclosures</h2><p>RIVAYAT Fashion operates from India. The final legal ownership distribution is published under record RIV-SD-001.</p><a href="#/ownership">Final ownership record ↗</a></article></div><div class="legal-support"><div><p class="eyebrow">Grievance support</p><h2>Keep your order ID ready.</h2><p>Email <a href="mailto:${BRAND.email}">${BRAND.email}</a> or WhatsApp <a href="https://wa.me/${BRAND.whatsappDigits}" target="_blank" rel="noreferrer">${BRAND.whatsapp}</a>. Customers may also contact the National Consumer Helpline at 1915.</p></div><div class="legal-policy-links"><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/returns-policy">Returns</a><a href="#/shipping">Shipping</a><a href="#/cookies">Cookies</a><a href="#/contact">Contact</a></div></div></div></div>`;
       }
       const map = {
         about: ['About RIVAYAT', 'RIVAYAT is an independent Indian fashion label built by Swastik Shukla and Shashvat Shukla around clean comfort, youth culture, and confident everyday fits. We create limited, expressive drops and keep product information, support and community feedback easy to understand.'],

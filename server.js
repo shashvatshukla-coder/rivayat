@@ -956,7 +956,7 @@ async function serveIndex(req, res) {
       const canonical = `${BASE_URL}${cleanPath === "/" ? "/" : cleanPath}`;
       const staticMeta = {
         "/about": ["Our Story & Team | RIVAYAT", "Meet Shashvat Shukla, Swastik Shukla, Shantanu Shukla and Navneet Tiwari—the people shaping RIVAYAT."],
-        "/ownership": ["Proposed Ownership Distribution | RIVAYAT", "RIVAYAT’s illustrative proposed ownership distribution dated 11 October 2026, with its legal status clearly explained."],
+        "/ownership": ["Final Legal Ownership Distribution | RIVAYAT", "RIVAYAT’s final legal ownership distribution, effective 11 October 2026 under record RIV-SD-001."],
         "/legal": ["Legal Centre | RIVAYAT", "Plain-language RIVAYAT consumer, privacy, delivery, support and business disclosure information."]
       }[cleanPath];
       if (staticMeta) {

@@ -22,8 +22,123 @@ img {
 }
 
 .site-footer {
-  min-height: 320px;
+  padding: clamp(46px, 7vw, 88px) max(22px, calc((100vw - 1240px) / 2)) 26px;
+  color: #f8f3e9;
+  background: #082c2e;
   contain: layout paint;
+}
+
+.footer-main {
+  display: grid;
+  grid-template-columns: minmax(260px, .9fr) minmax(520px, 1.4fr);
+  gap: clamp(44px, 8vw, 110px);
+  padding-bottom: 44px;
+}
+
+.footer-mark {
+  margin: 0;
+  font: 500 clamp(50px, 7vw, 94px)/.9 Georgia, "Times New Roman", serif;
+  letter-spacing: -.055em;
+}
+
+.footer-note {
+  max-width: 360px;
+  margin: 20px 0 0;
+  color: rgba(255,255,255,.66);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.footer-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.footer-links > div {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+}
+
+.footer-links p {
+  margin: 0 0 6px;
+  color: var(--store-sun);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.footer-links a,
+.footer-links button {
+  width: fit-content;
+  color: rgba(255,255,255,.77);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.footer-links a:hover,
+.footer-links button:hover {
+  color: #fff;
+}
+
+.newsletter {
+  padding: 30px 0;
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 520px);
+  gap: 30px;
+  align-items: center;
+  border-block: 1px solid rgba(255,255,255,.16);
+}
+
+.newsletter h3 {
+  margin: 0;
+  font: 500 clamp(26px, 3vw, 42px)/1 Georgia, "Times New Roman", serif;
+}
+
+.newsletter .eyebrow {
+  color: rgba(255,255,255,.58);
+}
+
+.newsletter form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.newsletter input {
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 18px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255,255,255,.08);
+  outline: none;
+}
+
+.newsletter input::placeholder {
+  color: rgba(255,255,255,.55);
+}
+
+.newsletter button {
+  min-height: 50px;
+  padding: 0 20px;
+  border-radius: 999px;
+  color: #102a2c;
+  background: var(--store-sun);
+  font-weight: 950;
+}
+
+.footer-bottom {
+  padding-top: 23px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  color: rgba(255,255,255,.58);
+  font-size: 11px;
 }
 
 .notification-button,
@@ -120,6 +235,13 @@ img {
   color: inherit;
   background: none;
   text-align: left;
+}
+
+.btn:disabled,
+.button:disabled {
+  cursor: wait;
+  opacity: .62;
+  transform: none;
 }
 
 .storefront-home {
@@ -3280,6 +3402,36 @@ img {
 }
 
 @media (max-width: 720px) {
+  .site-footer {
+    padding: 44px 16px 88px;
+  }
+
+  .footer-main,
+  .newsletter {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-main {
+    gap: 34px;
+  }
+
+  .footer-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 18px;
+  }
+
+  .newsletter form {
+    grid-template-columns: 1fr;
+  }
+
+  .newsletter button {
+    width: 100%;
+  }
+
+  .footer-bottom {
+    display: grid;
+  }
+
   .section-heading-brand,
   .profile-progress-card,
   .search-admin-card {
