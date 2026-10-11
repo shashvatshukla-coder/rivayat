@@ -20,6 +20,14 @@ This package combines the supplied storefront, the corrected working server base
 4. Deploy, create a test account, request a verification code, subscribe/unsubscribe, and place one test order. Confirm that both customer and operations emails arrive and that Reply-To points to the customer on the internal order alert.
 5. Keep `RESEND_API_KEY` only in Render environment variables; never place it in browser code or commit it to GitHub.
 
+## RIVAYAT Assistant
+
+The floating **RIVAYAT Assistant** helps customers with product discovery, sizing, styling, delivery, returns and account navigation. Chat requests go to `POST /assistant/chat`; the Gemini key is read only by the server and is never sent to the browser.
+
+1. Add `GEMINI_API_KEY` to the Render environment. `GEMINI_MODEL` defaults to `gemini-2.5-flash`.
+2. Redeploy the service and confirm `/health` reports `services.assistant: true`.
+3. If the key is temporarily missing or the provider is unavailable, the assistant stays usable with a limited, safe help fallback.
+
 ## Final information still required from the owner
 
 - Confirmed selling price, MRP, available sizes and opening stock for each of the 32 products. Current values are launch-ready drafts only.

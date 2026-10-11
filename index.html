@@ -700,8 +700,31 @@
 
   <div class="floating-site-actions" aria-label="Quick actions">
     <button id="backToTop" class="floating-action back-to-top" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top" title="Back to top">↑</button>
+    <button id="assistantToggle" class="floating-action assistant-float" type="button" onclick="openAssistant()" aria-label="Open RIVAYAT Assistant" title="RIVAYAT Assistant"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 8.2 13.3 11l2.9 1.1-2.9 1.1L12 16l-1.3-2.8-2.9-1.1 2.9-1.1L12 8.2Z" fill="currentColor"/></svg></button>
     <a class="floating-action contact-float" href="https://wa.me/918004109305?text=Hi%20RIVAYAT%2C%20I%20need%20help" target="_blank" rel="noopener noreferrer" aria-label="Contact RIVAYAT on WhatsApp" title="WhatsApp RIVAYAT"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.3-4.7A8.5 8.5 0 1 1 20.5 11.7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.8c.5-.5 1-.2 1.3.5l.7 1.5c.2.5 0 .8-.4 1.2-.3.3-.2.6.1 1 1 1.5 2.2 2.4 3.8 3 .5.2.8.1 1.1-.3l.8-1c.3-.4.7-.4 1.1-.2l1.5.7c.5.2.6.6.4 1.1-.4 1.2-1.3 2-2.5 2.1-2.1.2-5.1-1.4-7.2-3.8-2.1-2.4-2.4-4.7-.7-5.8Z" fill="currentColor"/></svg></a>
   </div>
+
+  <section class="assistant-backdrop" id="assistantModal" role="dialog" aria-modal="true" aria-labelledby="assistantTitle" hidden onclick="if(event.target===this) closeAssistant()">
+    <div class="assistant-panel">
+      <header class="assistant-header">
+        <div class="assistant-brand"><span class="assistant-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 8.2 13.3 11l2.9 1.1-2.9 1.1L12 16l-1.3-2.8-2.9-1.1 2.9-1.1L12 8.2Z" fill="currentColor"/></svg></span><div><h2 id="assistantTitle">RIVAYAT Assistant</h2><p>Style, shopping and support in one place.</p></div></div>
+        <button class="icon-btn assistant-close" type="button" onclick="closeAssistant()" aria-label="Close RIVAYAT Assistant">×</button>
+      </header>
+      <p class="assistant-intro">Ask about products, sizing, styling, delivery, returns or your account. Never share a password or OTP here.</p>
+      <div class="assistant-messages" id="assistantMessages" aria-live="polite" aria-relevant="additions"></div>
+      <div class="assistant-suggestions" id="assistantSuggestions" aria-label="Suggested questions">
+        <button class="assistant-suggestion" type="button" onclick="askAssistantSuggestion(this)">What should I wear for a party?</button>
+        <button class="assistant-suggestion" type="button" onclick="askAssistantSuggestion(this)">How do returns work?</button>
+        <button class="assistant-suggestion" type="button" onclick="askAssistantSuggestion(this)">Help me find a jersey</button>
+      </div>
+      <form class="assistant-form" onsubmit="sendAssistantMessage(event)">
+        <label class="sr-only" for="assistantInput">Message RIVAYAT Assistant</label>
+        <input class="input" id="assistantInput" name="message" maxlength="1200" autocomplete="off" placeholder="Ask RIVAYAT Assistant…" required>
+        <button class="btn small" id="assistantSend" type="submit">Send</button>
+        <p class="assistant-note">AI suggestions are general guidance. Product stock, order status and account actions are confirmed in the site.</p>
+      </form>
+    </div>
+  </section>
 
   <section class="cookie-banner" id="cookieBanner" aria-labelledby="cookieTitle" hidden>
     <div><strong id="cookieTitle">Your privacy, your choice.</strong><p>RIVAYAT uses essential storage for your bag, theme and sign-in. Optional anonymous analytics help us improve speed and navigation.</p></div>
@@ -1302,6 +1325,12 @@
     const StyleService = {
       async recommend(payload) {
         return apiFetch('/style/recommendation', { method: 'POST', body: JSON.stringify(payload), timeoutMs: 35000 });
+      }
+    };
+
+    const AssistantService = {
+      async chat(payload) {
+        return apiFetch('/assistant/chat', { method: 'POST', body: JSON.stringify(payload), timeoutMs: 25000 });
       }
     };
 
@@ -1961,6 +1990,78 @@
       input.type = visible ? 'password' : 'text';
       button.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
       button.textContent = visible ? 'Show' : 'Hide';
+    }
+    const assistantState = { messages: [{ role: 'model', text: 'Hi, I’m RIVAYAT Assistant. What can I help you find today?' }], pending: false, lastFocused: null };
+    function renderAssistantMessages() {
+      const container = document.getElementById('assistantMessages');
+      if (!container) return;
+      container.replaceChildren();
+      assistantState.messages.forEach(message => {
+        const bubble = document.createElement('div');
+        bubble.className = `assistant-message ${message.role === 'user' ? 'user' : 'model'}`;
+        bubble.textContent = message.text;
+        container.appendChild(bubble);
+      });
+      if (assistantState.pending) {
+        const bubble = document.createElement('div');
+        bubble.className = 'assistant-message model typing';
+        bubble.textContent = 'RIVAYAT Assistant is thinking…';
+        container.appendChild(bubble);
+      }
+      container.scrollTop = container.scrollHeight;
+    }
+    function openAssistant() {
+      const modal = document.getElementById('assistantModal');
+      if (!modal) return;
+      assistantState.lastFocused = document.activeElement;
+      modal.hidden = false;
+      document.body.classList.add('no-scroll');
+      renderAssistantMessages();
+      setTimeout(() => document.getElementById('assistantInput')?.focus(), 0);
+    }
+    function closeAssistant() {
+      const modal = document.getElementById('assistantModal');
+      if (!modal) return;
+      modal.hidden = true;
+      document.body.classList.remove('no-scroll');
+      if (assistantState.lastFocused && typeof assistantState.lastFocused.focus === 'function') assistantState.lastFocused.focus();
+    }
+    function askAssistantSuggestion(button) {
+      const input = document.getElementById('assistantInput');
+      if (!input || !button) return;
+      input.value = button.textContent.trim();
+      input.closest('form')?.requestSubmit();
+    }
+    async function sendAssistantMessage(event) {
+      event.preventDefault();
+      if (assistantState.pending) return;
+      const input = document.getElementById('assistantInput');
+      const message = String(input?.value || '').trim().slice(0, 1200);
+      if (!message) return;
+      assistantState.messages.push({ role: 'user', text: message });
+      assistantState.messages = assistantState.messages.slice(-8);
+      assistantState.pending = true;
+      if (input) input.value = '';
+      renderAssistantMessages();
+      const send = document.getElementById('assistantSend');
+      if (send) { send.disabled = true; send.textContent = '…'; }
+      try {
+        const data = await AssistantService.chat({
+          message,
+          history: assistantState.messages.slice(-8),
+          page: location.hash || '#/'
+        });
+        assistantState.messages.push({ role: 'model', text: data.reply || 'I could not prepare a reply just now.' });
+        assistantState.messages = assistantState.messages.slice(-8);
+      } catch (error) {
+        assistantState.messages.push({ role: 'model', text: error.message || 'I’m having trouble connecting. Please try again or contact RIVAYAT support.' });
+        assistantState.messages = assistantState.messages.slice(-8);
+      } finally {
+        assistantState.pending = false;
+        if (send) { send.disabled = false; send.textContent = 'Send'; }
+        renderAssistantMessages();
+        input?.focus();
+      }
     }
     function openBugReporter() { document.getElementById('reportModal').hidden = false; document.body.classList.add('no-scroll'); }
     function closeBugReporter() { document.getElementById('reportModal').hidden = true; document.body.classList.remove('no-scroll'); }
@@ -3011,6 +3112,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
       toast(event.reason?.message || 'That action could not be completed. Please try again.');
     });
     window.addEventListener('error', event => reportClientFault(event.error || event.message, 'Window error'));
+    window.addEventListener('keydown', event => { if (event.key === 'Escape' && !document.getElementById('assistantModal')?.hidden) closeAssistant(); });
     window.addEventListener('hashchange', render);
     window.addEventListener('online', () => BugService.flushQueue());
     let deferredInstallPrompt = null;

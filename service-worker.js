@@ -1,4 +1,4 @@
-const CACHE_NAME = "rivayat-shell-2026-10-11-v11";
+const CACHE_NAME = "rivayat-shell-2026-10-11-v12";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -18,7 +18,7 @@ const API_PREFIXES = [
   "/api", "/health", "/login", "/signup", "/auth/", "/profile", "/forgot-password",
   "/reset-password", "/settings/", "/products", "/search", "/coupons", "/orders", "/returns",
   "/users", "/reviews", "/newsletter", "/referrals", "/admin/", "/delivery/", "/pincode/",
-  "/bugs", "/credits", "/telegram/", "/notifications", "/style/recommendation", "/contact", "/analytics/"
+  "/bugs", "/credits", "/telegram/", "/notifications", "/style/recommendation", "/assistant/chat", "/contact", "/analytics/"
 ];
 
 self.addEventListener("install", (event) => {
