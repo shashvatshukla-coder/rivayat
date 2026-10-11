@@ -4,7 +4,7 @@ const path = require("node:path");
 
 const storefront = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const navStart = storefront.indexOf('<header class="header">');
-const navEnd = storefront.indexOf('<main id="app">');
+const navEnd = storefront.indexOf('<main id="app"');
 assert.ok(navStart >= 0 && navEnd > navStart, "The storefront navigation shell should exist.");
 
 const navigation = storefront.slice(navStart, navEnd);

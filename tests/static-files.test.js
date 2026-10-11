@@ -13,7 +13,7 @@ assert.match(html, /<meta property="og:image" content="https:\/\/www\.rivayat\.s
 assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
 assert.match(html, /GOOGLE_SITE_VERIFICATION/);
 assert.doesNotMatch(html, /INITIAL_REVIEWS\s*=\s*\[[^\]]+\]/s, "Production must not contain seeded customer reviews.");
-assert.equal((fs.readFileSync(path.join(root, "sitemap.xml"), "utf8").match(/<url>/g) || []).length, products.length + 14, "Sitemap URL count must match public pages plus products.");
+assert.equal((fs.readFileSync(path.join(root, "sitemap.xml"), "utf8").match(/<url>/g) || []).length, products.length + 15, "Sitemap URL count must match public pages plus products.");
 assert.match(html, /rivayat-new-york-collage\.webp/, "The supplied horizontal hero must be published.");
 assert.match(html, /rivayat-castle-dark-horizontal\.webp/, "The dark homepage must use the horizontal castle artwork.");
 assert.match(html, /Work with RIVAYAT/, "The collaboration and internship page must be linked.");

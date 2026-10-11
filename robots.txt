@@ -11,6 +11,7 @@ Allow: /cookies
 Allow: /legal
 Allow: /accessibility
 Allow: /work-with-us
+Allow: /faq
 Allow: /style
 Allow: /product/
 Allow: /assets/

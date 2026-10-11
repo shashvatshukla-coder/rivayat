@@ -31,8 +31,6 @@
   <meta property="og:image:alt" content="RIVAYAT Fashion - Own Your Vibe" />
   <meta name="twitter:image" content="https://www.rivayat.shop/assets/branding/rivayat-logo.png" />
   <meta name="twitter:image:alt" content="RIVAYAT Fashion - Own Your Vibe" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/branding/rivayat-favicon-96.png" />
   <link rel="shortcut icon" href="/assets/branding/rivayat-favicon-96.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/branding/rivayat-apple-touch.png" />
@@ -635,6 +633,8 @@
   <link rel="stylesheet" href="/storefront.css" />
 </head>
 <body>
+  <a class="skip-link" href="#app">Skip to content</a>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <header class="header">
     <div class="container nav">
       <a class="brand" href="#/" aria-label="RIVAYAT Home">
@@ -674,7 +674,7 @@
     <a href="#/dashboard" aria-label="Account"><svg class="nav-svg-icon nav-account-icon" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-dasharray="28" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 21v-1c0 -3.31 2.69 -6 6 -6h4c3.31 0 6 2.69 6 6v1"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="28;0"/></path><path stroke-dashoffset="28" d="M12 11c-2.21 0 -4 -1.79 -4 -4c0 -2.21 1.79 -4 4 -4c2.21 0 4 1.79 4 4c0 2.21 -1.79 4 -4 4Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.4s" to="0"/></path></g></svg><small>Account</small></a>
   </nav>
 
-  <main id="app"><section class="startup-shell" aria-live="polite"><div class="startup-card"><p class="startup-logo serif">RIVAYAT</p><p class="muted">Preparing your storefront…</p><div class="startup-bar" aria-hidden="true"></div></div></section></main>
+  <main id="app" tabindex="-1"><section class="startup-shell" aria-live="polite"><div class="startup-card"><p class="startup-logo serif">RIVAYAT</p><p class="muted">Preparing your storefront…</p><div class="startup-bar" aria-hidden="true"></div></div></section></main>
   <div class="toast-host" id="toastHost"></div>
   <section class="offline-screen" id="offlineScreen" role="alertdialog" aria-modal="true" aria-labelledby="offlineTitle" hidden>
     <div class="offline-card">
@@ -684,6 +684,16 @@
       <p class="muted">Saved products remain available. Reconnect to sign in, verify PIN codes, place orders, or update your account.</p>
       <div class="state-actions"><button class="btn" onclick="retryConnection()">Try again</button><button class="btn secondary" onclick="dismissOfflineScreen()">Browse saved products</button></div>
     </div>
+  </section>
+
+  <div class="floating-site-actions" aria-label="Quick actions">
+    <button id="backToTop" class="floating-action back-to-top" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top" title="Back to top">↑</button>
+    <a class="floating-action contact-float" href="https://wa.me/918004109305?text=Hi%20RIVAYAT%2C%20I%20need%20help" target="_blank" rel="noopener noreferrer" aria-label="Contact RIVAYAT on WhatsApp" title="WhatsApp RIVAYAT"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.3-4.7A8.5 8.5 0 1 1 20.5 11.7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.8c.5-.5 1-.2 1.3.5l.7 1.5c.2.5 0 .8-.4 1.2-.3.3-.2.6.1 1 1 1.5 2.2 2.4 3.8 3 .5.2.8.1 1.1-.3l.8-1c.3-.4.7-.4 1.1-.2l1.5.7c.5.2.6.6.4 1.1-.4 1.2-1.3 2-2.5 2.1-2.1.2-5.1-1.4-7.2-3.8-2.1-2.4-2.4-4.7-.7-5.8Z" fill="currentColor"/></svg></a>
+  </div>
+
+  <section class="cookie-banner" id="cookieBanner" aria-labelledby="cookieTitle" hidden>
+    <div><strong id="cookieTitle">Your privacy, your choice.</strong><p>RIVAYAT uses essential storage for your bag, theme and sign-in. Optional anonymous analytics help us improve speed and navigation.</p></div>
+    <div class="cookie-actions"><button class="btn ghost small" type="button" onclick="setCookieConsent('essential')">Essential only</button><button class="btn small" type="button" onclick="setCookieConsent('analytics')">Allow analytics</button></div>
   </section>
   <section class="modal-backdrop" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportTitle" hidden onclick="if(event.target===this) closeBugReporter()">
     <form class="report-card grid" onsubmit="submitBugReport(event)">
@@ -697,8 +707,8 @@
   </section>
 
   <footer class="site-footer">
-    <div class="footer-main"><div class="footer-brand"><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p><div class="footer-socials" aria-label="RIVAYAT social links"><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a><a href="https://facebook.com/houseofrivayat" target="_blank" rel="noreferrer" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h4V3h-4c-3.3 0-6 2.7-6 6v3H4v5h4v4h5v-4h4l1-5h-5V9c0-.6.4-1 1-1Z" fill="currentColor"/></svg></a><a href="https://wa.me/918004109305" target="_blank" rel="noreferrer" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.3-4.7A8.5 8.5 0 1 1 20.5 11.7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.8c.5-.5 1-.2 1.3.5l.7 1.5c.2.5 0 .8-.4 1.2-.3.3-.2.6.1 1 1 1.5 2.2 2.4 3.8 3 .5.2.8.1 1.1-.3l.8-1c.3-.4.7-.4 1.1-.2l1.5.7c.5.2.6.6.4 1.1-.4 1.2-1.3 2-2.5 2.1-2.1.2-5.1-1.4-7.2-3.8-2.1-2.4-2.4-4.7-.7-5.8Z" fill="currentColor"/></svg></a><a href="mailto:houseofrivayat@gmail.com" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></a></div></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('goat-mode')">GOAT Mode</button><button onclick="homeScroll('mr')">Mr.</button><button onclick="homeScroll('muse')">Muse</button><a href="#/wishlist">Wishlist</a></div><div><p>Account & help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a><a href="#/dashboard/settings">Account cancellation</a></div><div><p>Company</p><a href="#/about">About us</a><a href="#/work-with-us">Work with RIVAYAT</a><a href="#/ownership">Ownership record</a><a href="#/style">Style Lab</a><a href="#/contact">Contact</a></div><div><p>Legal</p><a href="#/legal">Legal centre</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><a href="#/cookies">Cookies</a><a href="#/accessibility">Accessibility</a><a href="#/unsubscribe">Unsubscribe</a></div></div></div>
-    <div class="newsletter"><div><p class="eyebrow">No spam. Just good clothes.</p><h3>Get first dibs on every drop.</h3></div><form onsubmit="subscribeNewsletter(event)"><input name="email" type="email" required placeholder="Email address" aria-label="Email address"><button>Join ↗</button></form></div>
+    <div class="footer-main"><div class="footer-brand"><p class="footer-mark">RIVAYAT®</p><p class="footer-note">New Indian streetwear with a little salt in its hair.</p><div class="footer-socials" aria-label="RIVAYAT social links"><a href="https://instagram.com/houseofrivayat" target="_blank" rel="noreferrer" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a><a href="https://facebook.com/houseofrivayat" target="_blank" rel="noreferrer" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h4V3h-4c-3.3 0-6 2.7-6 6v3H4v5h4v4h5v-4h4l1-5h-5V9c0-.6.4-1 1-1Z" fill="currentColor"/></svg></a><a href="https://wa.me/918004109305" target="_blank" rel="noreferrer" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.3-4.7A8.5 8.5 0 1 1 20.5 11.7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.3 7.8c.5-.5 1-.2 1.3.5l.7 1.5c.2.5 0 .8-.4 1.2-.3.3-.2.6.1 1 1 1.5 2.2 2.4 3.8 3 .5.2.8.1 1.1-.3l.8-1c.3-.4.7-.4 1.1-.2l1.5.7c.5.2.6.6.4 1.1-.4 1.2-1.3 2-2.5 2.1-2.1.2-5.1-1.4-7.2-3.8-2.1-2.4-2.4-4.7-.7-5.8Z" fill="currentColor"/></svg></a><a href="mailto:houseofrivayat@gmail.com" aria-label="Email" title="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></a></div></div><div class="footer-links"><div><p>Shop</p><a href="#/shop">All products</a><button onclick="homeScroll('goat-mode')">GOAT Mode</button><button onclick="homeScroll('mr')">Mr.</button><button onclick="homeScroll('muse')">Muse</button><a href="#/wishlist">Wishlist</a></div><div><p>Account & help</p><a href="#/dashboard">My profile</a><a href="#/cart">My bag</a><a href="#/orders">My orders</a><a href="#/returns-policy">Shipping & returns</a><a href="#/dashboard/settings">Account cancellation</a></div><div><p>Company</p><a href="#/about">About us</a><a href="#/work-with-us">Work with RIVAYAT</a><a href="#/ownership">Ownership record</a><a href="#/style">Style Lab</a><a href="#/contact">Contact</a></div><div><p>Legal</p><a href="#/legal">Legal centre</a><a href="#/faq">FAQ</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><a href="#/cookies">Cookies</a><a href="#/accessibility">Accessibility</a><a href="#/unsubscribe">Unsubscribe</a></div></div></div>
+    <div class="newsletter"><div><p class="eyebrow">No spam. Just good clothes.</p><h3>Get first dibs on every drop.</h3></div><form onsubmit="subscribeNewsletter(event)"><input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><input name="email" type="email" required placeholder="Email address" aria-label="Email address"><button>Join ↗</button></form></div>
     <div class="footer-bottom"><span>© <span id="year"></span> RIVAYAT. All rights reserved.</span><span>A product of Shukla Group of Companies.</span><span>Made in India · worn everywhere</span><span><a href="#/legal">Legal</a> · <button onclick="openBugReporter()">Report a problem</button></span></div>
   </footer>
 
@@ -723,23 +733,23 @@
     const LEGACY_HERO_IMAGES = new Set([
       '/assets/storefront/hero/rivayat-home-light.png',
       '/assets/storefront/hero/rivayat-home-dark.png',
-      '/assets/storefront/categories/men.png'
+      '/assets/storefront/categories/men.webp'
     ]);
     const ASSETS = {
       logo: '/assets/branding/rivayat-logo.webp',
-      fallbackProduct: '/assets/products/tshirts/chicago_23_cream_red_tshirt.png',
+      fallbackProduct: '/assets/products/tshirts/chicago_23_cream_red_tshirt.webp',
       lightHero: HERO_IMAGE,
       darkHero: '/assets/storefront/hero/rivayat-castle-dark-horizontal.webp',
-      goat: '/assets/branding/goat-mode.png',
-      mr: '/assets/branding/mr-mark.png',
-      muse: '/assets/branding/muse-mark.png',
-      summer: '/assets/branding/summer-mark.png',
-      winter: '/assets/branding/winter-mark.png',
-      wishlist: '/assets/branding/wishlist-mark.png',
-      notifications: '/assets/branding/notification-mark.png',
-      bag: '/assets/branding/bag-mark.png',
-      monogram: '/assets/branding/rivayat-monogram.png',
-      crest: '/assets/branding/rivayat-crest.png'
+      goat: '/assets/branding/goat-mode.webp',
+      mr: '/assets/branding/mr-mark.webp',
+      muse: '/assets/branding/muse-mark.webp',
+      summer: '/assets/branding/summer-mark.webp',
+      winter: '/assets/branding/winter-mark.webp',
+      wishlist: '/assets/branding/wishlist-mark.webp',
+      notifications: '/assets/branding/notification-mark.webp',
+      bag: '/assets/branding/bag-mark.webp',
+      monogram: '/assets/branding/rivayat-monogram.webp',
+      crest: '/assets/branding/rivayat-crest.webp'
     };
 
     const CATEGORY_LABELS = {
@@ -804,7 +814,7 @@
 
     const INITIAL_USERS = [];
 
-    const APP_VERSION = 'rivayat-2026-10-11-accounts-emails-footer-v2';
+    const APP_VERSION = 'rivayat-2026-10-11-performance-security-v3';
    const DEFAULT_API_BASE_URL = 'https://rivayat.onrender.com';
    const API_BASE_URL = String(localStorage.getItem('rivayat_api_base_url') || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
    const CONFIG = {
@@ -1453,8 +1463,8 @@
         save();
         return data.user;
       },
-      async forgotPassword(email) {
-        const data = await apiFetch('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+      async forgotPassword(email, website='') {
+        const data = await apiFetch('/forgot-password', { method: 'POST', body: JSON.stringify({ email, website }) });
         if (data.resetCode) return data.message || `Reset code: ${data.resetCode}`;
         return data.message || 'Reset code sent.';
       },
@@ -1710,7 +1720,7 @@
         const email = String(payload.email || '').toLowerCase().trim();
         if (!email) throw new Error('Email required');
         if (CONFIG.apiBaseUrl) {
-          await apiFetch('/newsletter', { method:'POST', body: JSON.stringify({ email, phone: payload.phone || '', source: payload.source || 'Website' }) });
+          await apiFetch('/newsletter', { method:'POST', body: JSON.stringify({ email, phone: payload.phone || '', source: payload.source || 'Website', website: payload.website || '' }) });
         }
         const leads = db.get('rivayat_newsletter_leads', []);
         if (!leads.find(l => l.email === email)) leads.unshift({ id: uid('lead'), email, phone: payload.phone || '', source: payload.source || 'Website', createdAt: new Date().toISOString() });
@@ -1834,6 +1844,44 @@
     document.getElementById('mobileNav').innerHTML = navItems.map(([label,section])=>`<a href="#/" onclick="toggleDrawer(false);setTimeout(()=>homeScroll('${section}'),80)">${label}</a>`).join('') + `<a href="#/style" onclick="toggleDrawer(false)">Style Lab</a><a href="#/login" onclick="toggleDrawer(false)">Login / Signup</a>`;
     document.getElementById('year').textContent = new Date().getFullYear();
 
+    const attributionParams = new URLSearchParams(`${location.search.replace(/^\?/, '')}&${(location.hash.split('?')[1] || '')}`);
+    const marketingAttribution = {
+      utmSource: String(attributionParams.get('utm_source') || '').slice(0, 100),
+      utmMedium: String(attributionParams.get('utm_medium') || '').slice(0, 100),
+      utmCampaign: String(attributionParams.get('utm_campaign') || '').slice(0, 140)
+    };
+    if (Object.values(marketingAttribution).some(Boolean)) db.set('rivayat_marketing_attribution', marketingAttribution);
+    function analyticsConsentGranted() { return localStorage.getItem('rivayat_cookie_consent') === 'analytics'; }
+    function analyticsSessionId() {
+      let id = localStorage.getItem('rivayat_analytics_session');
+      if (!id) { id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`; localStorage.setItem('rivayat_analytics_session', id); }
+      return id;
+    }
+    function trackAnalytics(event, details={}) {
+      if (!analyticsConsentGranted() || !CONFIG.apiBaseUrl) return;
+      const attribution = db.get('rivayat_marketing_attribution', marketingAttribution);
+      fetch(`${CONFIG.apiBaseUrl}/analytics/event`, {
+        method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event, path: details.path || routeHashFromLocation(), sessionId: analyticsSessionId(), ...attribution })
+      }).catch(() => {});
+    }
+    function setCookieConsent(choice) {
+      localStorage.setItem('rivayat_cookie_consent', choice === 'analytics' ? 'analytics' : 'essential');
+      document.getElementById('cookieBanner').hidden = true;
+      if (choice === 'analytics') trackAnalytics('page_view');
+      toast(choice === 'analytics' ? 'Analytics enabled' : 'Essential storage only');
+    }
+    if (!localStorage.getItem('rivayat_cookie_consent')) document.getElementById('cookieBanner').hidden = false;
+
+    function syncScrollUtilities() {
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      document.getElementById('scrollProgress').style.width = `${Math.min(100, Math.max(0, scrollY / max * 100))}%`;
+      document.getElementById('backToTop').classList.toggle('visible', scrollY > 700);
+    }
+    addEventListener('scroll', syncScrollUtilities, { passive: true });
+    addEventListener('resize', syncScrollUtilities, { passive: true });
+    syncScrollUtilities();
+
     function applyTheme(theme) {
       const nextTheme = theme === 'dark' ? 'dark' : 'light';
       document.documentElement.dataset.theme = nextTheme;
@@ -1845,6 +1893,8 @@
         toggle.title = `Switch to ${switchingTo} mode`;
       }
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', nextTheme === 'dark' ? '#090c0c' : '#fffaf1');
+      const hero = document.querySelector('[data-theme-hero]');
+      if (hero) hero.src = nextTheme === 'dark' ? hero.dataset.dark : hero.dataset.light;
     }
     function toggleTheme() { applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); }
     applyTheme(localStorage.getItem('rivayat_theme') || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
@@ -1874,6 +1924,14 @@
       el.textContent = message;
       host.appendChild(el);
       setTimeout(()=>el.remove(), 2600);
+    }
+    function togglePasswordVisibility(button) {
+      const input = button.closest('.password-field')?.querySelector('input');
+      if (!input) return;
+      const visible = input.type === 'text';
+      input.type = visible ? 'password' : 'text';
+      button.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
+      button.textContent = visible ? 'Show' : 'Hide';
     }
     function openBugReporter() { document.getElementById('reportModal').hidden = false; document.body.classList.add('no-scroll'); }
     function closeBugReporter() { document.getElementById('reportModal').hidden = true; document.body.classList.remove('no-scroll'); }
@@ -2042,11 +2100,11 @@
       const forYouProducts = personalizedProducts(products);
       const lightHero = safeImageUrl(home.heroImage) || ASSETS.lightHero;
       const darkHero = safeImageUrl(home.darkHeroImage) || ASSETS.darkHero;
+      const activeHero = document.documentElement.dataset.theme === 'dark' ? darkHero : lightHero;
       const heroTitle = escapeHtml(home.heroTitle || DEFAULT_HOMEPAGE.heroTitle).replace(/(vibe)/ig, '<em>$1</em>');
       return `<div class="page storefront-home">
         <section class="hero" aria-labelledby="hero-title">
-          <img class="hero-image hero-image-aerial hero-image-light" src="${escapeHtml(lightHero)}" width="1200" height="675" alt="RIVAYAT New York street-culture collage" fetchpriority="high">
-          <img class="hero-image hero-image-aerial hero-image-dark" src="${escapeHtml(darkHero)}" width="1200" height="675" alt="RIVAYAT New York street-culture collage in dark mode" loading="lazy" decoding="async">
+          <img class="hero-image hero-image-aerial" data-theme-hero data-light="${escapeHtml(lightHero)}" data-dark="${escapeHtml(darkHero)}" src="${escapeHtml(activeHero)}" width="1774" height="887" alt="RIVAYAT street-culture collection" fetchpriority="high" decoding="async">
           <div class="hero-wash"></div>
           <div class="hero-copy">
             <p class="hero-tag">${escapeHtml(home.heroPill)}</p>
@@ -2070,17 +2128,17 @@
         </section>
 
         <section class="gender-grid" aria-label="Shop Mr. and Muse collections">
-          <article class="gender-card" id="mr" role="link" tabindex="0" aria-label="Shop the complete Mr. collection" onclick="if(!event.target.closest('a')) go('#/shop?edit=mr')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('#/shop?edit=mr')}"><img src="/assets/storefront/categories/men.png" width="736" height="1308" alt="RIVAYAT Mr. clothing section" loading="lazy" decoding="async"><div class="gender-overlay"></div><div class="gender-logo-wrap"><img class="category-logo" src="${ASSETS.mr}" width="1080" height="1080" alt="Mr. logo" loading="lazy" decoding="async"></div><div class="gender-copy"><p class="eyebrow">Fan jerseys / graphic tees / shorts</p><h2>Mr.</h2><a class="button button-light" href="#/shop?edit=mr">Shop Mr. ↗</a><div class="gender-subcategories"><a href="#/shop?category=Cricket%20Jerseys">Cricket jerseys</a><a href="#/shop?category=Football%20Jerseys">Football jerseys</a></div></div></article>
-          <article class="gender-card" id="muse" role="link" tabindex="0" aria-label="Shop the complete Muse collection" onclick="if(!event.target.closest('a')) go('#/shop?category=Women')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('#/shop?category=Women')}"><img src="/assets/storefront/categories/women.png" width="736" height="1308" alt="RIVAYAT Muse clothing section" loading="lazy" decoding="async"><div class="gender-overlay gender-overlay-teal"></div><div class="gender-logo-wrap"><img class="category-logo" src="${ASSETS.muse}" width="644" height="644" alt="Muse logo" loading="lazy" decoding="async"></div><div class="gender-copy"><p class="eyebrow">Soft / playful / made to move</p><h2>Muse</h2><a class="button button-light" href="#/shop?category=Women">Shop Muse ↗</a></div></article>
+          <article class="gender-card" id="mr" role="link" tabindex="0" aria-label="Shop the complete Mr. collection" onclick="if(!event.target.closest('a')) go('#/shop?edit=mr')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('#/shop?edit=mr')}"><img src="/assets/storefront/categories/men.webp" width="736" height="1308" alt="RIVAYAT Mr. clothing section" loading="lazy" decoding="async"><div class="gender-overlay"></div><div class="gender-logo-wrap"><img class="category-logo" src="${ASSETS.mr}" width="1080" height="1080" alt="Mr. logo" loading="lazy" decoding="async"></div><div class="gender-copy"><p class="eyebrow">Fan jerseys / graphic tees / shorts</p><h2>Mr.</h2><a class="button button-light" href="#/shop?edit=mr">Shop Mr. ↗</a><div class="gender-subcategories"><a href="#/shop?category=Cricket%20Jerseys">Cricket jerseys</a><a href="#/shop?category=Football%20Jerseys">Football jerseys</a></div></div></article>
+          <article class="gender-card" id="muse" role="link" tabindex="0" aria-label="Shop the complete Muse collection" onclick="if(!event.target.closest('a')) go('#/shop?category=Women')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('#/shop?category=Women')}"><img src="/assets/storefront/categories/women.webp" width="736" height="1308" alt="RIVAYAT Muse clothing section" loading="lazy" decoding="async"><div class="gender-overlay gender-overlay-teal"></div><div class="gender-logo-wrap"><img class="category-logo" src="${ASSETS.muse}" width="644" height="644" alt="Muse logo" loading="lazy" decoding="async"></div><div class="gender-copy"><p class="eyebrow">Soft / playful / made to move</p><h2>Muse</h2><a class="button button-light" href="#/shop?category=Women">Shop Muse ↗</a></div></article>
         </section>
 
         <section class="season-story summer-story" id="summer">
-          <div class="season-visual"><img src="/assets/products/shorts/new_york_blue_shorts.png" width="736" height="980" alt="RIVAYAT washed blue graphic shorts" loading="lazy" decoding="async"><img class="season-logo" src="${ASSETS.summer}" width="832" height="1248" alt="Summer logo" loading="lazy" decoding="async"><span class="vertical-label">SUMMER / 26</span></div>
+          <div class="season-visual"><img src="/assets/products/shorts/new_york_blue_shorts.webp" width="736" height="980" alt="RIVAYAT washed blue graphic shorts" loading="lazy" decoding="async"><img class="season-logo" src="${ASSETS.summer}" width="832" height="1248" alt="Summer logo" loading="lazy" decoding="async"><span class="vertical-label">SUMMER / 26</span></div>
           <div class="season-content"><p class="eyebrow">The heatwave edit</p><h2>Coast first.<br><em>Plans later.</em></h2><p class="season-intro">Breeze-through separates and easy layers in colours borrowed from pools, palms and late sunsets.</p><div class="mini-product-row">${summerPicks.map(product=>`<a class="mini-product" href="#/product/${encodeURIComponent(product.slug)}"><span class="mini-product-image">${productArt(product)}</span><span>${escapeHtml(product.name)}</span><strong>${money(product.price)}</strong></a>`).join('')}</div><a class="button button-dark" href="#/shop">Enter summer ↗</a></div>
         </section>
 
         <section class="winter-story" id="winter">
-          <div class="winter-landscape-frame"><img class="winter-background" src="/assets/products/collection/clothing_02.png" width="736" height="980" alt="RIVAYAT heather grey cropped hoodie" loading="lazy" decoding="async"><img class="season-logo winter-logo" src="${ASSETS.winter}" width="800" height="600" alt="Winter logo" loading="lazy" decoding="async"></div><div class="winter-overlay"></div>
+          <div class="winter-landscape-frame"><img class="winter-background" src="/assets/products/collection/clothing_02.webp" width="736" height="980" alt="RIVAYAT heather grey cropped hoodie" loading="lazy" decoding="async"><img class="season-logo winter-logo" src="${ASSETS.winter}" width="800" height="600" alt="Winter logo" loading="lazy" decoding="async"></div><div class="winter-overlay"></div>
           <div class="winter-copy"><p class="eyebrow">After-dark layers · winter 2026</p><h2>Cold streets.<br><em>Warm signal.</em></h2><p>Comfort-first layers and cold-weather fits for chai runs that become midnight walks.</p><a class="button button-light" href="#/shop">Shop winter ↗</a></div>
           <div class="winter-picks">${winterPicks.map(product=>`<a href="#/product/${encodeURIComponent(product.slug)}">${productArt(product)}<span>${escapeHtml(product.name)}</span></a>`).join('')}</div>
         </section>
@@ -2406,8 +2464,9 @@
           ${isForgot || isSignup ? '<input type="hidden" name="stage" value="request">' : ''}
           ${isSignup ? '<label>Name<input class="input" name="name" required></label><label>Phone<input class="input" name="phone" required pattern="[0-9]{10}"></label>' : ''}
           <label>${isSignup || isForgot ? 'Email' : 'Email or Username'}<input class="input" type="${isSignup || isForgot ? 'email' : 'text'}" name="email" required></label>
-          ${isForgot ? `<div id="resetFields" class="grid" style="display:none"><label>Reset code<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}"></label><label>New Password<input class="input" type="password" name="password" required minlength="8" maxlength="15" autocomplete="new-password" aria-describedby="password-strength-reset" data-strength-target="password-strength-reset" oninput="updatePasswordStrength(this)"></label>${passwordStrengthMarkup('password-strength-reset')}<label>Confirm Password<input class="input" type="password" name="confirmPassword" required minlength="8" maxlength="15" autocomplete="new-password"></label></div>` : ''}
-          ${isSignup ? `<label>Password<input class="input" type="password" name="password" required minlength="8" maxlength="15" autocomplete="new-password" aria-describedby="password-strength-signup" data-strength-target="password-strength-signup" oninput="updatePasswordStrength(this)"></label>${passwordStrengthMarkup('password-strength-signup')}<div id="signupOtpFields" class="grid" style="display:none"><label>Verification code<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}"></label></div>` : (!isForgot ? '<label>Password<input class="input" type="password" name="password" required autocomplete="current-password"></label>' : '')}
+          <input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          ${isForgot ? `<div id="resetFields" class="grid" style="display:none"><label>Reset code<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}" disabled></label><label class="password-field">New Password<input class="input" type="password" name="password" minlength="8" maxlength="15" autocomplete="new-password" aria-describedby="password-strength-reset" data-strength-target="password-strength-reset" oninput="updatePasswordStrength(this)" disabled><button class="password-toggle" type="button" onclick="togglePasswordVisibility(this)" aria-label="Show password">Show</button></label>${passwordStrengthMarkup('password-strength-reset')}<label class="password-field">Confirm Password<input class="input" type="password" name="confirmPassword" minlength="8" maxlength="15" autocomplete="new-password" disabled><button class="password-toggle" type="button" onclick="togglePasswordVisibility(this)" aria-label="Show password">Show</button></label></div>` : ''}
+          ${isSignup ? `<label class="password-field">Password<input class="input" type="password" name="password" required minlength="8" maxlength="15" autocomplete="new-password" aria-describedby="password-strength-signup" data-strength-target="password-strength-signup" oninput="updatePasswordStrength(this)"><button class="password-toggle" type="button" onclick="togglePasswordVisibility(this)" aria-label="Show password">Show</button></label>${passwordStrengthMarkup('password-strength-signup')}<div id="signupOtpFields" class="grid" style="display:none"><label>Verification code<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}" disabled></label></div>` : (!isForgot ? '<label class="password-field">Password<input class="input" type="password" name="password" required autocomplete="current-password"><button class="password-toggle" type="button" onclick="togglePasswordVisibility(this)" aria-label="Show password">Show</button></label>' : '')}
           <button class="btn full" id="authSubmitBtn">${isSignup ? 'Get verification code' : isForgot ? 'Get reset code' : 'Login'}</button>
           <div id="authMsg"></div>
         </form>
@@ -2421,9 +2480,11 @@
         const stage = String(fd.get('stage') || 'request');
         if (stage === 'request') {
           requireValidCustomerPassword(fd.get('password'));
-          const data = await AuthService.requestSignupOtp({ name: fd.get('name'), email, phone: fd.get('phone'), password: fd.get('password') });
+          const data = await AuthService.requestSignupOtp({ name: fd.get('name'), email, phone: fd.get('phone'), password: fd.get('password'), website: fd.get('website') });
           event.target.querySelector('[name="stage"]').value = 'verify';
           document.getElementById('signupOtpFields').style.display = 'grid';
+          const verificationCode = document.getElementById('signupOtpFields').querySelector('[name="code"]');
+          verificationCode.disabled = false; verificationCode.required = true; verificationCode.focus();
           document.getElementById('authSubmitBtn').textContent = 'Verify & create account';
           msg.innerHTML = `<span class="success-text">${escapeHtml(data.message || 'OTP sent.')}${data.devOtp ? ` Preview code: ${escapeHtml(data.devOtp)}` : ''}</span>`;
           toast('Verification email sent');
@@ -2439,9 +2500,12 @@
         const email = String(fd.get('email') || '').trim();
         const stage = String(fd.get('stage') || 'request');
         if (stage === 'request') {
-          const message = await AuthService.forgotPassword(email);
+          const message = await AuthService.forgotPassword(email, fd.get('website'));
           event.target.querySelector('[name="stage"]').value = 'reset';
-          document.getElementById('resetFields').style.display = 'grid';
+          const resetFields = document.getElementById('resetFields');
+          resetFields.style.display = 'grid';
+          resetFields.querySelectorAll('input').forEach(input => { input.disabled = false; input.required = true; });
+          resetFields.querySelector('[name="code"]').focus();
           document.getElementById('authSubmitBtn').textContent = 'Reset Password';
           msg.innerHTML = `<span class="success-text">${escapeHtml(message)}</span>`;
           toast('Reset code sent');
@@ -2735,7 +2799,7 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
       event.preventDefault();
       const fd = new FormData(event.target);
       try {
-        await NewsletterService.subscribe({ email: fd.get('email'), source: 'Homepage' });
+        await NewsletterService.subscribe({ email: fd.get('email'), source: 'Homepage', website: fd.get('website') });
         event.target.reset();
         toast('Subscribed to RIVAYAT updates');
       } catch (error) { toast(error.message); }
@@ -2748,6 +2812,31 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
         messageBox.textContent = message;
         event.target.reset();
       } catch (error) { messageBox.textContent = error.message; }
+    }
+
+    async function submitContactForm(event) {
+      event.preventDefault();
+      const form = event.target;
+      const button = form.querySelector('button[type="submit"]');
+      const messageBox = form.querySelector('[data-contact-message]');
+      const fd = new FormData(form);
+      button.disabled = true;
+      button.textContent = 'Sending…';
+      messageBox.className = 'muted';
+      messageBox.textContent = 'Sending your message securely…';
+      try {
+        const data = await apiFetch('/contact', { method: 'POST', body: JSON.stringify({ name: fd.get('name'), email: fd.get('email'), message: fd.get('message'), website: fd.get('website') }) });
+        messageBox.className = 'success-text';
+        messageBox.textContent = data.message || 'Message sent.';
+        form.reset();
+        toast('Message sent to RIVAYAT');
+      } catch (error) {
+        messageBox.className = 'error';
+        messageBox.textContent = error.message;
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Send message';
+      }
     }
 
     async function exportOrdersCSV() {
@@ -2816,6 +2905,19 @@ White|L|5|349|https://..."></textarea></label><label style="grid-column:1/-1">De
         setSEO('Unsubscribe from RIVAYAT', 'Manage RIVAYAT marketing email preferences.');
         return `<div class="page section policy"><div class="container auth-shell"><form class="card pad grid" onsubmit="requestNewsletterUnsubscribe(event)"><span class="pill">EMAIL PREFERENCES</span><h1 class="serif">Unsubscribe from marketing.</h1><p class="muted">Enter the subscribed email address. We’ll send a secure confirmation link. Essential order, account and security emails are not affected.</p><label>Email address<input class="input" type="email" name="email" required autocomplete="email"></label><button class="btn full">Send unsubscribe link</button><p id="unsubscribeMessage" class="muted" aria-live="polite"></p></form></div></div>`;
       }
+      if (kind === 'faq') {
+        setSEO('Frequently Asked Questions', 'Answers about RIVAYAT orders, delivery, returns, sizing, accounts and privacy.');
+        const faqs = [
+          ['How do I know my order was placed?', 'After checkout, you will see a confirmation page and the order will appear in My Orders. A confirmation email is also sent when email delivery is configured.'],
+          ['How long does delivery take?', 'The checkout displays an estimate based on your delivery PIN code. Carrier, weather, holiday and remote-area delays can change that estimate.'],
+          ['Can I cancel or return an order?', 'Eligible orders may be cancelled before packing or dispatch. Return eligibility and instructions are shown in the Returns, Refunds & Cancellation policy and your order details.'],
+          ['How do I choose the right size?', 'Use the size information on each product page. If you need help, send the product name and your usual fit to support before ordering.'],
+          ['I forgot my password. What should I do?', 'Open Forgot Password, enter your registered email, then use the secure code sent to that inbox. Your new password must contain 8–15 characters, including a number and a symbol.'],
+          ['How do I stop marketing emails?', 'Use the unsubscribe link in any marketing email or the Unsubscribe page. Essential order, account and security emails may still be sent.'],
+          ['How do I contact RIVAYAT?', `Use the contact form, email ${BRAND.email}, or WhatsApp ${BRAND.whatsapp}. Never share your password or verification code with support.`]
+        ];
+        return `<div class="page section policy"><div class="container"><div class="section-head legal-hero"><div><span class="pill">HELP CENTRE</span><h1 class="serif">Frequently asked questions.</h1><p>Quick answers for shopping safely and confidently.</p></div><a class="button button-dark" href="#/contact">Still need help? ↗</a></div><div class="faq-list">${faqs.map(([question,answer], index) => `<details${index===0?' open':''}><summary>${escapeHtml(question)}</summary><p>${escapeHtml(answer)}</p></details>`).join('')}</div><p class="legal-review-note">Last updated: 11 October 2026.</p></div></div>`;
+      }
       const map = {
         about: ['About RIVAYAT', 'RIVAYAT is an independent Indian fashion label built by Swastik Shukla and Shashvat Shukla around clean comfort, youth culture, and confident everyday fits. We create limited, expressive drops and keep product information, support and community feedback easy to understand.'],
         contact: ['Contact Us', `Email: ${BRAND.email}
@@ -2832,7 +2934,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
       };
       const [title, text] = map[kind] || map.about; setSEO(title, text);
       const isContact = kind === 'contact';
-      return `<div class="page section policy"><div class="container"><div class="section-head"><div><span class="pill">RIVAYAT</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">${title}</h1></div></div><div class="grid ${isContact?'grid-2':''}"><article class="card pad"><p>${text.replaceAll('\n','<br>')}</p>${isContact ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><a class="btn" href="mailto:${BRAND.email}">Email Us</a><a class="btn secondary" target="_blank" href="https://wa.me/${BRAND.whatsappDigits}">WhatsApp</a></div>` : ''}<h2>RIVAYAT Promise</h2><p>Premium quality, clean everyday style, quick support, and a smooth shopping experience from browsing to delivery.</p></article>${isContact ? `<form class="card pad" onsubmit="event.preventDefault(); toast('Message submitted. Our team will contact you soon')"><h2>Send a message</h2><label>Name<input class="input" required></label><br><label>Email<input class="input" type="email" required></label><br><label>Message<textarea class="textarea" required></textarea></label><br><button class="btn full">Submit</button></form>` : ''}</div>${kind==='about' ? renderFoundersSection() + renderOwnershipSection({ compact: true }) : ''}</div></div>`;
+      return `<div class="page section policy"><div class="container"><div class="section-head"><div><span class="pill">RIVAYAT</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">${title}</h1></div></div><div class="grid ${isContact?'grid-2':''}"><article class="card pad"><p>${text.replaceAll('\n','<br>')}</p>${isContact ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><a class="btn" href="mailto:${BRAND.email}">Email Us</a><a class="btn secondary" target="_blank" rel="noreferrer" href="https://wa.me/${BRAND.whatsappDigits}">WhatsApp</a></div>` : ''}<h2>RIVAYAT Promise</h2><p>Premium quality, clean everyday style, quick support, and a smooth shopping experience from browsing to delivery.</p><p class="legal-review-note">Last updated: 11 October 2026.</p></article>${isContact ? `<form class="card pad" onsubmit="submitContactForm(event)"><h2>Send a message</h2><input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><label>Name<input class="input" name="name" minlength="2" maxlength="100" autocomplete="name" required></label><br><label>Email<input class="input" name="email" type="email" maxlength="254" autocomplete="email" required></label><br><label>Message<textarea class="textarea" name="message" minlength="10" maxlength="2000" required></textarea></label><br><button class="btn full" type="submit">Send message</button><p class="muted" data-contact-message aria-live="polite"></p></form>` : ''}</div>${kind==='about' ? renderFoundersSection() + renderOwnershipSection({ compact: true }) : ''}</div></div>`;
     }
 
     function notFound() { setSEO('Page Not Found', 'This RIVAYAT page does not exist.'); document.querySelector('meta[name="robots"]')?.setAttribute('content','noindex,follow'); return `<div class="page section"><div class="container"><div class="state-screen"><span class="error-code">404 · Page not found</span><h1>That page slipped away.</h1><p class="muted">The link may be old, incomplete, or no longer available.</p><div class="state-actions"><a class="btn" href="#/">Go home</a><a class="btn secondary" href="#/shop">Shop collection</a></div></div></div></div>`; }
@@ -2867,11 +2969,11 @@ Business WhatsApp: ${BRAND.whatsapp}`],
         else if (route === 'forgot-password') nextHtml = renderAuth('forgot');
         else if (route === 'dashboard') nextHtml = await renderDashboard(parts[1] || 'profile');
         else if (route === 'admin') nextHtml = await renderAdmin(parts[1] || 'analytics');
-        else if (['about','ownership','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal','accessibility','work-with-us','unsubscribe'].includes(route)) nextHtml = renderStaticPage(route);
+        else if (['about','ownership','contact','privacy','terms','refund','returns-policy','shipping','cookies','legal','accessibility','work-with-us','unsubscribe','faq'].includes(route)) nextHtml = renderStaticPage(route);
         else nextHtml = notFound();
         if (renderId !== renderSequence) return;
         app.innerHTML = nextHtml;
-        updateBadges(); if (!preserveScroll) window.scrollTo({top:0, behavior:'smooth'}); if (route === 'login' || route === 'signup') setTimeout(mountGoogleSignIn, 0); if (route === 'dashboard' && parts[1] === 'profile') setTimeout(openProfileOnboarding, 120); showAbandonedCartReminder();
+        updateBadges(); applyTheme(document.documentElement.dataset.theme); syncScrollUtilities(); trackAnalytics('page_view', { path: hash }); if (!preserveScroll) window.scrollTo({top:0, behavior:'smooth'}); if (route === 'login' || route === 'signup') setTimeout(mountGoogleSignIn, 0); if (route === 'dashboard' && parts[1] === 'profile') setTimeout(openProfileOnboarding, 120); showAbandonedCartReminder();
       } catch (e) { if (renderId !== renderSequence) return; console.error(e); reportClientFault(e, 'Route render'); app.innerHTML = `<div class="section"><div class="container"><div class="state-screen"><span class="error-code">Something went wrong</span><h1>We hit a loose thread.</h1><p class="muted">${escapeHtml(e.message || 'This page could not be prepared right now.')}</p><div class="state-actions"><button class="btn" onclick="render({revalidate:true})">Try again</button><a class="btn secondary" href="#/">Go home</a><button class="btn ghost" onclick="openBugReporter()">Report this problem</button></div></div></div></div>`; }
     }
     window.addEventListener('unhandledrejection', event => {

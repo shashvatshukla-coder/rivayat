@@ -18,7 +18,7 @@ function request(port, pathname) {
   await new Promise((resolve) => server.once("listening", resolve));
   const port = server.address().port;
   try {
-    const routes = ["/", "/about", "/ownership", "/legal", "/work-with-us", "/accessibility", "/catalog.js", "/storefront.css", "/manifest.webmanifest", "/service-worker.js", "/sitemap.xml", "/robots.txt", "/llms.txt", "/assets/branding/rivayat-logo.png", "/assets/storefront/hero/rivayat-new-york-collage.webp", "/assets/storefront/hero/rivayat-castle-dark-horizontal.webp"];
+    const routes = ["/", "/about", "/ownership", "/legal", "/work-with-us", "/accessibility", "/faq", "/forgot-password", "/catalog.js", "/storefront.css", "/manifest.webmanifest", "/service-worker.js", "/sitemap.xml", "/robots.txt", "/llms.txt", "/assets/branding/rivayat-logo.png", "/assets/storefront/hero/rivayat-new-york-collage.webp", "/assets/storefront/hero/rivayat-castle-dark-horizontal.webp"];
     for (const pathname of routes) {
       const response = await request(port, pathname);
       assert.equal(response.status, 200, `${pathname} should return 200.`);

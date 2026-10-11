@@ -1,4 +1,4 @@
-const CACHE_NAME = "rivayat-shell-2026-10-11-v8";
+const CACHE_NAME = "rivayat-shell-2026-10-11-v9";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -12,27 +12,13 @@ const CORE_ASSETS = [
   "/assets/branding/rivayat-favicon-96.png",
   "/assets/branding/rivayat-apple-touch.png",
   "/assets/branding/rivayat-icon-192.png",
-  "/assets/branding/rivayat-icon-512.png",
-  "/assets/storefront/categories/men.png",
-  "/assets/storefront/categories/women.png",
-  "/assets/storefront/hero/rivayat-new-york-collage.webp",
-  "/assets/storefront/hero/rivayat-castle-dark-horizontal.webp",
-  "/assets/branding/goat-mode.png",
-  "/assets/branding/mr-mark.png",
-  "/assets/branding/muse-mark.png",
-  "/assets/branding/summer-mark.png",
-  "/assets/branding/winter-mark.png",
-  "/assets/branding/wishlist-mark.png",
-  "/assets/branding/notification-mark.png",
-  "/assets/branding/bag-mark.png",
-  "/assets/branding/rivayat-monogram.png",
-  "/assets/branding/rivayat-crest.png"
+  "/assets/branding/rivayat-icon-512.png"
 ];
 const API_PREFIXES = [
   "/api", "/health", "/login", "/signup", "/auth/", "/profile", "/forgot-password",
   "/reset-password", "/settings/", "/products", "/search", "/coupons", "/orders", "/returns",
   "/users", "/reviews", "/newsletter", "/referrals", "/admin/", "/delivery/", "/pincode/",
-  "/bugs", "/credits", "/telegram/", "/notifications", "/style/recommendation"
+  "/bugs", "/credits", "/telegram/", "/notifications", "/style/recommendation", "/contact", "/analytics/"
 ];
 
 self.addEventListener("install", (event) => {

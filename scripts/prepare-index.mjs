@@ -17,7 +17,7 @@ html = html.replace(
   /    const ASSETS = \{.*?\};\n\n    const INITIAL_PRODUCTS = \[[\s\S]*?\n\];\n\n    const INITIAL_COUPONS = /,
   `    const ASSETS = {
       logo: '/assets/branding/rivayat-logo.webp',
-      fallbackProduct: '/assets/products/tshirts/chicago_23_cream_red_tshirt.png'
+      fallbackProduct: '/assets/products/tshirts/chicago_23_cream_red_tshirt.webp'
     };
 
     const INITIAL_PRODUCTS = Array.isArray(window.RIVAYAT_PRODUCTS) ? window.RIVAYAT_PRODUCTS : [];

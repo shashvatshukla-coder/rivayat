@@ -10,7 +10,10 @@ const CATALOG_PRODUCTS = require("./catalog");
 const { buildMerchantFeed } = require("./scripts/export-merchant-feed");
 
 const app = express();
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
+const BUILD_VERSION = "2026-10-11-performance-security-v1";
 const MONGO_URI = process.env.MONGO_URI || "";
 const APP_SECRET = process.env.APP_SECRET || "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
@@ -76,7 +79,7 @@ const DEFAULT_HOMEPAGE = {
   secondaryButtonText: "Enter GOAT Mode"
 };
 const LEGACY_HERO_IMAGES = new Set([
-  "/assets/storefront/categories/men.png",
+  "/assets/storefront/categories/men.webp",
   "/assets/storefront/hero/rivayat-home-light.png",
   "/assets/storefront/hero/rivayat-home-dark.png"
 ]);
@@ -112,15 +115,20 @@ app.use((req, res, next) => {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
-    "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://accounts.google.com; connect-src 'self' https://rivayat.onrender.com https://accounts.google.com; frame-src https://accounts.google.com; worker-src 'self'"
+    "Cross-Origin-Resource-Policy": "same-site",
+    "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline' https://accounts.google.com; connect-src 'self' https://rivayat.onrender.com https://accounts.google.com; frame-src https://accounts.google.com; worker-src 'self'; upgrade-insecure-requests"
   });
   if (req.secure || req.get("x-forwarded-proto") === "https") {
     res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }
+  if (!req.path.startsWith("/assets/") && !new Set(["/", "/index.html", "/shop", "/about", "/ownership", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal", "/accessibility", "/work-with-us", "/unsubscribe", "/faq", "/style", "/catalog.js", "/storefront.css", "/sitemap.xml", "/robots.txt", "/manifest.webmanifest", "/service-worker.js", "/llms.txt", "/merchant-feed.xml", "/google-merchant-feed.xml"]).has(req.path)) {
+    res.set("Cache-Control", "no-store");
+  }
   next();
 });
-app.use(express.json({ limit: "16mb" }));
-app.use(express.urlencoded({ extended: true, limit: "16mb" }));
+app.use("/style/recommendation", express.json({ limit: "16mb" }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 function createRateLimiter({ windowMs, max }) {
   const buckets = new Map();
@@ -147,14 +155,13 @@ function createRateLimiter({ windowMs, max }) {
   };
 }
 
+app.use(["/login", "/signup", "/signup/request-otp", "/signup/verify", "/reset-password", "/auth/google"], createRateLimiter({ windowMs: 15 * 60 * 1000, max: 12 }));
+app.use(["/forgot-password"], createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }));
 app.use(
-  ["/login", "/signup", "/signup/request-otp", "/signup/verify", "/forgot-password", "/reset-password", "/auth/google"],
-  createRateLimiter({ windowMs: 15 * 60 * 1000, max: 20 })
-);
-app.use(
-  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate", "/bugs", "/search", "/notifications", "/admin/notifications"],
+  ["/pincode", "/newsletter", "/reviews", "/orders", "/returns", "/coupons/validate", "/referrals/validate", "/bugs", "/search", "/notifications", "/admin/notifications", "/analytics/event"],
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 120 })
 );
+app.use(["/contact"], createRateLimiter({ windowMs: 60 * 60 * 1000, max: 8 }));
 app.use(
   ["/style/recommendation"],
   createRateLimiter({ windowMs: 15 * 60 * 1000, max: 8 })
@@ -366,6 +373,16 @@ const NotificationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, default: null }
 });
+const AnalyticsEventSchema = new mongoose.Schema({
+  event: { type: String, enum: ["page_view", "search", "add_to_cart", "checkout_start", "purchase"], required: true, index: true },
+  path: { type: String, default: "#/", index: true },
+  sessionHash: { type: String, required: true, index: true },
+  utmSource: { type: String, default: "" },
+  utmMedium: { type: String, default: "" },
+  utmCampaign: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now, index: true },
+  expiresAt: { type: Date, required: true, expires: 0 }
+});
 
 const User = mongoose.model("User", UserSchema);
 const Product = mongoose.model("Product", ProductSchema);
@@ -382,6 +399,7 @@ const BugReport = mongoose.model("BugReport", BugReportSchema);
 const CreditTransaction = mongoose.model("CreditTransaction", CreditTransactionSchema);
 const ProductBackup = mongoose.model("ProductBackup", ProductBackupSchema);
 const Notification = mongoose.model("Notification", NotificationSchema);
+const AnalyticsEvent = mongoose.model("AnalyticsEvent", AnalyticsEventSchema);
 
 const normalizeEmail = (email) => String(email || "").toLowerCase().trim();
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -389,6 +407,7 @@ const PINCODE_PATTERN = /^\d{6}$/;
 const IMAGE_DATA_PATTERN = /^data:image\/(?:png|jpeg|webp|avif);base64,[a-z0-9+/=]+$/i;
 const slugify = (value = "") => String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `product-${Date.now()}`;
 const cleanText = (value, max = 500) => String(value || "").trim().slice(0, max);
+const isBotTrapFilled = (body = {}) => cleanText(body.website || body.companyWebsite, 200).length > 0;
 const publicUser = (user) => ({
   id: user._id,
   username: user.username,
@@ -915,6 +934,7 @@ async function ensureDefaultData() {
 }
 mongoose.connection.once("open", () => ensureDefaultData().catch((err) => console.log("Seed skipped:", err.message)));
 
+const INDEX_HTML = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
 app.use("/assets", express.static(path.join(__dirname, "assets"), {
   dotfiles: "deny",
   immutable: true,
@@ -923,7 +943,7 @@ app.use("/assets", express.static(path.join(__dirname, "assets"), {
 }));
 async function serveIndex(req, res) {
   try {
-    let html = await fs.promises.readFile(path.join(__dirname, "index.html"), "utf8");
+    let html = INDEX_HTML;
     if (GOOGLE_SITE_VERIFICATION) {
       html = html.replace("<!-- GOOGLE_SITE_VERIFICATION -->", `<meta name="google-site-verification" content="${htmlEscape(GOOGLE_SITE_VERIFICATION)}" />`);
     }
@@ -1008,7 +1028,7 @@ async function serveIndex(req, res) {
   }
 }
 app.get(["/about-us", "/aboutus"], (req, res) => res.redirect(301, "/about"));
-app.get(["/", "/index.html", "/shop", "/about", "/ownership", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal", "/accessibility", "/work-with-us", "/unsubscribe", "/style"], serveIndex);
+app.get(["/", "/index.html", "/shop", "/about", "/ownership", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal", "/accessibility", "/work-with-us", "/unsubscribe", "/faq", "/style", "/login", "/signup", "/forgot-password"], serveIndex);
 app.get("/product/:slug", serveIndex);
 app.get("/catalog.js", (req, res) => {
   res.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
@@ -1056,6 +1076,14 @@ app.get(["/merchant-feed.xml", "/google-merchant-feed.xml"], (req, res) => {
 app.get("/api", (req, res) => res.json({ success: true, message: "Rivayat backend running" }));
 app.get("/health", (req, res) => res.json({
   success: true,
+  version: BUILD_VERSION,
+  database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  services: {
+    email: Boolean(RESEND_API_KEY && EMAIL_FROM),
+    googleLogin: Boolean(GOOGLE_CLIENT_ID),
+    search: Boolean(ALGOLIA_APP_ID && ALGOLIA_SEARCH_API_KEY),
+    styleLab: Boolean(GEMINI_API_KEY)
+  },
   passwordPolicy: {
     version: "customer-password-v2",
     minLength: 8,
@@ -1064,6 +1092,53 @@ app.get("/health", (req, res) => res.json({
     requiresSymbol: true
   }
 }));
+
+app.post("/contact", async (req, res) => {
+  try {
+    if (isBotTrapFilled(req.body)) return res.json({ success: true, message: "Thanks. Your message has been received." });
+    const name = cleanText(req.body?.name, 100);
+    const email = normalizeEmail(req.body?.email);
+    const message = cleanText(req.body?.message, 2000);
+    if (name.length < 2 || !EMAIL_PATTERN.test(email) || message.length < 10) {
+      return res.status(400).json({ success: false, message: "Enter your name, a valid email, and a message of at least 10 characters." });
+    }
+    const recipients = [...new Set([SUPPORT_EMAIL, ...ORDER_NOTIFICATION_EMAILS].map(normalizeEmail).filter((value) => EMAIL_PATTERN.test(value)))];
+    const internal = await sendEmail({
+      to: recipients,
+      replyTo: email,
+      subject: `RIVAYAT contact request from ${name}`,
+      html: brandedEmail({ preheader: "New website contact request", title: "A customer sent a message.", intro: `<strong>${htmlEscape(name)}</strong> (${htmlEscape(email)}) contacted RIVAYAT.`, content: `<div style="margin-top:18px;padding:18px;border-radius:14px;background:#f3f0e8;white-space:pre-wrap;line-height:1.6">${htmlEscape(message)}</div>` })
+    });
+    if (!internal.success) return res.status(503).json({ success: false, message: "Email support is temporarily unavailable. Please use WhatsApp or try again later." });
+    sendEmail({ to: email, subject: "We received your RIVAYAT message", html: brandedEmail({ preheader: "RIVAYAT support request received", title: "We’ve got your message.", intro: `Hi ${htmlEscape(name)}, thanks for contacting RIVAYAT. Our team will review your message and reply to this email.` }) }).catch(() => {});
+    return res.json({ success: true, message: "Message sent. The RIVAYAT team will reply by email." });
+  } catch (error) {
+    return sendServerError(res, error, "Contact form");
+  }
+});
+
+app.post("/analytics/event", async (req, res) => {
+  try {
+    if (isBotTrapFilled(req.body)) return res.status(204).end();
+    const event = cleanText(req.body?.event, 30);
+    const sessionId = cleanText(req.body?.sessionId, 120);
+    if (!["page_view", "search", "add_to_cart", "checkout_start", "purchase"].includes(event) || sessionId.length < 16) {
+      return res.status(400).json({ success: false, message: "Invalid analytics event." });
+    }
+    await AnalyticsEvent.create({
+      event,
+      path: cleanText(req.body?.path, 240) || "#/",
+      sessionHash: crypto.createHmac("sha256", APP_SECRET).update(`analytics:${sessionId}`).digest("hex"),
+      utmSource: cleanText(req.body?.utmSource, 100),
+      utmMedium: cleanText(req.body?.utmMedium, 100),
+      utmCampaign: cleanText(req.body?.utmCampaign, 140),
+      expiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+    });
+    return res.status(201).json({ success: true });
+  } catch (error) {
+    return sendServerError(res, error, "Analytics event");
+  }
+});
 
 app.post("/style/recommendation", async (req, res) => {
   const rawImages = Array.isArray(req.body?.images) ? req.body.images : [];
@@ -1184,6 +1259,7 @@ app.get("/telegram/test", async (req, res) => {
 
 async function requestSignupOtp(req, res) {
   try {
+    if (isBotTrapFilled(req.body)) return res.json({ success: true, verificationRequired: true, message: "Check your inbox for the verification email." });
     const { name, email, phone, password } = req.body;
     const cleanName = cleanText(name, 100);
     const cleanEmail = normalizeEmail(email);
@@ -2300,6 +2376,7 @@ app.patch("/bugs/:id", async (req, res) => {
 });
 
 app.post("/newsletter", async (req, res) => {
+  if (isBotTrapFilled(req.body)) return res.json({ success: true, message: "Subscribed successfully" });
   const email = normalizeEmail(req.body.email);
   if (!EMAIL_PATTERN.test(email)) return res.status(400).json({ success: false, message: "A valid email is required" });
   const lead = await Newsletter.findOneAndUpdate(
@@ -2367,7 +2444,12 @@ app.post("/referrals/validate", async (req, res) => {
 });
 app.get("/admin/stats", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const [orders, products, customers, returnRequests, bugReports] = await Promise.all([Order.find(), Product.find(), User.find({ role: "customer" }), ReturnRequest.find(), BugReport.find()]);
+  const analyticsSince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const [orders, products, customers, returnRequests, bugReports, analyticsEvents, uniqueSessions] = await Promise.all([
+    Order.find(), Product.find(), User.find({ role: "customer" }), ReturnRequest.find(), BugReport.find(),
+    AnalyticsEvent.countDocuments({ createdAt: { $gte: analyticsSince } }),
+    AnalyticsEvent.distinct("sessionHash", { createdAt: { $gte: analyticsSince } })
+  ]);
   res.json({
     success: true,
     stats: {
@@ -2384,7 +2466,9 @@ app.get("/admin/stats", async (req, res) => {
       pendingReturns: returnRequests.filter((r) => r.status === "Pending").length,
       openBugs: bugReports.filter((bug) => bug.status === "Open" || bug.status === "Investigating").length,
       criticalBugs: bugReports.filter((bug) => bug.severity === "Critical" && bug.status !== "Resolved" && bug.status !== "Ignored").length,
-      creditsOutstanding: customers.reduce((sum, user) => sum + Number(user.credits || 0), 0)
+      creditsOutstanding: customers.reduce((sum, user) => sum + Number(user.credits || 0), 0),
+      analyticsEvents30d: analyticsEvents,
+      uniqueSessions30d: uniqueSessions.length
     }
   });
 });
@@ -2431,7 +2515,7 @@ app.get("/pincode/:pincode", async (req, res) => {
 
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
-  const status = /CORS policy/i.test(error?.message || "") ? 403 : 500;
+  const status = /CORS policy/i.test(error?.message || "") ? 403 : error?.type === "entity.too.large" ? 413 : 500;
   if (status === 500) {
     console.error("Rivayat request error:", error);
     if (mongoose.connection.readyState === 1) {
@@ -2451,7 +2535,7 @@ app.use((error, req, res, next) => {
   }
   return res.status(status).json({
     success: false,
-    message: status === 403 ? "This origin is not allowed." : "Rivayat could not complete this request."
+    message: status === 403 ? "This origin is not allowed." : status === 413 ? "This request is too large." : "Rivayat could not complete this request."
   });
 });
 
@@ -2512,6 +2596,7 @@ module.exports = {
     verifyToken
   },
   models: {
+    AnalyticsEvent,
     BugReport,
     Coupon,
     CreditTransaction,
