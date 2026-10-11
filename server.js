@@ -22,8 +22,9 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_SITE_VERIFICATION = process.env.GOOGLE_SITE_VERIFICATION || "";
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_API_KEY = String(process.env.GEMINI_API_KEY || "").trim().replace(/^['"]|['"]$/g, "");
+const GEMINI_MODEL = String(process.env.GEMINI_MODEL || "gemini-2.5-flash").trim().replace(/^['"]|['"]$/g, "") || "gemini-2.5-flash";
+const GEMINI_REQUEST_TIMEOUT_MS = 18_000;
 const BASE_URL = String(process.env.BASE_URL || "https://www.rivayat.shop").replace(/\/+$/, "");
 const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID || "";
 const ALGOLIA_SEARCH_API_KEY = process.env.ALGOLIA_SEARCH_API_KEY || "";
@@ -747,11 +748,19 @@ async function requestAssistantReply({ message, history = [], page = "" }) {
     `RIVAYAT catalogue: ${JSON.stringify(catalogue)}`
   ].join("\n");
   const contents = conversation.map((item) => ({ role: item.role, parts: [{ text: item.text }] }));
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt }] }, contents, generationConfig: { temperature: 0.45, maxOutputTokens: 260 } })
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), GEMINI_REQUEST_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt }] }, contents, generationConfig: { temperature: 0.45, maxOutputTokens: 260 } }),
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(cleanText(payload?.error?.message || `Assistant provider error (${response.status})`, 240));
   const reply = cleanText(payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join(" "), 900);
@@ -1250,14 +1259,14 @@ app.post("/assistant/chat", async (req, res) => {
   if (message.length < 2) return res.status(400).json({ success: false, message: "Tell the assistant what you need help with." });
   const history = normalizeAssistantMessages(req.body?.history);
   if (!GEMINI_API_KEY) {
-    return res.json({ success: true, reply: assistantFallback(message), fallback: true, configured: false });
+    return res.json({ success: true, reply: assistantFallback(message), fallback: true, configured: false, fallbackReason: "missing_key" });
   }
   try {
     const reply = await requestAssistantReply({ message, history, page: req.body?.page });
     return res.json({ success: true, reply, fallback: false, configured: true });
   } catch (error) {
     console.error("RIVAYAT assistant provider error:", error.message);
-    return res.json({ success: true, reply: assistantFallback(message), fallback: true, configured: true });
+    return res.status(502).json({ success: false, code: "ASSISTANT_PROVIDER_ERROR", message: "RIVAYAT AI could not reach Gemini. Check GEMINI_API_KEY and GEMINI_MODEL on Render, then redeploy." });
   }
 });
 

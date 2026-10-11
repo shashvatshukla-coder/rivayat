@@ -686,7 +686,7 @@
     <a href="#/dashboard" aria-label="Account"><svg class="nav-svg-icon nav-account-icon" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-dasharray="28" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 21v-1c0 -3.31 2.69 -6 6 -6h4c3.31 0 6 2.69 6 6v1"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="28;0"/></path><path stroke-dashoffset="28" d="M12 11c-2.21 0 -4 -1.79 -4 -4c0 -2.21 1.79 -4 4 -4c2.21 0 4 1.79 4 4c0 2.21 -1.79 4 -4 4Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.4s" to="0"/></path></g></svg><small>Account</small></a>
   </nav>
 
-  <main id="app" tabindex="-1"><section class="startup-shell" aria-live="polite"><div class="startup-card"><p class="startup-logo serif">RIVAYAT</p><p class="muted">Preparing your storefront…</p><div class="startup-bar" aria-hidden="true"></div></div></section></main>
+  <main id="app" tabindex="-1"><section class="launch-screen" aria-live="polite"><div class="launch-card"><div class="launch-orbit" aria-hidden="true"><span>R</span><i></i><i></i><i></i></div><p class="launch-kicker">RIVAYAT / preparing your edit</p><h1 class="serif">One moment.<br><em>Your vibe is loading.</em></h1><p class="launch-message">Picking the right pieces, colours and stories for you.</p><div class="launch-progress" aria-hidden="true"><span></span></div><div class="launch-dots" aria-hidden="true"><b></b><b></b><b></b></div></div></section></main>
   <div class="toast-host" id="toastHost"></div>
   <section class="offline-screen" id="offlineScreen" role="alertdialog" aria-modal="true" aria-labelledby="offlineTitle" hidden>
     <div class="offline-card">
@@ -707,7 +707,7 @@
   <section class="assistant-backdrop" id="assistantModal" role="dialog" aria-modal="true" aria-labelledby="assistantTitle" hidden onclick="if(event.target===this) closeAssistant()">
     <div class="assistant-panel">
       <header class="assistant-header">
-        <div class="assistant-brand"><span class="assistant-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 8.2 13.3 11l2.9 1.1-2.9 1.1L12 16l-1.3-2.8-2.9-1.1 2.9-1.1L12 8.2Z" fill="currentColor"/></svg></span><div><h2 id="assistantTitle">RIVAYAT Assistant</h2><p>Style, shopping and support in one place.</p></div></div>
+        <div class="assistant-brand"><span class="assistant-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 8.2 13.3 11l2.9 1.1-2.9 1.1L12 16l-1.3-2.8-2.9-1.1 2.9-1.1L12 8.2Z" fill="currentColor"/></svg></span><div><h2 id="assistantTitle">RIVAYAT Assistant</h2><p>Style, shopping and support in one place. <span id="assistantStatus" class="assistant-status">Ready</span></p></div></div>
         <button class="icon-btn assistant-close" type="button" onclick="closeAssistant()" aria-label="Close RIVAYAT Assistant">×</button>
       </header>
       <p class="assistant-intro">Ask about products, sizing, styling, delivery, returns or your account. Never share a password or OTP here.</p>
@@ -721,7 +721,7 @@
         <label class="sr-only" for="assistantInput">Message RIVAYAT Assistant</label>
         <input class="input" id="assistantInput" name="message" maxlength="1200" autocomplete="off" placeholder="Ask RIVAYAT Assistant…" required>
         <button class="btn small" id="assistantSend" type="submit">Send</button>
-        <p class="assistant-note">AI suggestions are general guidance. Product stock, order status and account actions are confirmed in the site.</p>
+        <p class="assistant-note" id="assistantNote">AI suggestions are general guidance. Product stock, order status and account actions are confirmed in the site.</p>
       </form>
     </div>
   </section>
@@ -1991,7 +1991,14 @@
       button.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
       button.textContent = visible ? 'Show' : 'Hide';
     }
-    const assistantState = { messages: [{ role: 'model', text: 'Hi, I’m RIVAYAT Assistant. What can I help you find today?' }], pending: false, lastFocused: null };
+    const assistantState = { messages: [{ role: 'model', text: 'Hi, I’m RIVAYAT Assistant. What can I help you find today?' }], pending: false, lastFocused: null, status: 'ready' };
+    function setAssistantStatus(status='ready', note='') {
+      assistantState.status = status;
+      const label = document.getElementById('assistantStatus');
+      const message = document.getElementById('assistantNote');
+      if (label) { label.textContent = status === 'online' ? 'Gemini online' : status === 'fallback' ? 'Help mode' : status === 'error' ? 'Needs attention' : status === 'busy' ? 'Thinking…' : 'Ready'; label.dataset.status = status; }
+      if (message && note) message.textContent = note;
+    }
     function renderAssistantMessages() {
       const container = document.getElementById('assistantMessages');
       if (!container) return;
@@ -2041,6 +2048,7 @@
       assistantState.messages.push({ role: 'user', text: message });
       assistantState.messages = assistantState.messages.slice(-8);
       assistantState.pending = true;
+      setAssistantStatus('busy', 'Checking the RIVAYAT catalogue and preparing a useful answer.');
       if (input) input.value = '';
       renderAssistantMessages();
       const send = document.getElementById('assistantSend');
@@ -2051,9 +2059,13 @@
           history: assistantState.messages.slice(-8),
           page: location.hash || '#/'
         });
+        if (data.fallback && data.fallbackReason === 'missing_key') setAssistantStatus('fallback', 'AI is in help mode. Add GEMINI_API_KEY on Render and redeploy for full Gemini answers.');
+        else if (data.fallback) setAssistantStatus('fallback', 'Gemini is unavailable right now, so I’m showing safe RIVAYAT help.');
+        else setAssistantStatus('online', 'Powered by Gemini · catalogue-aware');
         assistantState.messages.push({ role: 'model', text: data.reply || 'I could not prepare a reply just now.' });
         assistantState.messages = assistantState.messages.slice(-8);
       } catch (error) {
+        setAssistantStatus('error', error.message || 'Gemini could not answer. Check the Render AI settings and try again.');
         assistantState.messages.push({ role: 'model', text: error.message || 'I’m having trouble connecting. Please try again or contact RIVAYAT support.' });
         assistantState.messages = assistantState.messages.slice(-8);
       } finally {
@@ -2588,7 +2600,7 @@
     function renderAuth(mode='login') {
       setSEO(mode === 'signup' ? 'Signup' : mode === 'forgot' ? 'Forgot Password' : 'Login', 'RIVAYAT account login and signup.');
       const isSignup = mode === 'signup'; const isForgot = mode === 'forgot';
-      return `<div class="page section"><div class="container auth-shell"><div class="card pad"><span class="pill">RIVAYAT Account</span><h1 class="serif" style="font-size:54px;margin:18px 0 8px">${isSignup ? 'Create account' : isForgot ? 'Reset password' : 'Welcome back'}</h1><p class="muted">${isForgot ? 'Enter your email to receive a reset code.' : 'Use your registered email/username and password.'}</p>
+      return `<div class="page section"><div class="container auth-shell"><div class="card pad"><span class="pill">RIVAYAT Account</span><div class="auth-hero-line"><span class="auth-spark" aria-hidden="true">✦</span><span>${isSignup ? 'Your RIVAYAT story starts here.' : isForgot ? 'A secure reset, with no fuss.' : 'Good to see you again.'}</span></div><h1 class="serif" style="font-size:54px;margin:18px 0 8px">${isSignup ? 'Create account' : isForgot ? 'Reset password' : 'Welcome back'}</h1><p class="muted">${isForgot ? 'Enter your email to receive a reset code.' : 'Use your registered email/username and password.'}</p>
         ${!isForgot ? '<div id="googleSignIn" style="margin:18px 0"></div><div class="divider"><span class="muted">or use email</span></div>' : ''}
         <form onsubmit="handleAuth(event,'${mode}')" class="grid" style="margin-top:18px">
           ${isForgot || isSignup ? '<input type="hidden" name="stage" value="request">' : ''}
@@ -2603,8 +2615,23 @@
         <div class="divider"></div><p class="muted">${isSignup ? 'Already have an account?' : isForgot ? 'Remembered it?' : 'New here?'} <a class="accent" href="${isSignup || isForgot ? '#/login' : '#/signup'}">${isSignup || isForgot ? 'Login' : 'Create Account'}</a>${!isForgot ? ' • <a class="accent" href="#/forgot-password">Forgot Password?</a>' : ''}</p>
       </div></div></div>`;
     }
+    function setAuthBusy(form, busy, label='Working…') {
+      const button = form?.querySelector('#authSubmitBtn');
+      if (!button) return;
+      if (busy) {
+        button.dataset.idleText = button.textContent;
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.innerHTML = `<span class="button-spinner" aria-hidden="true"></span>${escapeHtml(label)}`;
+      } else {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.textContent = button.dataset.idleText || 'Continue';
+      }
+    }
     async function handleAuth(event, mode) {
       event.preventDefault(); const fd = new FormData(event.target); const msg = document.getElementById('authMsg');
+      setAuthBusy(event.target, true, mode === 'signup' ? 'Preparing your code…' : mode === 'forgot' ? 'Preparing reset…' : 'Opening your account…');
       try { if (mode === 'signup') {
         const email = String(fd.get('email') || '').trim();
         const stage = String(fd.get('stage') || 'request');
@@ -2616,6 +2643,7 @@
           const verificationCode = document.getElementById('signupOtpFields').querySelector('[name="code"]');
           verificationCode.disabled = false; verificationCode.required = true; verificationCode.focus();
           document.getElementById('authSubmitBtn').textContent = 'Verify & create account';
+          document.getElementById('authSubmitBtn').dataset.idleText = 'Verify & create account';
           msg.innerHTML = `<span class="success-text">${escapeHtml(data.message || 'OTP sent.')}${data.devOtp ? ` Preview code: ${escapeHtml(data.devOtp)}` : ''}</span>`;
           toast('Verification email sent');
           return;
@@ -2637,6 +2665,7 @@
           resetFields.querySelectorAll('input').forEach(input => { input.disabled = false; input.required = true; });
           resetFields.querySelector('[name="code"]').focus();
           document.getElementById('authSubmitBtn').textContent = 'Reset Password';
+          document.getElementById('authSubmitBtn').dataset.idleText = 'Reset Password';
           msg.innerHTML = `<span class="success-text">${escapeHtml(message)}</span>`;
           toast('Reset code sent');
           return;
@@ -2654,6 +2683,7 @@
         const user = await AuthService.login(fd.get('email'), fd.get('password'));
         toast(`Logged in as ${user.name}`); go(user.role === 'admin' ? '#/admin' : '#/dashboard');
       } catch(e) { msg.innerHTML = `<span class="error">${escapeHtml(e.message)}</span>`; }
+      finally { setAuthBusy(event.target, false); }
     }
 
     function closeProfileOnboarding() {
@@ -3067,7 +3097,12 @@ Business WhatsApp: ${BRAND.whatsapp}`],
       return `<div class="page section policy"><div class="container"><div class="section-head"><div><span class="pill">RIVAYAT</span><h1 class="serif" style="font-size:64px;margin:14px 0 0">${title}</h1></div></div><div class="grid ${isContact?'grid-2':''}"><article class="card pad"><p>${text.replaceAll('\n','<br>')}</p>${isContact ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><a class="btn" href="mailto:${BRAND.email}">Email Us</a><a class="btn secondary" target="_blank" rel="noreferrer" href="https://wa.me/${BRAND.whatsappDigits}">WhatsApp</a></div>` : ''}<h2>RIVAYAT Promise</h2><p>Premium quality, clean everyday style, quick support, and a smooth shopping experience from browsing to delivery.</p><p class="legal-review-note">Last updated: 11 October 2026.</p></article>${isContact ? `<form class="card pad" onsubmit="submitContactForm(event)"><h2>Send a message</h2><input class="form-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><label>Name<input class="input" name="name" minlength="2" maxlength="100" autocomplete="name" required></label><br><label>Email<input class="input" name="email" type="email" maxlength="254" autocomplete="email" required></label><br><label>Message<textarea class="textarea" name="message" minlength="10" maxlength="2000" required></textarea></label><br><button class="btn full" type="submit">Send message</button><p class="muted" data-contact-message aria-live="polite"></p></form>` : ''}</div>${kind==='about' ? renderFoundersSection() + renderOwnershipSection({ compact: true }) : ''}</div></div>`;
     }
 
-    function notFound() { setSEO('Page Not Found', 'This RIVAYAT page does not exist.'); document.querySelector('meta[name="robots"]')?.setAttribute('content','noindex,follow'); return `<div class="page section"><div class="container"><div class="state-screen"><span class="error-code">404 · Page not found</span><h1>That page slipped away.</h1><p class="muted">The link may be old, incomplete, or no longer available.</p><div class="state-actions"><a class="btn" href="#/">Go home</a><a class="btn secondary" href="#/shop">Shop collection</a></div></div></div></div>`; }
+    function renderErrorPage({ status=500, code='RIVAYAT / ERROR', title='A loose thread got in the way.', description='The page could not be prepared right now. Your saved bag and wishlist are safe.', retry=true }={}) {
+      setSEO(`${status} · ${title}`, description);
+      document.querySelector('meta[name="robots"]')?.setAttribute('content','noindex,follow');
+      return `<div class="page section error-page"><div class="container"><div class="error-page-grid"><div class="error-art" aria-hidden="true"><span>${escapeHtml(String(status))}</span><i></i><i></i><i></i></div><div class="state-screen"><span class="error-code">${escapeHtml(code)}</span><h1>${escapeHtml(title)}</h1><p class="muted">${escapeHtml(description)}</p><div class="state-actions">${retry ? '<button class="btn" onclick="render({revalidate:true})">Try again</button>' : ''}<a class="btn secondary" href="#/">Go home</a><a class="btn ghost" href="#/contact">Contact support</a></div></div></div></div></div>`;
+    }
+    function notFound() { return renderErrorPage({ status: 404, code: '404 · page not found', title: 'That page slipped away.', description: 'The link may be old, incomplete, or no longer available.', retry: false }); }
 
     function routeHashFromLocation() {
       if (location.hash) return location.hash;
@@ -3104,7 +3139,7 @@ Business WhatsApp: ${BRAND.whatsapp}`],
         if (renderId !== renderSequence) return;
         app.innerHTML = nextHtml;
         updateBadges(); applyTheme(document.documentElement.dataset.theme); syncScrollUtilities(); trackAnalytics('page_view', { path: hash }); if (!preserveScroll) window.scrollTo({top:0, behavior:'smooth'}); if (route === 'login' || route === 'signup') setTimeout(mountGoogleSignIn, 0); if (route === 'dashboard' && parts[1] === 'profile') setTimeout(openProfileOnboarding, 120); showAbandonedCartReminder();
-      } catch (e) { if (renderId !== renderSequence) return; console.error(e); reportClientFault(e, 'Route render'); app.innerHTML = `<div class="section"><div class="container"><div class="state-screen"><span class="error-code">Something went wrong</span><h1>We hit a loose thread.</h1><p class="muted">${escapeHtml(e.message || 'This page could not be prepared right now.')}</p><div class="state-actions"><button class="btn" onclick="render({revalidate:true})">Try again</button><a class="btn secondary" href="#/">Go home</a><button class="btn ghost" onclick="openBugReporter()">Report this problem</button></div></div></div></div>`; }
+      } catch (e) { if (renderId !== renderSequence) return; console.error(e); reportClientFault(e, 'Route render'); app.innerHTML = renderErrorPage({ status: 500, code: '500 · storefront error', title: 'We hit a loose thread.', description: e.message || 'This page could not be prepared right now.' }); }
     }
     window.addEventListener('unhandledrejection', event => {
       console.error(event.reason);
