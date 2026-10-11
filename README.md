@@ -10,7 +10,15 @@ This package combines the supplied storefront, the corrected working server base
 4. After the first successful catalog load, change `CATALOG_SYNC_MODE` to `seed-empty` to prevent a future version string typo from replacing admin edits.
 5. Sign in as the seeded administrator, verify all draft prices, stock, sizes and team profiles, and then remove `ADMIN_PASSWORD` from Render.
 6. Trigger **Search → Reindex Algolia** after Algolia keys are configured, or call `POST /admin/search/reindex` with an administrator token.
-7. Verify password reset and signup OTP delivery using the verified `EMAIL_FROM` domain before announcing launch.
+7. Verify password reset, signup verification, unsubscribe and order-email delivery using the verified `EMAIL_FROM` domain before announcing launch.
+
+## Official email and order alerts
+
+1. In Resend, add and verify `rivayat.shop`; publish the SPF and DKIM DNS records Resend provides.
+2. Set `EMAIL_FROM=RIVAYAT <orders@rivayat.shop>` on Render. This makes verification, reset, newsletter and order emails come from the official domain.
+3. Set `ORDER_NOTIFICATION_EMAILS=jiking847@gmail.com,shashvatshukla240@gmail.com`. Add any other trusted operations address as another comma-separated recipient.
+4. Deploy, create a test account, request a verification code, subscribe/unsubscribe, and place one test order. Confirm that both customer and operations emails arrive and that Reply-To points to the customer on the internal order alert.
+5. Keep `RESEND_API_KEY` only in Render environment variables; never place it in browser code or commit it to GitHub.
 
 ## Final information still required from the owner
 

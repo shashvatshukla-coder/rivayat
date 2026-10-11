@@ -13,8 +13,13 @@ assert.match(html, /<meta property="og:image" content="https:\/\/www\.rivayat\.s
 assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
 assert.match(html, /GOOGLE_SITE_VERIFICATION/);
 assert.doesNotMatch(html, /INITIAL_REVIEWS\s*=\s*\[[^\]]+\]/s, "Production must not contain seeded customer reviews.");
-assert.equal((fs.readFileSync(path.join(root, "sitemap.xml"), "utf8").match(/<url>/g) || []).length, products.length + 12, "Sitemap URL count must match public pages plus products.");
+assert.equal((fs.readFileSync(path.join(root, "sitemap.xml"), "utf8").match(/<url>/g) || []).length, products.length + 14, "Sitemap URL count must match public pages plus products.");
 assert.match(html, /rivayat-new-york-collage\.webp/, "The supplied horizontal hero must be published.");
+assert.match(html, /rivayat-castle-dark-horizontal\.webp/, "The dark homepage must use the horizontal castle artwork.");
+assert.match(html, /Work with RIVAYAT/, "The collaboration and internship page must be linked.");
+assert.match(html, /Account cancellation/, "Account cancellation must be discoverable from the footer.");
+assert.match(html, /aria-label="Instagram"[\s\S]*aria-label="Facebook"[\s\S]*aria-label="WhatsApp"/, "Footer social links must use accessible SVG controls.");
+assert.doesNotMatch(html, /Send 4-digit OTP|4 digits in every OTP/i, "Customer-facing OTP advertising must be removed.");
 assert.match(html, /const OWNERSHIP_RECORDS = \[/, "The ownership record must be rendered from structured data.");
 assert.match(html, /Shashvat Shukla[^\n]+share: 33/, "Shashvat's legal ownership must be published.");
 assert.match(html, /Swastik Shukla[^\n]+share: 29/, "Swastik's legal ownership must be published.");
@@ -32,6 +37,13 @@ for (const source of [serverSource, serviceWorkerSource, deploymentSource, envEx
 const heroBuffer = fs.readFileSync(path.join(root, "assets/storefront/hero/rivayat-new-york-collage.webp"));
 assert.match(heroBuffer.subarray(0, 16).toString("ascii"), /^RIFF.{4}WEBP/, "Horizontal hero must be a valid WebP image.");
 assert.ok(heroBuffer.length > 700000, "Horizontal hero must retain its lossless source detail.");
+const darkHeroBuffer = fs.readFileSync(path.join(root, "assets/storefront/hero/rivayat-castle-dark-horizontal.webp"));
+assert.match(darkHeroBuffer.subarray(0, 16).toString("ascii"), /^RIFF[\s\S]{4}WEBP/, "Dark horizontal hero must be a valid WebP image.");
+assert.ok(darkHeroBuffer.length > 600000, "Dark horizontal hero must retain high-resolution source detail.");
+assert.match(serverSource, /app\.delete\("\/account"/, "A signed-in account cancellation endpoint is required.");
+assert.match(serverSource, /newsletter\/unsubscribe-request/, "Newsletter unsubscribe confirmation must be available.");
+assert.match(serverSource, /ORDER_NOTIFICATION_EMAILS/, "Order notification recipients must be configurable.");
+assert.match(serverSource, /assets\/branding\/rivayat-logo\.png/, "Transactional emails must use the RIVAYAT logo.");
 const algoliaRecords = JSON.parse(fs.readFileSync(path.join(root, "algolia-records.json"), "utf8"));
 assert.equal(algoliaRecords.length, products.length, "Algolia export count must match active catalogue.");
 assert.ok(algoliaRecords.every((record) => record.objectID && record.url && record.imageUrl), "Every Algolia record needs objectID, URL, and image URL.");

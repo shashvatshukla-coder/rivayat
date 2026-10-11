@@ -1,4 +1,4 @@
-const CACHE_NAME = "rivayat-shell-2026-10-11-v7";
+const CACHE_NAME = "rivayat-shell-2026-10-11-v8";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -16,6 +16,7 @@ const CORE_ASSETS = [
   "/assets/storefront/categories/men.png",
   "/assets/storefront/categories/women.png",
   "/assets/storefront/hero/rivayat-new-york-collage.webp",
+  "/assets/storefront/hero/rivayat-castle-dark-horizontal.webp",
   "/assets/branding/goat-mode.png",
   "/assets/branding/mr-mark.png",
   "/assets/branding/muse-mark.png",

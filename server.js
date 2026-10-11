@@ -35,6 +35,10 @@ const BUSINESS_ADDRESS = process.env.BUSINESS_ADDRESS || "India";
 const BUSINESS_GSTIN = process.env.BUSINESS_GSTIN || "";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "houseofrivayat@gmail.com";
 const SUPPORT_PHONE = process.env.SUPPORT_PHONE || "+91 80041 09305";
+const ORDER_NOTIFICATION_EMAILS = String(process.env.ORDER_NOTIFICATION_EMAILS || "jiking847@gmail.com,shashvatshukla240@gmail.com")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter((email, index, values) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && values.indexOf(email) === index);
 const CUSTOMER_PASSWORD_MESSAGE = "Password must be 8 to 15 characters and include at least one number and one symbol.";
 const CUSTOMER_PASSWORD_PATTERN = /^(?=.*\d)(?=.*[!-/:-@[-`{-~])\S{8,15}$/;
 const configuredEarnPercent = Number(process.env.LOYALTY_EARN_PERCENT || 2);
@@ -66,7 +70,7 @@ const DEFAULT_HOMEPAGE = {
   heroTitle: "Own your vibe.",
   heroSubtitle: "Fan jerseys, expressive layers and easy everyday fits selected for the way young India dresses now.",
   heroImage: "/assets/storefront/hero/rivayat-new-york-collage.webp",
-  darkHeroImage: "/assets/storefront/hero/rivayat-new-york-collage.webp",
+  darkHeroImage: "/assets/storefront/hero/rivayat-castle-dark-horizontal.webp",
   heroOffer: "A considered edit for every mood",
   primaryButtonText: "Shop the edit",
   secondaryButtonText: "Enter GOAT Mode"
@@ -277,6 +281,8 @@ const NewsletterSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   phone: { type: String, default: "" },
   source: { type: String, default: "Website" },
+  active: { type: Boolean, default: true },
+  unsubscribedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 const ReferralSchema = new mongoose.Schema({
@@ -460,6 +466,9 @@ function hashResetCode(email, code) {
 function randomFourDigitCode() {
   return String(crypto.randomInt(1000, 10000));
 }
+function newsletterToken(email) {
+  return crypto.createHmac("sha256", APP_SECRET).update(`newsletter:${normalizeEmail(email)}`).digest("hex");
+}
 function validImageDataUrl(value, maxBytes = 8 * 1024 * 1024) {
   const image = String(value || "").trim();
   if (!image) return "";
@@ -485,7 +494,7 @@ function normalizeHomepageSettings(value = {}) {
   const source = value && typeof value === "object" ? value : {};
   const settings = { ...DEFAULT_HOMEPAGE, ...source };
   if (!settings.heroImage || LEGACY_HERO_IMAGES.has(settings.heroImage)) settings.heroImage = DEFAULT_HOMEPAGE.heroImage;
-  if (!settings.darkHeroImage || LEGACY_HERO_IMAGES.has(settings.darkHeroImage)) settings.darkHeroImage = DEFAULT_HOMEPAGE.darkHeroImage;
+  settings.darkHeroImage = DEFAULT_HOMEPAGE.darkHeroImage;
   if (settings.heroPill === "RIVAYAT New Collection • India 2026") settings.heroPill = DEFAULT_HOMEPAGE.heroPill;
   if (settings.heroOffer === "New collection now live with 32 supplied styles") settings.heroOffer = DEFAULT_HOMEPAGE.heroOffer;
   if (settings.primaryButtonText === "Shop New Collection") settings.primaryButtonText = DEFAULT_HOMEPAGE.primaryButtonText;
@@ -557,13 +566,30 @@ async function sendTelegramMessage(text) {
     return { success: false, message: error.message };
   }
 }
-async function sendEmail({ to, subject, html }) {
+function brandedEmail({ preheader = "", title, intro = "", code = "", content = "", actionLabel = "", actionUrl = "", footer = "" }) {
+  const logoUrl = `${BASE_URL}/assets/branding/rivayat-logo.png`;
+  const action = actionLabel && actionUrl
+    ? `<p style="margin:28px 0"><a href="${htmlEscape(actionUrl)}" style="display:inline-block;padding:13px 20px;border-radius:999px;background:#123f42;color:#fff;text-decoration:none;font-weight:700">${htmlEscape(actionLabel)}</a></p>`
+    : "";
+  const codeBlock = code
+    ? `<div style="margin:26px 0;padding:20px;border-radius:14px;background:#f3f0e8;text-align:center;font-size:34px;font-weight:800;letter-spacing:10px;color:#102a2c">${htmlEscape(code)}</div>`
+    : "";
+  return `<!doctype html><html><body style="margin:0;background:#f4f1ea;color:#172426;font-family:Arial,sans-serif"><span style="display:none;max-height:0;overflow:hidden">${htmlEscape(preheader)}</span><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f1ea"><tr><td align="center" style="padding:28px 14px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fff;border-radius:18px;overflow:hidden"><tr><td style="padding:24px 30px;border-bottom:1px solid #e7e1d6"><img src="${htmlEscape(logoUrl)}" width="152" alt="RIVAYAT" style="display:block;max-width:152px;height:auto"></td></tr><tr><td style="padding:34px 30px"><h1 style="margin:0 0 16px;font:700 30px/1.15 Georgia,serif;color:#102a2c">${htmlEscape(title)}</h1>${intro ? `<p style="margin:0 0 16px;line-height:1.65;color:#465456">${intro}</p>` : ""}${codeBlock}${content}${action}</td></tr><tr><td style="padding:24px 30px;background:#102a2c;color:#d8e4df;font-size:12px;line-height:1.6"><strong style="color:#fff">RIVAYAT · Own Your Vibe</strong><br>${footer || "This is an official email from RIVAYAT. We never ask for your password or verification code by phone, chat, or email."}<br><a href="${BASE_URL}/privacy" style="color:#f4be58">Privacy</a> · <a href="mailto:${htmlEscape(SUPPORT_EMAIL)}" style="color:#f4be58">Support</a><br>© ${new Date().getFullYear()} RIVAYAT. A product of Shukla Group of Companies.</td></tr></table></td></tr></table></body></html>`;
+}
+function orderEmail(order, { admin = false } = {}) {
+  const rows = (order.items || []).map((item) => `<tr><td style="padding:8px 0;border-bottom:1px solid #ece7df">${htmlEscape(item.name || "Item")} · ${htmlEscape(item.size || "-")} × ${Number(item.qty || item.quantity || 1)}</td><td align="right" style="padding:8px 0;border-bottom:1px solid #ece7df">₹${Number(item.price || 0).toLocaleString("en-IN")}</td></tr>`).join("");
+  const details = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:18px;font-size:14px"><tr><td style="padding:7px 0;color:#667">Order</td><td align="right"><strong>${htmlEscape(order.id)}</strong></td></tr><tr><td style="padding:7px 0;color:#667">Customer</td><td align="right">${htmlEscape(order.customerName || "Customer")}</td></tr>${admin ? `<tr><td style="padding:7px 0;color:#667">Email</td><td align="right">${htmlEscape(order.email || "-")}</td></tr><tr><td style="padding:7px 0;color:#667">Phone</td><td align="right">${htmlEscape(order.phone || "-")}</td></tr>` : ""}${rows}<tr><td style="padding:14px 0 0"><strong>Total</strong></td><td align="right" style="padding:14px 0 0"><strong>₹${Number(order.price || 0).toLocaleString("en-IN")}</strong></td></tr></table>`;
+  return brandedEmail({ preheader: `${admin ? "New" : "Confirmed"} RIVAYAT order ${order.id}`, title: admin ? "A new order is ready." : "Your order is confirmed.", intro: admin ? "Review the customer and fulfilment details below." : "Thanks for shopping with RIVAYAT. We’ll notify you as your order moves.", content: details, actionLabel: admin ? "Open admin orders" : "Track your order", actionUrl: `${BASE_URL}/#/${admin ? "admin/orders" : "dashboard/orders"}` });
+}
+async function sendEmail({ to, subject, html, replyTo = "" }) {
   if (!RESEND_API_KEY || !to) return { skipped: true, reason: "Email is not configured. Add RESEND_API_KEY." };
   try {
+    const recipients = (Array.isArray(to) ? to : [to]).map(normalizeEmail).filter((email) => EMAIL_PATTERN.test(email));
+    if (!recipients.length) return { skipped: true, reason: "No valid recipient email was provided." };
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-      body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html })
+      body: JSON.stringify({ from: EMAIL_FROM, to: recipients, subject, html, ...(replyTo ? { reply_to: replyTo } : {}) })
     });
     if (!response.ok) throw new Error(`Email error ${response.status}`);
     return { success: true };
@@ -957,7 +983,10 @@ async function serveIndex(req, res) {
       const staticMeta = {
         "/about": ["Our Story & Team | RIVAYAT", "Meet Shashvat Shukla, Swastik Shukla, Shantanu Shukla and Navneet Tiwari—the people shaping RIVAYAT."],
         "/ownership": ["Final Legal Ownership Distribution | RIVAYAT", "RIVAYAT’s final legal ownership distribution, effective 11 October 2026 under record RIV-SD-001."],
-        "/legal": ["Legal Centre | RIVAYAT", "Plain-language RIVAYAT consumer, privacy, delivery, support and business disclosure information."]
+        "/legal": ["Legal Centre | RIVAYAT", "Plain-language RIVAYAT consumer, privacy, delivery, support and business disclosure information."],
+        "/work-with-us": ["Work with RIVAYAT", "Internships, collaborations and creative partnerships with RIVAYAT."],
+        "/accessibility": ["Accessibility Statement | RIVAYAT", "RIVAYAT accessibility commitment and support options."],
+        "/unsubscribe": ["Unsubscribe from RIVAYAT", "Manage RIVAYAT marketing email preferences."]
       }[cleanPath];
       if (staticMeta) {
         html = html
@@ -979,7 +1008,7 @@ async function serveIndex(req, res) {
   }
 }
 app.get(["/about-us", "/aboutus"], (req, res) => res.redirect(301, "/about"));
-app.get(["/", "/index.html", "/shop", "/about", "/ownership", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal", "/style"], serveIndex);
+app.get(["/", "/index.html", "/shop", "/about", "/ownership", "/contact", "/shipping", "/returns-policy", "/privacy", "/terms", "/cookies", "/legal", "/accessibility", "/work-with-us", "/unsubscribe", "/style"], serveIndex);
 app.get("/product/:slug", serveIndex);
 app.get("/catalog.js", (req, res) => {
   res.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
@@ -1190,7 +1219,7 @@ async function requestSignupOtp(req, res) {
     const emailResult = await sendEmail({
       to: cleanEmail,
       subject: `${code} is your RIVAYAT verification code`,
-      html: `<div style="font-family:Arial,sans-serif;color:#102a2c"><h1>RIVAYAT</h1><p>Hi ${cleanName.replace(/[<>&"']/g, "")}, enter this 4-digit code to create your account:</p><p style="font-size:36px;font-weight:800;letter-spacing:10px">${code}</p><p>This code expires in 10 minutes.</p></div>`
+      html: brandedEmail({ preheader: "Complete your RIVAYAT account", title: "Confirm your email.", intro: `Hi ${htmlEscape(cleanName)}, use this verification code to finish creating your RIVAYAT account.`, code, content: '<p style="margin:0;color:#667;line-height:1.6">This code expires in 10 minutes. If you did not request it, you can safely ignore this email.</p>' })
     });
     if (!emailResult.success) {
       if (!IS_TEST && process.env.NODE_ENV === "production") {
@@ -1198,7 +1227,7 @@ async function requestSignupOtp(req, res) {
       }
       return res.json({ success: true, verificationRequired: true, devOtp: code, message: "Preview mode: use the 4-digit code shown here." });
     }
-    return res.json({ success: true, verificationRequired: true, message: "A 4-digit OTP was sent to your email. It expires in 10 minutes." });
+    return res.json({ success: true, verificationRequired: true, message: "Your verification code is on its way. Check your inbox and spam folder." });
   } catch (error) {
     return sendServerError(res, error, "Signup OTP");
   }
@@ -1210,20 +1239,20 @@ app.post("/signup/verify", async (req, res) => {
     const email = normalizeEmail(req.body.email);
     const code = String(req.body.code || req.body.otp || "").trim();
     if (!EMAIL_PATTERN.test(email) || !/^\d{4}$/.test(code)) {
-      return res.status(400).json({ success: false, message: "Enter your email and complete 4-digit OTP." });
+      return res.status(400).json({ success: false, message: "Enter your email and complete the verification code." });
     }
     const pending = await SignupVerification.findOne({ email });
     if (!pending || new Date(pending.expiresAt).getTime() <= Date.now()) {
       await SignupVerification.deleteOne({ email });
-      return res.status(400).json({ success: false, message: "This OTP has expired. Request a new 4-digit code." });
+      return res.status(400).json({ success: false, message: "This verification code has expired. Request a new code." });
     }
     if (Number(pending.attempts || 0) >= 5) {
-      return res.status(429).json({ success: false, message: "Too many attempts. Request a fresh OTP." });
+      return res.status(429).json({ success: false, message: "Too many attempts. Request a fresh verification code." });
     }
     if (!sameHash(pending.codeHash, hashResetCode(email, code))) {
       pending.attempts = Number(pending.attempts || 0) + 1;
       await pending.save();
-      return res.status(400).json({ success: false, message: "That OTP is not correct." });
+      return res.status(400).json({ success: false, message: "That verification code is not correct." });
     }
     if (await User.findOne({ email })) {
       await SignupVerification.deleteOne({ email });
@@ -1372,6 +1401,34 @@ app.put("/profile", async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error." });
   }
 });
+app.delete("/account", async (req, res) => {
+  try {
+    const auth = requireUser(req, res);
+    if (!auth) return;
+    if (auth.role === "admin") return res.status(403).json({ success: false, message: "Administrator accounts cannot be deleted from the storefront." });
+    if (String(req.body?.confirmation || "").trim().toUpperCase() !== "DELETE") return res.status(400).json({ success: false, message: "Type DELETE to confirm account cancellation." });
+    const email = normalizeEmail(auth.email);
+    const activeOrder = await Order.findOne({ email, status: { $in: ["Pending", "Confirmed", "Packed", "Shipped", "Out for Delivery"] } }).select("id status");
+    if (activeOrder) return res.status(409).json({ success: false, message: `Order ${activeOrder.id} is still ${activeOrder.status}. Cancel or complete it before deleting your account.` });
+    const anonymizedEmail = `deleted+${crypto.createHash("sha256").update(email).digest("hex").slice(0, 16)}@rivayat.invalid`;
+    await Promise.all([
+      Notification.deleteMany({ $or: [{ userId: String(auth.id) }, { email }] }),
+      CreditTransaction.deleteMany({ $or: [{ userId: String(auth.id) }, { email }] }),
+      SignupVerification.deleteMany({ email }),
+      PasswordReset.deleteMany({ email }),
+      Referral.updateMany({ ownerEmail: email }, { active: false, updatedAt: new Date() }),
+      Newsletter.updateMany({ email }, { active: false, unsubscribedAt: new Date() }),
+      Review.updateMany({ $or: [{ userId: String(auth.id) }, { userEmail: email }] }, { userId: "", userEmail: "", name: "Former customer", updatedAt: new Date() }),
+      ReturnRequest.updateMany({ "customer.email": email }, { "customer.name": "Former customer", "customer.email": anonymizedEmail, "customer.phone": "", updatedAt: new Date() }),
+      Order.updateMany({ email }, { customerName: "Former customer", phone: "", email: anonymizedEmail, address: {}, updatedAt: new Date() })
+    ]);
+    await User.deleteOne({ _id: auth.id, email });
+    sendEmail({ to: email, subject: "Your RIVAYAT account has been cancelled", html: brandedEmail({ preheader: "RIVAYAT account cancellation complete", title: "Your account has been cancelled.", intro: "Your profile, saved addresses and account access have been removed. Completed transaction records may be retained in anonymized form where required for fraud prevention, tax, accounting or legal obligations.", content: `<p style="margin:0;color:#667;line-height:1.6">If you did not request this, contact <a href="mailto:${htmlEscape(SUPPORT_EMAIL)}">${htmlEscape(SUPPORT_EMAIL)}</a> immediately.</p>` }) }).catch(() => {});
+    return res.json({ success: true, message: "Your RIVAYAT account has been cancelled and personal profile data removed." });
+  } catch (error) {
+    return sendServerError(res, error, "Account cancellation");
+  }
+});
 app.post("/forgot-password", async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email || req.body.identifier);
@@ -1381,7 +1438,7 @@ app.post("/forgot-password", async (req, res) => {
 
     const previous = await PasswordReset.findOne({ email, usedAt: null }).sort({ createdAt: -1 });
     if (previous && Date.now() - new Date(previous.requestedAt || previous.createdAt).getTime() < 60_000) {
-      return res.status(429).json({ success: false, message: "Please wait one minute before requesting another OTP." });
+      return res.status(429).json({ success: false, message: "Please wait one minute before requesting another reset code." });
     }
     const code = randomFourDigitCode();
     await PasswordReset.updateMany({ email, usedAt: null }, { $set: { usedAt: new Date() } });
@@ -1390,7 +1447,7 @@ app.post("/forgot-password", async (req, res) => {
     const emailResult = await sendEmail({
       to: user.email,
       subject: "RIVAYAT password reset code",
-      html: `<div style="font-family:Arial,sans-serif;color:#111"><h1>RIVAYAT</h1><p>Hi ${cleanText(user.name || "Customer", 100).replace(/[<>&"']/g, "")}, your 4-digit password reset code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p><p>This code expires in 10 minutes.</p></div>`
+      html: brandedEmail({ preheader: "Reset your RIVAYAT password", title: "Reset your password.", intro: `Hi ${htmlEscape(cleanText(user.name || "Customer", 100))}, use this verification code to choose a new password.`, code, content: '<p style="margin:0;color:#667;line-height:1.6">This code expires in 10 minutes. If you did not request a reset, ignore this email and your password will remain unchanged.</p>' })
     });
     if (!emailResult.success) {
       const showCode = process.env.NODE_ENV !== "production";
@@ -1414,7 +1471,7 @@ app.post("/reset-password", async (req, res) => {
     const email = normalizeEmail(req.body.email);
     const code = String(req.body.code || "").trim();
     const password = String(req.body.password || "");
-    if (!EMAIL_PATTERN.test(email) || !/^\d{4}$/.test(code) || !password) return res.status(400).json({ success: false, message: "Email, 4-digit reset code, and new password are required." });
+    if (!EMAIL_PATTERN.test(email) || !/^\d{4}$/.test(code) || !password) return res.status(400).json({ success: false, message: "Email, reset code, and new password are required." });
     if (!isValidCustomerPassword(password)) return res.status(400).json({ success: false, message: CUSTOMER_PASSWORD_MESSAGE });
     const reset = await PasswordReset.findOne({ email, usedAt: null, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
     if (!reset || Number(reset.attempts || 0) >= 5) return res.status(400).json({ success: false, message: "Invalid or expired reset code." });
@@ -1448,16 +1505,12 @@ app.put("/settings/homepage", async (req, res) => {
   if (heroImage === null) {
     return res.status(400).json({ success: false, message: "Hero image must be a valid HTTP(S) image or PNG, JPG, WEBP or AVIF upload under 10 MB." });
   }
-  const darkHeroImage = safeImageSource(body.darkHeroImage || DEFAULT_HOMEPAGE.darkHeroImage, 10 * 1024 * 1024);
-  if (darkHeroImage === null) {
-    return res.status(400).json({ success: false, message: "Dark-mode hero image must be a valid HTTP(S) image or PNG, JPG, WEBP or AVIF upload under 10 MB." });
-  }
   const value = {
     heroPill: cleanText(body.heroPill, 140) || DEFAULT_HOMEPAGE.heroPill,
     heroTitle: cleanText(body.heroTitle, 180) || DEFAULT_HOMEPAGE.heroTitle,
     heroSubtitle: cleanText(body.heroSubtitle, 500) || DEFAULT_HOMEPAGE.heroSubtitle,
     heroImage,
-    darkHeroImage,
+    darkHeroImage: DEFAULT_HOMEPAGE.darkHeroImage,
     heroOffer: cleanText(body.heroOffer, 180) || DEFAULT_HOMEPAGE.heroOffer,
     primaryButtonText: cleanText(body.primaryButtonText, 80) || DEFAULT_HOMEPAGE.primaryButtonText,
     secondaryButtonText: cleanText(body.secondaryButtonText, 80) || DEFAULT_HOMEPAGE.secondaryButtonText
@@ -1820,7 +1873,10 @@ app.post("/orders", async (req, res) => {
     if (order.referralCode) await Referral.findOneAndUpdate({ code: order.referralCode, active: true }, { $inc: { uses: 1 }, updatedAt: new Date() });
     sendTelegramMessage(`New RIVAYAT order\n${orderPlainText(order)}`).catch(() => {});
     if (order.email) {
-      sendEmail({ to: order.email, subject: `RIVAYAT order confirmed: ${order.id}`, html: `<pre>${orderPlainText(order)}</pre>` }).catch(() => {});
+      sendEmail({ to: order.email, subject: `RIVAYAT order confirmed: ${order.id}`, html: orderEmail(order) }).catch(() => {});
+    }
+    if (ORDER_NOTIFICATION_EMAILS.length) {
+      sendEmail({ to: ORDER_NOTIFICATION_EMAILS, subject: `New RIVAYAT order ${order.id} · ₹${Number(order.price || 0).toLocaleString("en-IN")}`, html: orderEmail(order, { admin: true }), replyTo: order.email }).catch(() => {});
     }
     try {
       const recipient = auth.id ? await User.findById(auth.id).select("_id email") : await User.findOne({ email }).select("_id email");
@@ -2248,11 +2304,36 @@ app.post("/newsletter", async (req, res) => {
   if (!EMAIL_PATTERN.test(email)) return res.status(400).json({ success: false, message: "A valid email is required" });
   const lead = await Newsletter.findOneAndUpdate(
     { email },
-    { email, phone: cleanText(req.body.phone, 24), source: cleanText(req.body.source, 80) || "Website" },
+    { email, phone: cleanText(req.body.phone, 24), source: cleanText(req.body.source, 80) || "Website", active: true, unsubscribedAt: null },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
   sendTelegramMessage(`New RIVAYAT newsletter lead\nEmail: ${email}\nPhone: ${lead.phone || "-"}`).catch(() => {});
+  const unsubscribeUrl = `${BASE_URL}/newsletter/unsubscribe?email=${encodeURIComponent(email)}&token=${newsletterToken(email)}`;
+  sendEmail({ to: email, subject: "Welcome to RIVAYAT updates", html: brandedEmail({ preheader: "You are subscribed to RIVAYAT", title: "You’re on the list.", intro: "You’ll receive considered updates about new drops, restocks and useful account news—without the noise.", actionLabel: "Shop RIVAYAT", actionUrl: `${BASE_URL}/#/shop`, footer: `You received this because ${htmlEscape(email)} subscribed to RIVAYAT updates. <a href="${htmlEscape(unsubscribeUrl)}" style="color:#f4be58">Unsubscribe</a> at any time.` }) }).catch(() => {});
   res.json({ success: true, message: "Subscribed successfully", lead });
+});
+app.post("/newsletter/unsubscribe-request", async (req, res) => {
+  const email = normalizeEmail(req.body.email);
+  if (!EMAIL_PATTERN.test(email)) return res.status(400).json({ success: false, message: "Enter a valid email address." });
+  const lead = await Newsletter.findOne({ email, active: { $ne: false } });
+  if (lead) {
+    const unsubscribeUrl = `${BASE_URL}/newsletter/unsubscribe?email=${encodeURIComponent(email)}&token=${newsletterToken(email)}`;
+    await sendEmail({ to: email, subject: "Confirm your RIVAYAT unsubscribe request", html: brandedEmail({ preheader: "Confirm newsletter unsubscribe", title: "Stop RIVAYAT marketing emails?", intro: "Use the button below to confirm. Essential account, security and order emails are not affected.", actionLabel: "Unsubscribe", actionUrl: unsubscribeUrl }) });
+  }
+  return res.json({ success: true, message: "If that address is subscribed, a confirmation email is on its way." });
+});
+app.post("/newsletter/unsubscribe", async (req, res) => {
+  const auth = requireUser(req, res);
+  if (!auth) return;
+  await Newsletter.updateMany({ email: normalizeEmail(auth.email) }, { active: false, unsubscribedAt: new Date() });
+  return res.json({ success: true, message: "Marketing emails have been turned off for your account." });
+});
+app.get("/newsletter/unsubscribe", async (req, res) => {
+  const email = normalizeEmail(req.query.email);
+  const token = String(req.query.token || "");
+  if (!EMAIL_PATTERN.test(email) || !sameHash(token, newsletterToken(email))) return res.status(400).type("html").send("<!doctype html><title>Invalid unsubscribe link</title><p>This unsubscribe link is invalid or incomplete.</p>");
+  await Newsletter.updateMany({ email }, { active: false, unsubscribedAt: new Date() });
+  return res.type("html").send(brandedEmail({ title: "You’re unsubscribed.", intro: "RIVAYAT marketing emails have been turned off for this address. Essential order, account and security emails may still be sent.", actionLabel: "Return to RIVAYAT", actionUrl: BASE_URL }));
 });
 app.get("/newsletter", async (req, res) => {
   if (!requireAdmin(req, res)) return;

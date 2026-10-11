@@ -9,6 +9,8 @@ Allow: /privacy
 Allow: /terms
 Allow: /cookies
 Allow: /legal
+Allow: /accessibility
+Allow: /work-with-us
 Allow: /style
 Allow: /product/
 Allow: /assets/
@@ -38,6 +40,7 @@ Disallow: /returns
 Disallow: /reviews
 Disallow: /bugs
 Disallow: /newsletter
+Disallow: /unsubscribe
 Disallow: /referrals
 Disallow: /pincode
 Disallow: /search
