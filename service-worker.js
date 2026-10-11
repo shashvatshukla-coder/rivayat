@@ -1,4 +1,4 @@
-const CACHE_NAME = "rivayat-shell-2026-10-11-v10";
+const CACHE_NAME = "rivayat-shell-2026-10-11-v11";
 const CORE_ASSETS = [
   "/",
   "/index.html",
