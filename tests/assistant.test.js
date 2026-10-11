@@ -10,11 +10,17 @@ const worker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
 
 assert.match(server, /app\.post\("\/assistant\/chat"/);
 assert.match(server, /ASSISTANT_MAX_MESSAGE_LENGTH/);
+assert.match(server, /ASSISTANT_ALLOWED_TOPIC_PATTERN/);
+assert.match(server, /ASSISTANT_ABUSE_PATTERN/);
+assert.match(server, /ASSISTANT_PROVIDER_TIMEOUT/);
+assert.match(server, /gemini-2\.0-flash/);
 assert.match(server, /RIVAYAT Assistant/);
 assert.match(server, /assistantFallback/);
+assert.match(server, /validateAssistantRequest/);
 assert.match(html, /assistantModal/);
 assert.match(html, /AssistantService/);
 assert.match(html, /openAssistant\(\)/);
+assert.match(html, /timeoutMs: 55000/);
 assert.match(css, /\.assistant-panel/);
 assert.match(css, /\[data-theme="dark"\] \.assistant-panel/);
 assert.match(worker, /"\/assistant\/chat"/);
